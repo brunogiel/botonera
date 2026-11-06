@@ -64,6 +64,7 @@
           display: grid; grid-template-columns: 96px 1fr; gap: 6px 18px;
           border-left: 4px solid var(--line); transition: border-color .15s; }
   .card.go { border-left-color: var(--go); }
+  .card.vc { border-left-color: var(--brand); }
   .card.no { border-left-color: var(--no); background: var(--surface-2); }
   .card.warning .pic { background: var(--warn-bg); }
   .card.danger .pic { background: var(--no-bg); }
@@ -122,7 +123,22 @@
   .btn.no.on { background: var(--no); border-color: var(--no); color: #fff; }
   .btn.go:hover { border-color: var(--go); color: var(--go); }
   .btn.no:hover { border-color: var(--no); color: var(--no); }
+  .btn.vc.on { background: var(--brand); border-color: var(--brand); color: #fff; }
+  .btn.vc:hover { border-color: var(--brand); color: var(--brand); }
   .btn.on:hover { color: #fff; }
+  /* Editar: los valores que propuso el agente, cargados en campos; el comentario libre queda siempre visible abajo */
+  .pend { grid-column: 1 / -1; margin: 8px 0 0; font: 650 13px var(--sans); color: var(--brand); }
+  .campos { grid-column: 1 / -1; display: grid; gap: 12px; margin-top: 10px; }
+  .campos .lead { margin: 0; font-size: 14px; color: var(--muted); }
+  .campos .f { display: grid; gap: 4px; }
+  .campos label { font: 650 13px var(--sans); }
+  .campos .in { font: 15px var(--sans); color: var(--ink); background: var(--surface); border: 2px solid var(--line-strong, var(--line)); border-radius: 10px; padding: 9px 12px; min-height: 44px; }
+  .campos .f.cambio .in { border-color: var(--brand); background: var(--brand-bg, var(--surface-2)); font-weight: 700; }
+  .campos .tag-cambio, .campos .antes { display: none; font-size: 13px; color: var(--muted); }
+  .campos .f.cambio .tag-cambio { display: inline; margin-left: 6px; font-size: 11px; font-weight: 700; color: var(--brand); }
+  .campos .f.cambio .antes { display: flex; justify-content: space-between; gap: 8px; }
+  .campos .antes s { opacity: .8; }
+  .campos .fre { font: 650 13px var(--sans); background: none; border: 0; padding: 0; text-decoration: underline; color: var(--brand); cursor: pointer; }
   .comment { flex: 1 1 220px; font: 14px var(--sans); color: var(--ink); background: var(--surface-2);
              border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; min-height: 44px; resize: vertical; }
   details { grid-column: 1 / -1; margin-top: 8px; font-size: 14px; color: var(--muted); }
@@ -144,6 +160,7 @@
   #idx .dot { flex: 0 0 9px; height: 9px; border-radius: 50%; border: 2px solid var(--faint); transform: translateY(1px); }
   #idx .dot.go { background: var(--go); border-color: var(--go); }
   #idx .dot.no { background: var(--no); border-color: var(--no); }
+  #idx .dot.vc { background: var(--brand); border-color: var(--brand); }
   #idx .nn { font: 600 11px var(--mono); color: var(--faint); min-width: 16px; }
   .card, .sec-head { scroll-margin-top: 16px; }
   .sec-head { margin: 30px 0 14px; padding-bottom: 8px; border-bottom: 2px solid var(--ink); display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
@@ -255,7 +272,25 @@ function imagenHTML(it) {
     `<a class="afuera" href="${esc(link)}" target="_blank" rel="noopener noreferrer">Abrir afuera ↗</a>` : img}</div>`;
 }
 const recoGo = it => /^va$/i.test((it.reco || '').trim());
-const state = {};   // n -> {m: "go"|"no"|"", c: ""}
+const state = {};   // n -> {m: "go"|"no"|"vc"|"", c: "", f: {id: valor nuevo}}  (vc = Editar: va con cambios)
+// `campos` del ítem (máx. 5): {id, etiqueta, valor, tipo: texto|numero|fecha|opcion, opciones?}. Misma forma que valida armar.py.
+const camposDe = it => (Array.isArray(it.campos) ? it.campos : []).filter(c => c && /^[a-z0-9_-]{1,30}$/.test(String(c.id || '')) && c.etiqueta &&
+  ['texto', 'numero', 'fecha', 'opcion'].includes(c.tipo) && (c.tipo !== 'opcion' || (Array.isArray(c.opciones) && c.opciones.length >= 2)))
+  .slice(0, 5).map(c => ({ id: String(c.id), etiqueta: String(c.etiqueta), tipo: c.tipo, valor: c.valor == null ? '' : String(c.valor), opciones: (c.opciones || []).map(String) }));
+const mismo = (tipo, a, b) => { a = String(a == null ? '' : a).trim(); b = String(b == null ? '' : b).trim();
+  return tipo === 'numero' && a !== '' && b !== '' && isFinite(+a) && isFinite(+b) ? +a === +b : a === b; };
+// «id=nuevo (antes viejo); …» de los campos que cambiaron, en el orden del ítem
+const camposN = (it, f) => !f ? 0 : camposDe(it).filter(c => f[c.id] != null && !mismo(c.tipo, f[c.id], c.valor)).length;
+const camposTxt = (it, f) => !f ? '' : camposDe(it).filter(c => f[c.id] != null && !mismo(c.tipo, f[c.id], c.valor))
+  .map(c => c.id + '=' + String(f[c.id]).replace(/\s+/g, ' ').trim() + ' (antes ' + c.valor.replace(/\s+/g, ' ').trim() + ')').join('; ');
+function campoHTML(c, val, i, n) {
+  const id = 'f-' + n + '-' + i, cam = !mismo(c.tipo, val, c.valor);
+  const inp = c.tipo === 'opcion'
+    ? `<select id="${id}" class="in" data-f="${esc(c.id)}">${c.opciones.map(o => `<option value="${esc(o)}"${o === val ? ' selected' : ''}>${esc(o)}</option>`).join('')}</select>`
+    : `<input id="${id}" class="in" data-f="${esc(c.id)}" type="${c.tipo === 'numero' ? 'number' : c.tipo === 'fecha' ? 'date' : 'text'}"${c.tipo === 'numero' ? ' step="any"' : ''} value="${esc(val)}" autocomplete="off">`;
+  return `<div class="f${cam ? ' cambio' : ''}" data-tipo="${esc(c.tipo)}" data-orig="${esc(c.valor)}"><label for="${id}">${esc(c.etiqueta)}<span class="tag-cambio">Cambiado</span></label>${inp}` +
+    `<div class="antes"><span>Antes: <s>${esc(c.valor)}</s></span><button type="button" class="fre">Volver al original</button></div></div>`;
+}
 const EMBEBIDO = window.self !== window.top;   // va en el iframe de la página de la web (ver el contrato más abajo)
 
 // vence (AAAA-MM-DD) -> «25-oct»; vencido = hoy o antes (comparación de texto AAAA-MM-DD, sin husos).
@@ -281,7 +316,8 @@ function aplicarMarcas(mk) {
   const items = mk.items && typeof mk.items === 'object' ? mk.items : {};
   DATA.items.forEach(it => {
     const v = items[it.n];
-    if (v && typeof v === 'object') state[it.n] = { m: v.m === 'go' || v.m === 'no' ? v.m : '', c: typeof v.c === 'string' ? v.c : '' };
+    if (v && typeof v === 'object') state[it.n] = { m: v.m === 'go' || v.m === 'no' || v.m === 'vc' ? v.m : '', c: typeof v.c === 'string' ? v.c : '',
+      f: v.f && typeof v.f === 'object' && !Array.isArray(v.f) ? v.f : {} };
   });
   if (typeof mk.notas === 'string') document.getElementById('notas').value = mk.notas;
 }
@@ -319,7 +355,11 @@ function render() {
     root.appendChild(h);
    }
    g.items.forEach(it => {
-    const st = state[it.n] || (state[it.n] = { m: '', c: '' });
+    const st = state[it.n] || (state[it.n] = { m: '', c: '', f: {} });
+    const cs = camposDe(it);
+    const panel = st.m === 'vc' && cs.length
+      ? `<div class="campos"><p class="lead">Esto propuso el agente. Cambiá lo que quieras.</p>` +
+        cs.map((c, i) => campoHTML(c, (st.f || {})[c.id] != null ? String(st.f[c.id]) : c.valor, i, it.n)).join('') + `</div>` : '';
     const card = document.createElement('article');
     card.id = 'd-' + it.n;
     const conPic = !it.dibujo && (it.svg || it.icono);
@@ -343,8 +383,11 @@ function render() {
       `<p class="ctx">${lnk(it.contexto)}</p>` +
       bloqueAntecedentes(it) +
       `<p class="reco">Te recomiendo <b class="${recoGo(it) ? 'r-go' : 'r-no'}">${esc(recoGo(it) ? (it.accion_va || 'Va') : (it.accion_no_va || 'No va'))}</b><span>${esc(it.reco_motivo)}</span></p>` +
+      panel +
+      (st.m !== 'vc' && st.m !== 'no' && camposN(it, st.f) ? `<p class="pend" role="status">${camposN(it, st.f)} ${camposN(it, st.f) === 1 ? 'cambio pendiente' : 'cambios pendientes'} · Va los manda con el cambio</p>` : '') +
       `<div class="actions">` +
         `<button type="button" class="btn no${recoGo(it) ? '' : ' rec'}${st.m === 'no' ? ' on' : ''}" data-m="no">${esc(it.accion_no_va || 'No va')}</button>` +
+        `<button type="button" class="btn vc${st.m === 'vc' ? ' on' : ''}" data-m="vc">Editar</button>` +
         `<button type="button" class="btn go${recoGo(it) ? ' rec' : ''}${st.m === 'go' ? ' on' : ''}" data-m="go">${esc(it.accion_va || 'Va')}</button>` +
         `<textarea class="comment" rows="1" placeholder="Comentario (opcional)">${esc(st.c)}</textarea>` +
       `</div>` +
@@ -353,6 +396,17 @@ function render() {
       st.m = st.m === b.dataset.m ? '' : b.dataset.m; save(); render();
     }));
     card.querySelector('.comment').addEventListener('input', e => { st.c = e.target.value; save(); });
+    // Editar: los campos se guardan al escribir; el que cambia queda marcado, con «Antes: X» y «Volver al original»
+    const sync = () => {
+      const f = {};
+      card.querySelectorAll('.campos .f').forEach(w => { const i = w.querySelector('[data-f]'), cam = !mismo(w.dataset.tipo, i.value, w.dataset.orig);
+        w.classList.toggle('cambio', cam); if (cam) f[i.dataset.f] = i.value; });
+      st.f = f; save();
+    };
+    card.querySelectorAll('.campos [data-f]').forEach(i => i.addEventListener('input', sync));
+    card.querySelectorAll('.campos .fre').forEach(b => b.addEventListener('click', () => {
+      const i = b.closest('.f').querySelector('[data-f]'); i.value = b.closest('.f').dataset.orig; sync();
+    }));
     root.appendChild(card);
    });
   });
@@ -398,7 +452,7 @@ function indice() {
 function tally() {
   indice();
   const v = Object.values(state);
-  const go = v.filter(s => s.m === 'go').length, no = v.filter(s => s.m === 'no').length;
+  const go = v.filter(s => s.m === 'go' || s.m === 'vc').length, no = v.filter(s => s.m === 'no').length;
   document.getElementById('t-go').textContent = go + ' va';
   document.getElementById('t-no').textContent = no + ' no va';
   document.getElementById('t-un').textContent = (DATA.items.length - go - no) + ' sin marcar';
@@ -408,9 +462,14 @@ function respuesta() {
   const L = ['/botonera respuesta · ' + DATA.clave];
   DATA.items.forEach(it => {
     const st = state[it.n] || {};
-    const m = st.m === 'go' ? 'va' : st.m === 'no' ? 'no va' : 'sin marcar';
-    const acc = st.m === 'go' ? it.accion_va : st.m === 'no' ? it.accion_no_va : '';
-    L.push(it.n + '. ' + m + ' · ' + it.titulo + (acc ? ' → ' + acc : '') + (st.c && st.c.trim() ? ' · comentario: ' + st.c.trim() : ''));
+    // un Va con cambios escritos en Editar sin confirmar sale como «va con cambios»; Editar sin campos ni comentario es un va liso
+    const cf = st.m === 'go' || st.m === 'vc' ? camposTxt(it, st.f) : '';
+    let mk = st.m;
+    if (mk === 'go' && cf) mk = 'vc';
+    if (mk === 'vc' && !cf && !(st.c && st.c.trim())) mk = 'go';
+    const m = mk === 'go' ? 'va' : mk === 'vc' ? 'va con cambios' : mk === 'no' ? 'no va' : 'sin marcar';
+    const acc = mk === 'go' || mk === 'vc' ? it.accion_va : mk === 'no' ? it.accion_no_va : '';
+    L.push(it.n + '. ' + m + ' · ' + it.titulo + (acc ? ' → ' + acc : '') + (cf ? ' · campos: ' + cf : '') + (st.c && st.c.trim() ? ' · comentario: ' + st.c.trim() : ''));
   });
   const n = document.getElementById('notas').value.trim();
   if (n) L.push('notas: ' + n);

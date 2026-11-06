@@ -19,7 +19,9 @@
 set -euo pipefail
 
 AQUI="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-MIGRACION="$AQUI/supabase/migrations/20261105000000_botonera.sql"
+shopt -s nullglob
+MIGRACIONES=("$AQUI"/supabase/migrations/*.sql)   # en orden de fecha: la base entera y sus agregados
+shopt -u nullglob
 
 URL=""
 KEY=""
@@ -85,7 +87,7 @@ python3 -c 'import sys; sys.exit(0 if sys.version_info >= (3, 9) else 1)' \
   || die "hace falta python3 3.9 o más nuevo (tenés $(python3 -c 'import sys; print("%d.%d" % sys.version_info[:2])'))"
 
 [ -f "$AQUI/skill/armar.py" ] || die "no encuentro $AQUI/skill/armar.py: corré el instalador desde el repo clonado"
-[ -f "$MIGRACION" ] || die "falta la migración $MIGRACION (el repo está incompleto)"
+[ "${#MIGRACIONES[@]}" -gt 0 ] || die "faltan las migraciones en $AQUI/supabase/migrations (el repo está incompleto)"
 
 # --- datos de Supabase ------------------------------------------------------------------------
 preguntar() {  # preguntar <variable> <texto>
@@ -200,7 +202,7 @@ PY
 [ -n "$LINEA" ] || die "no pude armar la llamada a bm_instalar"
 
 ( umask 077
-  { cat "$MIGRACION"; printf '\n%s\n' "$LINEA"; } > "$CONF_DIR/instalar.sql"
+  { for m in "${MIGRACIONES[@]}"; do cat "$m"; printf '\n'; done; printf '%s\n' "$LINEA"; } > "$CONF_DIR/instalar.sql"
   printf '%s\n' "$LINEA" > "$CONF_DIR/bootstrap.sql" )
 chmod 600 "$CONF_DIR/instalar.sql" "$CONF_DIR/bootstrap.sql"
 info "SQL escrito en $CONF_DIR/instalar.sql y $CONF_DIR/bootstrap.sql (permisos 600)"
@@ -217,8 +219,9 @@ cat <<PASOS
 Listo. Faltan estos pasos, en este orden:
 
   1. Pegá el contenido de $CONF_DIR/instalar.sql en el SQL editor de Supabase y ejecutalo.
-     (Si la migración ya está aplicada, por ejemplo con "supabase start", pegá solo
-     $CONF_DIR/bootstrap.sql.)
+     (Si las migraciones ya están aplicadas, por ejemplo con "supabase start", pegá solo
+     $CONF_DIR/bootstrap.sql. Si venís de una versión anterior, volvé a correr este
+     instalador y pegá el instalar.sql nuevo: las migraciones se pueden repetir.)
 
   2. Desplegá la función de avisos push, desde la raíz del repo:
        supabase functions deploy bm-avisar --project-ref $REF --no-verify-jwt
@@ -236,4 +239,8 @@ Listo. Faltan estos pasos, en este orden:
 Opcional: para que las respuestas lleguen aunque se cierre la sesión, corré
   ./install.sh --hook
 y sumá lo que imprime a ~/.claude/settings.json.
+
+Opcional: para que un bot publique sin tu secret completo, corré
+  python3 $SKILL_DIR/secret-bot.py
+y ejecutá el SQL que imprime.
 PASOS

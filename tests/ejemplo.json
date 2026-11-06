@@ -33,7 +33,16 @@
         "positivo": "Los pedidos chicos vuelven a dejar ganancia.",
         "negativo": "Algún cliente puede abandonar el carrito."
       },
-      "vence": "2026-11-15"
+      "vence": "2026-11-15",
+      "campos": [
+        { "id": "precio", "etiqueta": "Nuevo precio del envío (ARS)", "valor": 3500, "tipo": "numero" },
+        { "id": "desde", "etiqueta": "Desde", "valor": "2026-11-15", "tipo": "fecha" },
+        { "id": "alcance", "etiqueta": "A quiénes", "valor": "Pedidos chicos", "tipo": "opcion", "opciones": ["Pedidos chicos", "Todos los pedidos"] }
+      ],
+      "aplicar": {
+        "va": "Cambiar la tarifa de envíos en la tienda al precio y la fecha de campos. Avisar en el blog.",
+        "no_va": "Nada."
+      }
     },
     {
       "n": 2,
@@ -50,6 +59,11 @@
       "impacto": {
         "positivo": "No suma costo mensual ni herramientas nuevas.",
         "negativo": "Algunos mails caen en la carpeta de spam."
+      },
+      "aplicar": {
+        "mail": "Armar la plantilla de aviso por mail y activarla.",
+        "whatsapp": "Pedir el alta del número de WhatsApp.",
+        "sms": "Contratar el servicio de SMS."
       }
     },
     {
@@ -65,6 +79,10 @@
       "impacto": {
         "positivo": "La lista de pedidos activos se lee más rápido.",
         "negativo": "Hay que buscar en el archivo si alguien reclama."
+      },
+      "aplicar": {
+        "va": "Mover los pedidos cerrados de hace más de un año a la hoja de archivo.",
+        "no_va": "Nada."
       }
     }
   ]

@@ -17,6 +17,8 @@ Qué hace (todo con un HOME temporal: no toca tu ~/.claude ni tu ~/.config):
      recibe con esperar.py y cierra con marcar.py.
   4. Chequea los casos que tienen que fallar: PIN malo, clave pública sola, secreto malo,
      respuesta con prefijo malo.
+  5. Editar (campos que vuelven en la respuesta), retomar una tanda decidida con `retomar.py`, la fila
+     «Con error» (`errores.py`, listar y marcar «Visto») y el secret de bot, que solo sirve para claves `bot-`.
 
 Opciones:
   --url <url>            URL de la API (default: la de `supabase status`)
@@ -153,8 +155,20 @@ def main():
     def rpc(nombre, cuerpo):
         return http("POST", f"{url}/rest/v1/rpc/{nombre}", key, cuerpo)
 
-    def py(script, *a, timeout=60):
-        return correr([sys.executable, str(skill / script), *a], env=env, timeout=timeout)
+    def py(script, *a, timeout=60, entorno=None):
+        return correr([sys.executable, str(skill / script), *a], env=entorno or env, timeout=timeout)
+
+    def sql(texto):
+        return correr(["docker", "exec", "-i", contenedor, "psql", "-U", "postgres", "-v", "ON_ERROR_STOP=1", "-t", "-A"],
+                      entrada=texto, timeout=60)
+
+    def leer_env(ruta):
+        cfg = {}
+        for linea in ruta.read_text(encoding="utf-8").splitlines():
+            if "=" in linea and not linea.strip().startswith("#"):
+                k, v = linea.split("=", 1)
+                cfg[k.strip()] = v.strip()
+        return cfg
 
     try:
         # 1. instalar
@@ -244,6 +258,8 @@ def main():
             "bm_avisos_guardar_vapid": {"p_publica": "a", "p_privada": "b"},
             "bm_avisos_resultado": {"p_ok": [], "p_muertos": [], "p_fallidos": [], "p_claves": [], "p_error": "x"},
             "bm_check": {"p_secret": "x"},
+            "bm_rol": {"p_secret": "x"},
+            "bm_es_bot": {"p_texto": "bot-x"},
         }
         abiertas = [n for n, cuerpo in internas.items() if rpc(n, cuerpo)[0] not in (401, 403, 404)]
         registrar(not abiertas, "las funciones internas (instalar, avisos, llaves) no se llaman con la clave pública", ", ".join(abiertas))
@@ -303,6 +319,254 @@ def main():
         registrar(r.returncode != 0 and "ya está" in r.stderr, "republicar una tanda ya cerrada se rechaza", r.stdout + r.stderr)
         r = py("pendientes.py", "--horas", "0")
         registrar(r.returncode == 0 and clave not in r.stdout, "pendientes.py ya no la lista", r.stdout + r.stderr)
+
+
+        # 6b. Editar (campos), retomar, «Con error» y rol de bot. El token del paso 3 sigue vivo (el PIN cambia al final).
+        print("\nEditar: campos que viajan y vuelven")
+        secreto = leer_env(env_file)["BM_SECRET"]
+
+        def armar_variante(nombre, cambio, extra=()):
+            d = copy.deepcopy(datos)
+            d["clave"] = f"{clave}-{nombre}"
+            cambio(d)
+            ruta = tmp / f"{nombre}.json"
+            ruta.write_text(json.dumps(d, ensure_ascii=False), encoding="utf-8")
+            return py("armar.py", *extra, str(ruta), str(tmp / f"{nombre}.html"))
+
+        seis = [{"id": f"c{i}", "etiqueta": f"Campo {i}", "valor": "x", "tipo": "texto"} for i in range(6)]
+        r = armar_variante("seis", lambda d: d["items"][0].__setitem__("campos", seis), ("--html",))
+        registrar(r.returncode == 1 and "'campos' tiene que ser una lista de 1 a 5" in r.stderr,
+                  "armar.py rechaza más de 5 campos", r.stderr)
+        r = armar_variante("tipo", lambda d: d["items"][0]["campos"][0].__setitem__("tipo", "color"), ("--html",))
+        registrar(r.returncode == 1 and "tiene que ser texto | numero | fecha | opcion" in r.stderr,
+                  "armar.py rechaza un tipo de campo desconocido", r.stderr)
+        r = armar_variante("etiqueta", lambda d: d["items"][0]["campos"][0].__setitem__("etiqueta", "una etiqueta con muchas más de seis palabras"), ("--html",))
+        registrar(r.returncode == 1 and "palabras (techo 6)" in r.stderr, "armar.py rechaza una etiqueta de más de 6 palabras", r.stderr)
+        r = armar_variante("en-opciones", lambda d: d["items"][1].__setitem__("campos", d["items"][0]["campos"]), ("--html",))
+        registrar(r.returncode == 1 and "'campos' va solo en cards sí/no" in r.stderr, "armar.py rechaza campos en una card con opciones", r.stderr)
+        r = armar_variante("aplicar", lambda d: d["items"][0].__setitem__("aplicar", {"quizas": "algo"}), ("--html",))
+        registrar(r.returncode == 1 and "no es una respuesta de esta card" in r.stderr, "armar.py rechaza una clave de aplicar que no es una respuesta", r.stderr)
+        r = armar_variante("aplicar-largo", lambda d: d["items"][0].__setitem__("aplicar", {"va": " ".join(["palabra"] * 41)}), ("--html",))
+        registrar(r.returncode == 1 and "techo 40" in r.stderr, "armar.py rechaza un plan de aplicar de más de 40 palabras", r.stderr)
+        r = armar_variante("sin-aplicar", lambda d: [i.pop("aplicar", None) for i in d["items"]], ("--html",))
+        registrar(r.returncode == 0 and "sin 'aplicar'" in r.stderr, "armar.py avisa (sin frenar) cuando faltan los planes de aplicar", r.stderr)
+
+        clave_c = f"{clave}-campos"
+        ruta_c = tmp / "campos.json"
+        d_c = copy.deepcopy(datos)
+        d_c["clave"] = clave_c
+        ruta_c.write_text(json.dumps(d_c, ensure_ascii=False), encoding="utf-8")
+        r = py("armar.py", "--publicar", str(ruta_c), str(tmp / "campos.html"))
+        registrar(r.returncode == 0 and f"maestro: creada · {clave_c}" in r.stdout and "aviso" not in r.stderr,
+                  "armar.py --publicar sube una tanda con campos y planes de aplicar", r.stderr or r.stdout)
+        st, fl = rpc("bm_fila", {"p_token": token, "p_clave": clave_c})
+        f = fl[0] if isinstance(fl, list) and fl else {}
+        campos = ((f.get("datos") or {}).get("items") or [{}])[0].get("campos") or []
+        registrar([c.get("id") for c in campos] == ["precio", "desde", "alcance"] and campos[0].get("valor") == 3500,
+                  "los campos viajan a la base tal cual", f"{st} {str(campos)[:200]}")
+
+        respuesta_c = (f"/botonera respuesta · {clave_c}\n"
+                       "1. va con cambios · Subir el precio de los envíos → Subir el envío · "
+                       "campos: precio=4200 (antes 3500); desde=2026-11-22 (antes 2026-11-15) · comentario: Solo hasta fin de mes.\n"
+                       "2. eligió whatsapp · Elegir el canal para los avisos → Mensaje de WhatsApp\n"
+                       "3. sin marcar · Archivar los pedidos viejos")
+        st, res = rpc("bm_decidir_pin", {"p_token": token, "p_clave": clave_c, "p_respuesta": respuesta_c})
+        registrar(st == 200 and res == "decidida", "la respuesta «va con cambios · campos: …» se guarda entera", f"{st} {res}")
+
+        print("\nRetomar sin la sesión viva")
+        st, res = rpc("bm_retomar", {"p_secret": secreto, "p_clave": clave_c})
+        its = res.get("items") if isinstance(res, dict) else []
+        registrar(st == 200 and res.get("estado") == "decidida" and res.get("respuesta_texto") == respuesta_c and len(its) == 3
+                  and "Cambiar la tarifa" in (its[0].get("aplicar") or {}).get("va", "") and "whatsapp" in (its[1].get("aplicar") or {}),
+                  "bm_retomar trae la respuesta y el plan aplicar de cada ítem, sin cambiar el estado", f"{st} {str(res)[:200]}")
+        st, res = rpc("bm_retomar", {"p_secret": secreto, "p_clave": "clave-que-no-existe"})
+        registrar(st == 200 and isinstance(res, dict) and res.get("estado") == "no_existe", "bm_retomar sobre una clave inexistente dice no_existe", f"{st} {res}")
+        st, res = rpc("bm_retomar", {"p_secret": "secreto-falso", "p_clave": clave_c})
+        registrar(st >= 400 and "secret invalido" in mensaje(res), "bm_retomar con secreto equivocado se rechaza", f"{st} {res}")
+        r = py("retomar.py", clave_c)
+        registrar(r.returncode == 0 and "precio=4200 (antes 3500)" in r.stdout and "Cambiar la tarifa" in r.stdout
+                  and "[whatsapp] Pedir el alta" in r.stdout and "sin marcar: no se hace" in r.stdout,
+                  "retomar.py arma el brief: los valores nuevos, el plan de cada respuesta y lo sin marcar", r.stdout + r.stderr)
+        r = py("retomar.py", clave_c, "--json")
+        try:
+            a = json.loads(r.stdout)
+        except ValueError:
+            a = {}
+        registrar(r.returncode == 0 and a.get("todo_con_plan") is True and a["items"][0]["campos"].startswith("precio=4200")
+                  and a["items"][0]["comentario"] == "Solo hasta fin de mes." and a["items"][2]["accion"] == "nada",
+                  "retomar.py --json separa campos, comentario y acción de cada ítem", r.stdout[:200] + r.stderr)
+        r = py("retomar.py", clave_c, "--tomar")
+        st, fl = rpc("bm_fila", {"p_token": token, "p_clave": clave_c})
+        f = fl[0] if isinstance(fl, list) and fl else {}
+        registrar(r.returncode == 0 and f.get("estado") == "recibida", "retomar.py --tomar pasa la tanda de decidida a recibida", f"{r.stderr} {f.get('estado')}")
+        r = py("retomar.py", "clave-que-no-existe")
+        registrar(r.returncode == 1 and "no existe" in r.stderr, "retomar.py sobre una clave inexistente sale con 1", r.stdout + r.stderr)
+
+        print("\nColgadas y fila «Con error»")
+        r = py("colgadas.py")
+        registrar(r.returncode == 0 and clave_c in r.stdout and "plan aplicar 3/3" in r.stdout,
+                  "colgadas.py lista la tanda recibida con su «plan aplicar 3/3»", r.stdout + r.stderr)
+        r = py("colgadas.py", "--archivar", clave_c, "la sesión ya no está")
+        registrar(r.returncode == 0 and "→ archivada (antes: recibida)" in r.stdout and "errores: creado" in r.stdout,
+                  "colgadas.py --archivar archiva y publica un error si había una respuesta sin aplicar", r.stdout + r.stderr)
+
+        def errores_vistos():
+            st_, lista_ = rpc("bm_errores_lista", {"p_token": token})
+            return st_, (lista_ if isinstance(lista_, list) else [])
+        st, lista = errores_vistos()
+        e_sesion = next((e for e in lista if e.get("origen_id") == clave_c), None)
+        registrar(st == 200 and e_sesion is not None and e_sesion.get("tipo") == "sesion" and clave_c in e_sesion.get("titulo", ""),
+                  "bm_errores_lista (con token) muestra el error de la tanda archivada sin aplicar", f"{st} {str(lista)[:200]}")
+
+        tarea_id = f"tarea-prueba-{int(time.time())}"
+        err_tarea = {"tipo": "tarea", "origen_id": tarea_id, "titulo": "Tarea de prueba", "motivo": "Límite de uso",
+                     "ocurrio_at": "2026-11-01T03:00:00Z"}
+        r = py("errores.py", "publicar", json.dumps(err_tarea), "--seco")
+        registrar(r.returncode == 0 and "WOULD publish" in r.stdout, "errores.py --seco muestra lo que publicaría", r.stdout + r.stderr)
+        st, lista = errores_vistos()
+        registrar(not any(e.get("origen_id") == tarea_id for e in lista), "…y no escribe nada", str(lista)[:200])
+        r = py("errores.py", "publicar", json.dumps(err_tarea))
+        registrar(r.returncode == 0 and "errores: 1 creado" in r.stdout, "errores.py publicar crea el error", r.stdout + r.stderr)
+        r = py("errores.py", "publicar", json.dumps(err_tarea))
+        registrar(r.returncode == 0 and "errores: 1 repetido" in r.stdout, "publicar dos veces el mismo error no lo duplica", r.stdout + r.stderr)
+        ahora = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+        runs = {"taskId": f"tarea-runs-{int(time.time())}", "runs": [
+            {"status": "failed", "started_at": ahora, "error": "401 invalid_grant", "title": "Tarea con runs"},
+            {"status": "failed", "started_at": "2020-01-01T00:00:00Z", "error": "viejo"},
+            {"status": "success", "started_at": ahora}]}
+        ruta_runs = tmp / "runs.json"
+        ruta_runs.write_text(json.dumps(runs), encoding="utf-8")
+        r = py("errores.py", "desde-runs", str(ruta_runs))
+        registrar(r.returncode == 0 and "errores: 1 creado" in r.stdout and "401 invalid_grant" in r.stdout,
+                  "errores.py desde-runs publica solo los runs fallidos de las últimas 24 h", r.stdout + r.stderr)
+        st, res = rpc("bm_error_publicar", {"p_secret": "secreto-falso", "p_tipo": "tarea", "p_origen_id": "x", "p_titulo": "x",
+                                            "p_motivo": None, "p_ocurrio_at": ahora})
+        registrar(st >= 400 and "secret invalido" in mensaje(res), "bm_error_publicar con secreto equivocado se rechaza", f"{st} {res}")
+        st, res = rpc("bm_error_publicar", {"p_secret": secreto, "p_tipo": "otro", "p_origen_id": "x", "p_titulo": "x",
+                                            "p_motivo": None, "p_ocurrio_at": ahora})
+        registrar(st >= 400 and "tipo invalido" in mensaje(res), "bm_error_publicar rechaza un tipo desconocido", f"{st} {res}")
+        st, res = rpc("bm_errores_lista", {"p_token": "token-falso"})
+        registrar(st >= 400 and "token invalido" in mensaje(res), "bm_errores_lista con token falso se rechaza", f"{st} {res}")
+        st, res = http("GET", f"{url}/rest/v1/bm_errores?select=titulo", key)
+        registrar((st in (401, 403)) or (st == 200 and res == []), "la clave pública sola no puede leer la tabla bm_errores", f"{st} {str(res)[:120]}")
+        st, lista = errores_vistos()
+        e_tarea = next((e for e in lista if e.get("origen_id") == tarea_id), None)
+        registrar(e_tarea is not None and len(lista) >= 3, "la lista trae los errores sin ver", str(lista)[:300])
+        ids = [e["id"] for e in lista]
+        st, res = rpc("bm_error_visto", {"p_token": token, "p_id": e_tarea["id"]})
+        registrar(st == 200 and res is True, "bm_error_visto marca uno como visto", f"{st} {res}")
+        st, res = rpc("bm_error_visto", {"p_token": token, "p_id": e_tarea["id"]})
+        registrar(st == 200 and res is False, "marcar visto dos veces devuelve false", f"{st} {res}")
+        st, lista2 = errores_vistos()
+        registrar([e["id"] for e in lista2] == [i for i in ids if i != e_tarea["id"]], "el error visto sale de la lista y los demás quedan",
+                  f"{[e['id'] for e in lista2]} vs {ids}")
+        st, res = rpc("bm_error_visto", {"p_token": "token-falso", "p_id": 1})
+        registrar(st >= 400 and "token invalido" in mensaje(res), "bm_error_visto con token falso se rechaza", f"{st} {res}")
+        for e in lista2:   # la prueba deja la fila «Con error» vacía
+            rpc("bm_error_visto", {"p_token": token, "p_id": e["id"]})
+
+        print("\nRol de bot")
+        r = py("secret-bot.py")
+        env_bot = home / ".config" / "botonera" / "env-bot"
+        m = re.search(r"'([0-9a-f]{64})'", r.stdout)
+        cfg_bot = leer_env(env_bot) if env_bot.exists() else {}
+        bs = cfg_bot.get("BM_SECRET", "")
+        registrar(r.returncode == 0 and m and bs and bs not in r.stdout and oct(env_bot.stat().st_mode & 0o777) == "0o600",
+                  "secret-bot.py escribe env-bot (600), imprime el hash y nunca el secret", r.stderr or r.stdout[-200:])
+        r = py("secret-bot.py")
+        registrar(r.returncode != 0 and "ya existe" in (r.stderr + r.stdout), "secret-bot.py no pisa un env-bot existente sin --rotar", r.stdout + r.stderr)
+        st, res = rpc("bm_pendientes", {"p_secret": bs, "p_horas": 0})
+        registrar(st >= 400 and "secret invalido" in mensaje(res), "mientras el hash no está cargado el secret de bot no entra a nada", f"{st} {res}")
+        r = sql(f"insert into public.bm_config (k, v) values ('bot_secret_sha256', '{m.group(1)}') on conflict (k) do update set v = excluded.v;")
+        registrar(r.returncode == 0, "se carga el hash del secret de bot", r.stderr)
+
+        cb = f"bot-prueba-{int(time.time())}"
+        datos_bot = {"titulo": "Tanda de un bot", "clave": cb, "items": [{"n": 1, "titulo": "Algo del bot"}]}
+        def publicar_bot(c, session, skill="otro"):
+            return rpc("bm_publicar", {"p_secret": bs, "p_clave": c, "p_session_id": session, "p_sesion_titulo": "Bot",
+                                       "p_skill": skill, "p_proyecto": None, "p_titulo": "Tanda de un bot", "p_n_items": 1,
+                                       "p_datos": datos_bot, "p_html": "<html></html>"})
+        st, res = publicar_bot(cb, "bot-agente")
+        registrar(st == 200 and res == "creada", "el secret de bot publica una clave bot- con session_id bot-", f"{st} {res}")
+        st, lista = rpc("bm_lista", {"p_token": token})
+        fb = next((x for x in lista if x.get("clave") == cb), {}) if isinstance(lista, list) else {}
+        registrar(fb.get("skill") == "bot" and fb.get("session_id") == "bot-agente", "el servidor fuerza skill = bot", str(fb)[:200])
+        st, res = publicar_bot("tanda-comun", "bot-agente")
+        registrar(st >= 400 and "rol bot: solo claves bot-" in mensaje(res), "el secret de bot no publica una clave que no empieza con bot-", f"{st} {res}")
+        st, res = publicar_bot(cb, "sesion-de-claude-code")
+        registrar(st >= 400 and "session_id tiene que empezar con bot-" in mensaje(res), "el secret de bot no ata su tanda a una sesión de Claude Code", f"{st} {res}")
+        st, res = publicar_bot(cb, None)
+        registrar(st >= 400 and "session_id tiene que empezar con bot-" in mensaje(res), "…ni publica sin session_id", f"{st} {res}")
+        for nombre, cuerpo in (("bm_recibir", {"p_clave": clave}), ("bm_marcar", {"p_clave": clave, "p_estado": "archivada", "p_resumen": "x"}),
+                               ("bm_retomar", {"p_clave": clave})):
+            st, res = rpc(nombre, dict(cuerpo, p_secret=bs))
+            registrar(st >= 400 and "rol bot: solo claves bot-" in mensaje(res), f"{nombre} con el secret de bot no toca una clave ajena", f"{st} {res}")
+        for nombre, cuerpo in (("bm_poner_pin", {"p_pin": "1111"}), ("bm_desbloquear", {}), ("bm_estado_pin", {}), ("bm_sin_cerrar", {}),
+                               ("bm_estado_avisos", {})):
+            st, res = rpc(nombre, dict(cuerpo, p_secret=bs))
+            registrar(st >= 400 and "secret invalido" in mensaje(res), f"{nombre} no acepta el secret de bot", f"{st} {res}")
+        st, res = rpc("bm_error_publicar", {"p_secret": bs, "p_tipo": "tarea", "p_origen_id": "x", "p_titulo": "x", "p_motivo": None, "p_ocurrio_at": ahora})
+        registrar(st >= 400 and "rol bot: no publica errores" in mensaje(res), "el secret de bot no publica errores", f"{st} {res}")
+        r = py("colgadas.py")
+        registrar(r.returncode == 0 and cb not in r.stdout and "bot- salteadas" in r.stdout, "colgadas.py no lista las tandas bot-", r.stdout + r.stderr)
+        r = py("colgadas.py", "--archivar", cb, "prueba")
+        registrar(r.returncode == 1 and "es de un bot" in r.stdout, "colgadas.py --archivar no archiva una tanda bot-", r.stdout + r.stderr)
+
+        # pendientes: el bot ve solo lo suyo; el secret total ve todo
+        clave_o = f"{clave}-otra"
+        d_o = copy.deepcopy(datos)
+        d_o["clave"] = clave_o
+        (tmp / "otra.json").write_text(json.dumps(d_o, ensure_ascii=False), encoding="utf-8")
+        py("armar.py", "--publicar", str(tmp / "otra.json"), str(tmp / "otra.html"))
+        for c in (clave_o, cb):
+            rpc("bm_decidir_pin", {"p_token": token, "p_clave": c, "p_respuesta": f"/botonera respuesta · {c}\n1. va · x"})
+        st, pb = rpc("bm_pendientes", {"p_secret": bs, "p_horas": 0})
+        st2, pt = rpc("bm_pendientes", {"p_secret": secreto, "p_horas": 0})
+        claves_b = sorted(x["clave"] for x in pb) if isinstance(pb, list) else None
+        claves_t = {x["clave"] for x in pt} if isinstance(pt, list) else set()
+        registrar(claves_b == [cb] and {cb, clave_o} <= claves_t,
+                  "bm_pendientes: el bot ve solo sus tandas bot-, el secret total ve todas", f"bot={claves_b} total={sorted(claves_t)}")
+        st, res = rpc("bm_recibir", {"p_secret": bs, "p_clave": cb})
+        registrar(st == 200 and res.get("estado") == "recibida" and res.get("respuesta_texto", "").endswith("1. va · x"),
+                  "bm_recibir con el secret de bot entrega la respuesta de su tanda", f"{st} {res}")
+        st, res = rpc("bm_marcar", {"p_secret": bs, "p_clave": cb, "p_estado": "aplicada", "p_resumen": "hecho"})
+        registrar(st == 200 and res.get("cambiado") is True, "bm_marcar con el secret de bot cierra su tanda", f"{st} {res}")
+        py("marcar.py", clave_o, "archivada", "fin de la prueba")
+
+        # el bot por variables de entorno (sin archivo de config): armar.py, esperar.py y session_id bot-
+        home_bot = tmp / "home-bot"
+        home_bot.mkdir()
+        entorno_bot = dict(env, HOME=str(home_bot), SUPABASE_URL=url, SUPABASE_ANON_KEY=key, BM_SECRET=bs, BM_SESSION_ID="bot-por-env")
+        cb2 = f"bot-env-{int(time.time())}"
+        d_b = copy.deepcopy(datos)
+        d_b["clave"] = cb2
+        (tmp / "bot.json").write_text(json.dumps(d_b, ensure_ascii=False), encoding="utf-8")
+        r = py("armar.py", "--publicar", str(tmp / "bot.json"), str(tmp / "bot.html"), entorno=entorno_bot)
+        st, fl = rpc("bm_fila", {"p_token": token, "p_clave": cb2})
+        f = fl[0] if isinstance(fl, list) and fl else {}
+        registrar(r.returncode == 0 and f"creada · {cb2}" in r.stdout and not (home_bot / ".config").exists(),
+                  "armar.py publica como bot con SUPABASE_URL, SUPABASE_ANON_KEY y BM_SECRET en el entorno", r.stderr or r.stdout)
+        sesion_bot = f.get("session_id") if f else None
+        registrar(not (home_bot / ".cache" / "botonera" / "sesiones" / "bot-por-env").exists(),
+                  "una sesión bot- no deja la marca que despierta al hook entregar.py", str(sesion_bot))
+        r = py("armar.py", "--publicar", str(ruta_c), str(tmp / "campos2.html"), entorno=entorno_bot)
+        registrar("rol bot: solo claves bot-" in r.stderr, "armar.py como bot no publica una clave que no es suya (avisa y sigue)", r.stderr + r.stdout)
+        proc = subprocess.Popen([sys.executable, str(skill / "esperar.py"), cb2, "--cada", "1"], env=entorno_bot,
+                                stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        time.sleep(2)
+        respuesta_b = f"/botonera respuesta · {cb2}\n1. va · Subir el precio de los envíos → Subir el envío"
+        rpc("bm_decidir_pin", {"p_token": token, "p_clave": cb2, "p_respuesta": respuesta_b})
+        try:
+            out_b, err_b = proc.communicate(timeout=30)
+        except subprocess.TimeoutExpired:
+            proc.kill()
+            out_b, err_b = proc.communicate()
+        registrar(proc.returncode == 0 and out_b.strip() == respuesta_b, "esperar.py como bot recibe la respuesta de su tanda", f"rc={proc.returncode} {out_b[:150]!r} {err_b[:150]!r}")
+        py("marcar.py", cb2, "aplicada", "hecho", entorno=entorno_bot)
+
+        r = sql("delete from public.bm_config where k = 'bot_secret_sha256';")
+        st, res = rpc("bm_pendientes", {"p_secret": bs, "p_horas": 0})
+        registrar(r.returncode == 0 and st >= 400 and "secret invalido" in mensaje(res), "borrar la fila da de baja al bot", f"{st} {res}")
 
         # 7. el PIN se bloquea tras 10 fallos y pin.py desbloquear lo abre
         print("\nBloqueo del PIN")

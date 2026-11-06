@@ -1,0 +1,7 @@
+{
+  "name": "botonera-tests",
+  "private": true,
+  "description": "Dependencias de la prueba e2e de la web (tests/e2e-editar.js).",
+  "scripts": { "e2e": "node e2e-editar.js" },
+  "devDependencies": { "playwright": "^1.50.0" }
+}

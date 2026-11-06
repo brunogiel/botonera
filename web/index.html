@@ -356,7 +356,7 @@
   .sw-tema.act{background:#8ECAC8}
   .sw-tema .sw-c{font-variant-numeric:tabular-nums;flex:none}
   @media (prefers-reduced-motion: reduce){ .sw *{scroll-behavior:auto} }
-  /* tipos de card: opciones, casillas y Va, pero… */
+  /* tipos de card: opciones, casillas y Editar, antes «Va, pero…» */
   .sw-hints.solo-up .sw-h.go,.sw-hints.solo-up .sw-h.no{display:none}
   .sw-ops{display:flex;flex-direction:column;gap:8px}
   .sw-op{min-height:48px;border:2px solid #1C1B1B;border-radius:12px;background:#fff;color:#1C1B1B;font-size:15px;font-weight:700;padding:8px 14px;text-align:left;line-height:1.25}
@@ -368,6 +368,26 @@
   .sw-conds{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 2px}
   .sw-cond{border:2px solid #1C1B1B;border-radius:999px;background:#fff;color:#1C1B1B;padding:6px 12px;font-size:13px;font-weight:700}
   .sw-dbar.uno{grid-template-columns:1fr}
+  .sw-op.ed{display:flex;align-items:center;background:#DCEFEE}
+  .sw-op.ed .ic{width:16px;height:16px;flex:none;margin-right:6px}   /* Editar en las cards de opciones */
+  /* Editar: los valores que propuso el agente, cargados en campos */
+  .sw-act .ic{width:16px;height:16px;flex:none;margin-right:6px}
+  .sw-ed-lead{margin:4px 0 14px;font-size:14px;color:#3a3837}
+  .sw-fs{display:flex;flex-direction:column;gap:14px}
+  .sw-f{display:flex;flex-direction:column;gap:6px}
+  .sw-f label{font-size:13px;font-weight:700;display:flex;align-items:center;gap:6px}
+  .sw-in{width:100%;min-height:48px;padding:10px 12px;border:2px solid #1C1B1B;border-radius:10px;background:#fff;color:#1C1B1B;font:16px/1.3 Manrope,-apple-system,system-ui,sans-serif}
+  .sw-in:focus{outline:3px solid #8ECAC8;outline-offset:1px}
+  .sw-f.cambio .sw-in{border-color:#1F6F6B;background:#EAF6F5;box-shadow:inset 0 0 0 2px #8ECAC8;font-weight:700}
+  .sw-tag{display:none;font-size:11px;font-weight:700;padding:1px 8px;border-radius:99px;background:#8ECAC8;border:1.5px solid #1C1B1B}
+  .sw-fnota{display:none;justify-content:space-between;align-items:center;gap:8px;font-size:13px;color:#3a3837}
+  .sw-f.cambio .sw-tag{display:inline-block}
+  .sw-f.cambio .sw-fnota{display:flex}
+  .sw-fnota s{color:#6b6866}
+  .sw-fre{border:0;background:none;padding:0 4px;min-height:36px;font-size:13px;font-weight:700;text-decoration:underline;color:#1F6F6B}
+  .sw-resumen{text-align:center;font-size:13px;font-weight:600;color:#3a3837}
+  .sw-pend{display:flex;flex-direction:column;gap:1px;margin:10px 0 0;padding:6px 12px;border:1.5px solid #1F6F6B;border-radius:12px;background:#EAF6F5;color:#1F6F6B;font-size:14px;font-weight:800}
+  .sw-pend span{font-size:12px;font-weight:600;color:#3a3837}
   .sw-sheet .sw-bar{padding-top:8px}
   /* «todas juntas»: la botonera entera en una lista, cada card con sus botones */
   .sw-lbarra{flex:none;height:4px;margin:0 16px 8px;border-radius:2px;background:#E5E5E5;overflow:hidden}
@@ -432,6 +452,17 @@
   }
   .home-cta svg{width:18px;height:18px;flex:none;fill:none;stroke:#1C1B1B;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
   .home-err{margin-top:10px;font-size:12.5px;font-weight:600;color:#8a3b2a}
+  /* fila «Con error»: arriba del home, solo si hay errores sin ver. Mismo rojo apagado que .home-err, sobre un fondo crema rosado */
+  .herr{margin-bottom:14px;padding:12px 14px 12px;border:2px solid #8a3b2a;border-radius:16px;background:#F8E1DA;color:#1C1B1B}
+  .herr-k{font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#8a3b2a}
+  .herr-i{display:flex;align-items:flex-start;gap:10px;margin-top:10px;padding-top:10px;border-top:1.5px solid rgba(138,59,42,.28)}
+  .herr-k + .herr-i{border-top:0;padding-top:0;margin-top:8px}
+  .herr-tx{flex:1;min-width:0;display:block}
+  .herr-tx b{display:block;font-size:14px;font-weight:800;line-height:1.25;overflow-wrap:anywhere}
+  .herr-m{display:block;margin-top:2px;font-size:12.5px;line-height:1.35;color:#5b2a1f;overflow-wrap:anywhere}
+  .herr-w{display:block;margin-top:3px;font-size:11.5px;color:#6B7280}
+  .herr-v{flex:none;padding:7px 13px;border:2px solid #8a3b2a;border-radius:99px;background:#fff;color:#8a3b2a;font-size:13px;font-weight:800}
+  .herr-mas{margin:10px 0 8px;font-size:12px;font-weight:600;color:#6B7280}
   .hrows{margin-top:14px;display:flex;flex-direction:column;gap:10px}
   .hrow{
     display:flex;align-items:center;gap:12px;width:100%;padding:10px 12px;text-align:left;background:#fff;color:#1C1B1B;
@@ -580,6 +611,7 @@ var estado = {
   sw: null,           // el mazo montado: {el, tema, cola, salt, hist, ...}
   hd: {},             // home: clave abierta -> {clave, k, d, items, secs, cat, tanda, listo, error, enVuelo}
   listaCargada: false, // llego al menos una bm_lista
+  errores: [],        // fila «Con error» del home: lo que trajo bm_errores_lista (solo los no vistos)
   homeVisto: false    // el home ya completo una primera pasada (despues no vuelve a «Cargando…»)
 };
 var CLAVE_MARCAS = 'bm-marcas';
@@ -667,8 +699,10 @@ function hora(t){
   return d.toLocaleDateString('es-AR', {day:'2-digit', month:'2-digit'}) + ' ' + hm;
 }
 // abre la sesion en la app de escritorio de Claude (solo anda en la Mac con la app instalada)
+// los bots publican con session_id «bot-<nombre>»: no es una sesion de Claude, no hay link
 function urlSesion(id){
-  return (id && /^[A-Za-z0-9_-]+$/.test(String(id))) ? 'claude://claude.ai/epitaxy/' + id : '';
+  var s = String(id || '');
+  return (s && /^[A-Za-z0-9_-]+$/.test(s) && !/^bot-/.test(s)) ? 'claude://claude.ai/epitaxy/' + s : '';
 }
 // segunda vuelta: una clave «<base>-r2», «<base>-r3»…
 function vuelta(clave){
@@ -900,6 +934,7 @@ function cargarLista(){
       limpiarMarcas();
       pintarLista();
       homeCargar();
+      cargarErrores();
       homePintar();
       pintarPanel(false);
     }, function(err){ console.warn('lista', err); });
@@ -1078,12 +1113,14 @@ function parsearRespuesta(txt){
     var l = raw.trim(); if(!l) return;
     var m = RE_LINEA.exec(l);
     if(m){
-      var resto = m[3], coment = '';
+      var resto = m[3], coment = '', campos = '';
       var k = resto.search(/\s*·\s*comentario:\s*/i);
       if(k >= 0){ coment = resto.slice(k).replace(/^\s*·\s*comentario:\s*/i, ''); resto = resto.slice(0, k); }
+      var kc = resto.search(/\s*·\s*campos:\s*/i);   // Editar: «· campos: id=nuevo (antes viejo); …», entre la acción y el comentario
+      if(kc >= 0){ campos = resto.slice(kc).replace(/^\s*·\s*campos:\s*/i, ''); resto = resto.slice(0, kc); }
       var j = resto.indexOf(' → ');
       ultimo = {n: m[1], marca: m[2].toLowerCase(), titulo: (j >= 0 ? resto.slice(0, j) : resto).trim(),
-                accion: j >= 0 ? resto.slice(j + 3).trim() : '', comentario: coment.trim()};
+                accion: j >= 0 ? resto.slice(j + 3).trim() : '', campos: campos.trim(), comentario: coment.trim()};
       items.push(ultimo); enNota = false; return;
     }
     var n = /^Notas:\s*(.*)$/i.exec(l);
@@ -1128,6 +1165,7 @@ function marcaDe(clave, n){
   var mk = estado.marcas[clave], v = mk && mk.items && mk.items[n];
   var r = {m: v && MARCAS[v.m] ? v.m : '', c: v && typeof v.c === 'string' ? v.c : ''};
   if(v && Array.isArray(v.o)) r.o = v.o.filter(function(x){ return typeof x === 'string'; });
+  if(v && v.f && typeof v.f === 'object' && !Array.isArray(v.f)) r.f = v.f;   // Editar: {id del campo: valor nuevo}, solo los que cambiaron
   return r;
 }
 function setMarca(clave, n, campo, valor){
@@ -1142,10 +1180,13 @@ function respuestaVuelta(p){
   var L = ['/botonera respuesta · ' + p.clave];
   p.items.forEach(function(it){
     var st = marcaDe(p.clave, it.n), ids = st.m === 'op' ? (st.o || []) : [];
+    // Editar guarda los campos al escribir: un Va (botón, swipe o flecha) con cambios sin confirmar sale como «va con cambios» (no se pierden)
+    var cf = st.m === 'go' || st.m === 'vc' || st.m === 'op' ? mqCamposTxt(it, st.f) : '';
+    if(st.m === 'go' && cf) st.m = 'vc';
     var m = st.m === 'go' ? 'va' : st.m === 'no' ? 'no va' : st.m === 'vc' ? 'va con cambios' : st.m === 'ne' ? 'no entiendo' :
       st.m === 'yh' ? 'ya está hecho' : st.m === 'de' ? 'después' : st.m === 'co' ? 'comentario' : st.m === 'op' ? 'eligió ' + ids.join(', ') : 'sin marcar';
     var acc = st.m === 'go' || st.m === 'vc' ? it.accion_va : st.m === 'no' ? it.accion_no_va : st.m === 'op' ? ids.map(function(id){ return mqEtiqueta(it, id); }).join(', ') : '';
-    L.push(it.n + '. ' + m + ' · ' + it.titulo + (acc ? ' → ' + acc : '') + (st.c && st.c.trim() ? ' · comentario: ' + st.c.trim() : ''));
+    L.push(it.n + '. ' + m + ' · ' + it.titulo + (acc ? ' → ' + acc : '') + (cf ? ' · campos: ' + cf : '') + (st.c && st.c.trim() ? ' · comentario: ' + st.c.trim() : ''));
   });
   return L.join('\n');
 }
@@ -1190,6 +1231,7 @@ function pendActivaHTML(it, nShow, clave, bloq){
 // fila pendiente SIN vuelta abierta: en lectura, sin botones
 function pendLecturaHTML(it){
   return '<div class="dec-fila pend"><span class="dec-n">' + esc(it.n) + '</span><div class="dec-x"><div>' + esc(it.titulo) + '</div>' +
+    (it.campos ? '<div class="c"><b>Cambios:</b> ' + esc(it.campos) + '</div>' : '') +
     (it.comentario ? '<div class="c"><b>Comentario:</b> ' + esc(it.comentario) + '</div>' : '') + '</div></div>';
 }
 function barraPendHTML(p, sinMarcar){
@@ -1299,6 +1341,7 @@ function decididoHTML(t, datos, pend){
         '<span class="pill ' + cls + '">' + esc(/^eligió /.test(it.marca) ? 'eligió' : it.marca === 'después' ? 'al inbox' : it.marca) + '</span>' +
         '<div class="dec-x"><div>' + esc(it.titulo) + '</div>' +
         (it.accion ? '<div class="a">→ ' + esc(it.accion) + '</div>' : '') +
+        (it.campos ? '<div class="c"><b>Cambios:</b> ' + esc(it.campos) + '</div>' : '') +
         (it.comentario ? '<div class="c"><b>Comentario:</b> ' + esc(it.comentario) + '</div>' : '') +
         '</div></div>';
     });
@@ -1671,15 +1714,16 @@ var SW_ICO_UNDO = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" s
 var SW_ICO_UP = '<svg viewBox="0 0 24 24" fill="none" stroke="#1C1B1B" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V6M6.5 11.5L12 6l5.5 5.5"/></svg>';
 
 /* ----- tipos de card -----
-   El agente elige el tipo al armar: sí/no (No va · Va, pero… · Va), una opción (`opciones`: lista) o varias (`varias: true`: casillas).
-   Las listas suman «Otra cosa…»; lo que dice «comentá» abre el comentario antes de marcar; la card sale volando con cada marca.
-   La fila chica trae Al final, Al inbox (marca interna «después»: la sesión la anota en el inbox y cierra la tanda) y Comentar. */
+   El agente elige el tipo al armar: sí/no (No va · Editar · Va), una opción (`opciones`: lista) o varias (`varias: true`: casillas).
+   Las listas suman «Editar» (elegir o no una + escribir qué cambia); lo que dice «comentá» abre el comentario antes de marcar; la card sale volando con cada marca.
+   La fila chica trae Al final, Al inbox (marca interna «después»: la sesión la anota en el inbox y cierra la tanda) y +info. */
 var MQ_OTRA = {id: 'otra', etiqueta: 'Otra cosa', abierta: true};
 function mqLista(it){
   var o = Array.isArray(it && it.opciones) ? it.opciones.filter(function(x){ return x && /^[a-z0-9_-]{1,30}$/.test(String(x.id || '')) && x.etiqueta; }) : [];
   return o.length >= 2 && o.length <= 5 ? o : null;
 }
-// las opciones de la card, con «Otra cosa…» al final si ninguna es abierta; null = card de sí/no
+// las opciones de la card, con «Otra cosa» (id otra) al final si ninguna es abierta; null = card de sí/no.
+// En la barra no se pinta: Editar sin ninguna marcada vuelve como «eligió otra» con el comentario
 function mqOpciones(it){
   var o = mqLista(it); if(!o) return null;
   if(!o.some(mqAbierta)) o = o.concat([MQ_OTRA]);
@@ -1704,31 +1748,110 @@ function mqMarcar(sw, cid, m, o){
   if(o) setMarca(e.clave, e.n, 'o', o);
   swipeMarcar(sw, cid, m);
 }
-// la barra de la card: opciones, casillas, o No va · Va, pero… · Va
+/* ----- Editar: `campos` del ítem (lista de {id, etiqueta, valor, tipo: texto|numero|fecha|opcion, opciones?}, hasta 5) -----
+   Los valores que propuso el agente salen cargados en campos. El que el usuario cambia queda marcado, con «Antes: X» y «Volver al original».
+   La respuesta vuelve «N. va con cambios · título → acción · campos: id=nuevo (antes viejo); … · comentario: …».
+   El comentario libre queda siempre visible debajo de los campos: a veces sirve decir algo que no entra en ninguno. */
+var MQ_TIPOS = {texto: 1, numero: 1, fecha: 1, opcion: 1};
+var MQ_LAPIZ = '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#1C1B1B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9a2.1 2.1 0 0 0-3-3L5 17z"/><path d="M14 7l3 3"/></svg>';
+function mqCampos(it){
+  var out = [];
+  (Array.isArray(it && it.campos) ? it.campos : []).forEach(function(c){
+    if(!c || typeof c !== 'object' || !/^[a-z0-9_-]{1,30}$/i.test(String(c.id || '')) || !c.etiqueta || !MQ_TIPOS[c.tipo]) return;
+    var op = c.tipo === 'opcion' ? (Array.isArray(c.opciones) ? c.opciones.map(String) : []) : null;
+    if(op && op.length < 2) return;
+    out.push({id: String(c.id), etiqueta: String(c.etiqueta), tipo: c.tipo, valor: c.valor == null ? '' : String(c.valor), opciones: op});
+  });
+  return out.slice(0, 5);
+}
+function mqIgual(tipo, a, b){
+  a = String(a == null ? '' : a).trim(); b = String(b == null ? '' : b).trim();
+  if(tipo === 'numero' && a !== '' && b !== '' && isFinite(Number(a)) && isFinite(Number(b))) return Number(a) === Number(b);
+  return a === b;
+}
+// una fecha ISO se muestra como «lun 9 nov»; el resto, tal cual
+function mqVer(c, v){
+  if(c.tipo === 'fecha' && /^\d{4}-\d{2}-\d{2}$/.test(v)){
+    try{ return new Date(v + 'T12:00:00').toLocaleDateString('es-AR', {weekday: 'short', day: 'numeric', month: 'short'}); }catch(e){}
+  }
+  return v;
+}
+// «id=nuevo (antes viejo); …» de los campos que cambiaron, en el orden del ítem. f = {id: nuevo}
+function mqCamposTxt(it, f){
+  if(!f) return '';
+  return mqCampos(it).filter(function(c){ return f[c.id] != null && !mqIgual(c.tipo, f[c.id], c.valor); }).map(function(c){
+    return c.id + '=' + String(f[c.id]).replace(/\s+/g, ' ').trim() + ' (antes ' + c.valor.replace(/\s+/g, ' ').trim() + ')';
+  }).join('; ');
+}
+// cuántos campos cambiaron (los de f que difieren del original)
+function mqCamposN(it, f){
+  if(!f) return 0;
+  return mqCampos(it).filter(function(c){ return f[c.id] != null && !mqIgual(c.tipo, f[c.id], c.valor); }).length;
+}
+// «1 cambio pendiente»: cambios escritos en Editar que todavía no se confirmaron. Un Va (botón, swipe o flecha) los manda; No va no.
+function swPendHTML(e){
+  if(!e || !mqCampos(e.it).length) return '';
+  var st = marcaDe(e.clave, e.n), n = st.m === 'vc' || st.m === 'no' ? 0 : mqCamposN(e.it, st.f);
+  return n ? '<p class="sw-pend" role="status">' + esc(pl(n, 'cambio pendiente', 'cambios pendientes')) + '<span>Va los manda con el cambio</span></p>' : '';
+}
+function mqCampoHTML(c, val, i){
+  var id = 'sw-f' + i, cam = !mqIgual(c.tipo, val, c.valor), inp;
+  if(c.tipo === 'opcion') inp = '<select id="' + id + '" class="sw-in" data-f="' + esc(c.id) + '">' + c.opciones.map(function(o){
+    return '<option value="' + esc(o) + '"' + (o === val ? ' selected' : '') + '>' + esc(o) + '</option>'; }).join('') + '</select>';
+  else inp = '<input id="' + id + '" class="sw-in" data-f="' + esc(c.id) + '" type="' + (c.tipo === 'numero' ? 'number' : c.tipo === 'fecha' ? 'date' : 'text') + '"' +
+    (c.tipo === 'numero' ? ' inputmode="decimal" step="any"' : '') + ' value="' + esc(val) + '" autocomplete="off">';
+  return '<div class="sw-f' + (cam ? ' cambio' : '') + '" data-fid="' + esc(c.id) + '" data-tipo="' + esc(c.tipo) + '" data-orig="' + esc(c.valor) + '">' +
+    '<label for="' + id + '">' + esc(c.etiqueta) + '<span class="sw-tag">Cambiado</span></label>' + inp +
+    '<div class="sw-fnota"><span>Antes: <s>' + esc(mqVer(c, c.valor)) + '</s></span><button type="button" class="sw-fre" data-a="ed-volver">Volver al original</button></div></div>';
+}
+// lo que cambió en la hoja abierta: {id: valor nuevo}
+function mqEdLeer(root){
+  var f = {};
+  Array.prototype.forEach.call(root.querySelectorAll('.sw-f[data-fid]'), function(w){
+    var inp = w.querySelector('[data-f]');
+    if(inp && !mqIgual(w.getAttribute('data-tipo'), inp.value, w.getAttribute('data-orig'))) f[w.getAttribute('data-fid')] = inp.value;
+  });
+  return f;
+}
+// marca los campos que cambiaron y reescribe el resumen y el botón de abajo (sin repintar: el campo no pierde el foco)
+function mqEdSync(root){
+  var n = 0;
+  Array.prototype.forEach.call(root.querySelectorAll('.sw-f[data-fid]'), function(w){
+    var inp = w.querySelector('[data-f]'), cam = !!inp && !mqIgual(w.getAttribute('data-tipo'), inp.value, w.getAttribute('data-orig'));
+    w.classList.toggle('cambio', cam); if(cam) n++;
+  });
+  var tc = root.querySelector('textarea[data-com]'), hay = n > 0 || !!(tc && tc.value.trim());
+  var r = root.querySelector('.sw-resumen'), bt = root.querySelector('[data-a="ed-listo"] span');
+  if(r) r.textContent = n ? pl(n, 'cambio', 'cambios') + ' · lo demás queda igual' : (hay ? 'Sin cambios en los campos · va con tu comentario' : 'Sin cambios · queda como lo propuso el agente');
+  if(bt) bt.textContent = hay ? 'Va con estos cambios' : 'Va como está';
+}
+// Editar también en opciones y casillas, como en las de sí/no
+var MQ_ED_OP = '<button type="button" class="sw-op ed" data-a="editar">' + MQ_LAPIZ + '<span>Editar …</span></button>';
+// la barra de la card: opciones, casillas, o No va · Editar · Va
 function mqBarraHTML(it, a){
   var op = mqOpciones(it), rec = String(it.reco || '').trim();
   function rt(id){ return id === rec ? '<span class="rt">Te recomiendo esta</span>' : ''; }
   if(op && !op.varias){
-    return '<div class="sw-ops">' + op.lista.map(function(x){
+    return '<div class="sw-ops">' + op.lista.filter(function(x){ return x !== MQ_OTRA; }).map(function(x){
       return '<button type="button" class="sw-op' + (String(x.id) === rec ? ' rec' : '') + '" data-a="op" data-id="' + esc(x.id) + '">' + rt(String(x.id)) + esc(x.etiqueta) + (mqAbierta(x) ? ' …' : '') + '</button>';
-    }).join('') + '</div>';
+    }).join('') + MQ_ED_OP + '</div>';
   }
   if(op){
     var recs = rec.split(',').map(function(s){ return s.trim(); });
-    return '<div class="sw-ops">' + op.lista.map(function(x){
+    return '<div class="sw-ops">' + op.lista.filter(function(x){ return x !== MQ_OTRA; }).map(function(x){
       var r = recs.indexOf(String(x.id)) >= 0;
       return '<label class="sw-chk' + (r ? ' rec' : '') + '"><input type="checkbox" data-chk="' + esc(x.id) + '"><span>' + (r ? '<span class="rt">Te recomiendo esta</span>' : '') + esc(x.etiqueta) + (mqAbierta(x) ? ' …' : '') + '</span></label>';
-    }).join('') + '<button type="button" class="sw-big" data-a="op-listo">Listo</button></div>';
+    }).join('') + MQ_ED_OP + '<button type="button" class="sw-big" data-a="op-listo">Listo</button></div>';
   }
   // lo que dice «comentá» abre el comentario antes de marcar (data-a com-no / com-go)
   var dno = mqPideCom(a.no) ? 'com-no' : 'no', dgo = mqPideCom(a.va) ? 'com-go' : 'go';
   return '<div class="sw-acc"><button type="button" class="sw-act no" data-a="' + dno + '"><span>' + esc(a.no) + '</span></button>' +
-    '<button type="button" class="sw-act vcp" data-a="vcp"><span>Va, pero…</span></button>' +
+    '<button type="button" class="sw-act vcp" data-a="editar">' + MQ_LAPIZ + '<span>Editar</span></button>' +
     '<button type="button" class="sw-act go" data-a="' + dgo + '"><span>' + esc(a.va) + '</span></button></div>';
 }
 // botones chicos de abajo, al lado de la flechita de deshacer
 function mqSecHTML(){
-  return '<button type="button" class="sw-b" data-a="salt">Al final</button><button type="button" class="sw-b" data-a="despues">Al inbox</button><button type="button" class="sw-b" data-a="comentar">Comentar</button>';
+  return '<button type="button" class="sw-b" data-a="salt">Al final</button><button type="button" class="sw-b" data-a="despues">Al inbox</button><button type="button" class="sw-b" data-a="masinfo">+info</button>';
 }
 function swSecHTML(sw, bloq, conMq){
   return '<div class="sw-sec"><button type="button" class="sw-b sw-undo" data-a="deshacer" aria-label="Deshacer" title="Deshacer"' + (sw.hist.length && !bloq ? '' : ' disabled') + '>' + SW_ICO_UNDO + '</button>' +
@@ -1739,12 +1862,12 @@ function swBarraCardHTML(sw, it, a){
   var env = sw.envio || {}, bloq = env.st === 'enviando' || env.st === 'ok' || sw.enviadoAlgo;
   return '<div class="sw-bar">' + mqBarraHTML(it, a) + swSecHTML(sw, bloq, true) + '</div>';
 }
-var SW_BARRA = {no: 1, go: 1, vcp: 1, 'com-go': 1, 'com-no': 1, op: 1, 'op-listo': 1, salt: 1, despues: 1, comentar: 1, deshacer: 1};
+var SW_BARRA = {no: 1, go: 1, editar: 1, 'com-go': 1, 'com-no': 1, op: 1, 'op-listo': 1, salt: 1, despues: 1, masinfo: 1, deshacer: 1};
 function mqHoja(sw, titulo, cuerpo, barra){
   sw.sheet = 'mq';
   sw.sheetEl.innerHTML = '<div class="sw-sheet-in"><div class="sw-top"><button type="button" class="sw-b" data-a="cerrar">‹ Volver</button><span class="sw-st">' + esc(titulo) + '</span><span style="width:78px"></span></div>' +
     '<div class="sw-dscroll"><div class="sw-dcard">' + cuerpo + '</div></div>' + (barra || '') + '</div>';
-  var t = sw.sheetEl.querySelector('textarea'); if(t && !reducido()) try{ t.focus(); }catch(_){}
+  var t = sw.sheetEl.querySelector('textarea'); if(t && !reducido() && !sw.sheetEl.querySelector('.sw-f')) try{ t.focus(); }catch(_){}   // con campos no: el teclado taparia lo que hay que editar
 }
 function mqComHTML(cid, c, ph){
   return '<label class="sw-lbl" for="sw-com">Comentario</label><textarea id="sw-com" class="sw-com" data-com="1" data-cid="' + esc(cid) + '" rows="3" placeholder="' + esc(ph || 'Opcional') + '" autocomplete="off">' + esc(c || '') + '</textarea>';
@@ -1763,19 +1886,50 @@ function mqHojaCom(sw, cid, m, titulo){
   mqHoja(sw, titulo, '<h2>' + esc(e.it.titulo) + '</h2>' + mqComHTML(cid, st.c, 'Escribí cuál'),
     '<div class="sw-dbar uno"><button type="button" class="sw-act ' + (m === 'no' ? 'no' : 'go') + '" data-a="com-listo" data-cid="' + esc(cid) + '" data-m="' + m + '"><span>Listo</span></button></div>');
 }
-// Va, pero…: el sí con un cambio. `condiciones` del ítem salen como chips que se suman al comentario
+// Editar en una card sin campos: el comentario libre de siempre (el sí con un cambio). `condiciones` salen como chips que se suman al comentario
 function mqHojaVc(sw, cid){
   var e = sw.por[cid]; if(!e || sw.sheet) return;
   var st = marcaDe(e.clave, e.n), cs = Array.isArray(e.it.condiciones) ? e.it.condiciones.slice(0, 3) : [];
-  mqHoja(sw, 'Va, con un cambio', '<h2>' + esc(e.it.titulo) + '</h2>' +
+  mqHoja(sw, 'Editar', '<h2>' + esc(e.it.titulo) + '</h2>' +
     (cs.length ? '<div class="sw-conds">' + cs.map(function(c){ return '<button type="button" class="sw-cond" data-a="cond" data-t="' + esc(c) + '">' + esc(c) + '</button>'; }).join('') + '</div>' : '') +
     mqComHTML(cid, st.c, '¿Qué cambia o de qué depende?'),
     '<div class="sw-dbar uno"><button type="button" class="sw-act go" data-a="vc-listo" data-cid="' + esc(cid) + '"><span>Listo</span></button></div>');
 }
-// Comentar: la card pasa sin Va ni No va. Vuelve como «N. comentario · …» y la sesión la contesta
+// Editar en una card con `campos`: los valores propuestos en campos, y el comentario libre SIEMPRE visible debajo
+function mqHojaEd(sw, cid){
+  var e = sw.por[cid]; if(!e || sw.sheet) return;
+  var cs = mqCampos(e.it); if(!cs.length){ mqHojaVc(sw, cid); return; }
+  var st = marcaDe(e.clave, e.n), f = st.f || {}, ch = Array.isArray(e.it.condiciones) ? e.it.condiciones.slice(0, 3) : [];
+  mqHoja(sw, 'Editar', '<div class="sw-ed" data-cid="' + esc(cid) + '"><h2>' + esc(e.it.titulo) + '</h2>' +
+    '<p class="sw-ed-lead">Esto propuso el agente. Cambiá lo que quieras.</p>' +
+    '<div class="sw-fs">' + cs.map(function(c, i){ return mqCampoHTML(c, f[c.id] != null ? String(f[c.id]) : c.valor, i); }).join('') + '</div>' +
+    (ch.length ? '<div class="sw-conds">' + ch.map(function(c){ return '<button type="button" class="sw-cond" data-a="cond" data-t="' + esc(c) + '">' + esc(c) + '</button>'; }).join('') + '</div>' : '') +
+    mqComHTML(cid, st.c, 'Algo que no entra en los campos (opcional)') + '</div>',
+    '<div class="sw-dbar uno"><div class="sw-resumen"></div><button type="button" class="sw-act go" data-a="ed-listo" data-cid="' + esc(cid) + '"><span>Va con estos cambios</span></button></div>');
+  mqEdSync(sw.sheetEl);
+}
+// Editar en una card de opciones: la elegida (o la recomendada) ya marcada, los `campos` si hay y el comentario con lo que cambia.
+// Vuelve «N. eligió id · título → etiqueta · campos: … · comentario: …»
+function mqHojaOpEd(sw, cid){
+  var e = sw.por[cid]; if(!e || sw.sheet) return;
+  var op = mqOpciones(e.it); if(!op){ mqHojaEd(sw, cid); return; }
+  var st = marcaDe(e.clave, e.n), f = st.f || {}, cs = mqCampos(e.it), ch = Array.isArray(e.it.condiciones) ? e.it.condiciones.slice(0, 3) : [];
+  var sel = st.o && st.o.length ? st.o : String(e.it.reco || '').split(',').map(function(x){ return x.trim(); }).filter(Boolean);
+
+  mqHoja(sw, 'Editar', '<div class="sw-ed" data-cid="' + esc(cid) + '"><h2>' + esc(e.it.titulo) + '</h2>' +
+    '<p class="sw-ed-lead">' + (op.varias ? 'Marcá las que van' : 'Marcá cuál va') + ' y escribí qué le cambiás. Sin ninguna marcada, va lo que escribas.</p>' +
+    '<div class="sw-ops"' + (op.varias ? '' : ' data-uno="1"') + '>' + op.lista.filter(function(x){ return x !== MQ_OTRA; }).map(function(x){
+      return '<label class="sw-chk"><input type="checkbox" data-edop="' + esc(x.id) + '"' + (sel.indexOf(String(x.id)) >= 0 ? ' checked' : '') + '><span>' + esc(x.etiqueta) + '</span></label>';
+    }).join('') + '</div>' +
+    (cs.length ? '<div class="sw-fs" style="margin-top:14px">' + cs.map(function(c, i){ return mqCampoHTML(c, f[c.id] != null ? String(f[c.id]) : c.valor, i); }).join('') + '</div>' : '') +
+    (ch.length ? '<div class="sw-conds">' + ch.map(function(c){ return '<button type="button" class="sw-cond" data-a="cond" data-t="' + esc(c) + '">' + esc(c) + '</button>'; }).join('') + '</div>' : '') +
+    '<div style="margin-top:14px">' + mqComHTML(cid, st.c, '¿Qué le cambiás?') + '</div></div>',
+    '<div class="sw-dbar uno"><button type="button" class="sw-act go" data-a="op-ed-listo" data-cid="' + esc(cid) + '"><span>Listo</span></button></div>');
+}
+// +info: la card pasa sin Va ni No va. Vuelve como «N. comentario · …» y la sesión la contesta
 function mqHojaCo(sw, cid){
   var e = sw.por[cid]; if(!e || sw.sheet || sw.anim) return;
-  mqHoja(sw, 'Comentar', '<h2>' + esc(e.it.titulo) + '</h2>' + mqComHTML(cid, marcaDe(e.clave, e.n).c, 'Qué querés decir de esta card'),
+  mqHoja(sw, '+info', '<h2>' + esc(e.it.titulo) + '</h2>' + mqComHTML(cid, marcaDe(e.clave, e.n).c, 'Qué querés decir de esta card'),
     '<div class="sw-dbar uno"><button type="button" class="sw-act go" data-a="co-listo" data-cid="' + esc(cid) + '"><span>Listo</span></button></div>');
 }
 // ‹ Volver del Detalle (o Escape) con texto nuevo y sin marca: eso ya es comentar, y si no el comentario queda sin poder enviarse
@@ -1783,8 +1937,10 @@ function swVolverHoja(sw){
   var ta = sw.sheet === 'det' && sw.sheetEl.querySelector('textarea[data-com]');
   var cid = ta ? ta.getAttribute('data-cid') : null, e = cid != null && sw.por[cid];
   var pasa = e && ta.value.trim() && ta.value !== sw.detC && !marcaDe(e.clave, e.n).m;
+  var eraEd = sw.sheet === 'mq' && !!sw.sheetEl.querySelector('.sw-ed');   // salir de Editar con cambios sin confirmar: la card los muestra como pendientes
   swipeCerrarHoja();
   if(pasa && primeraActiva(sw) === cid) mqMarcar(sw, cid, 'co');
+  else if(eraEd && !sw.anim) swipeRender();
 }
 function mqClick(sw, a, b){
   var e = mqFrente(sw), cid = primeraActiva(sw);
@@ -1809,18 +1965,43 @@ function mqClick(sw, a, b){
     swipeCerrarHoja();
     if(primeraActiva(sw) === c3) mqMarcar(sw, c3, m3);
   } else if(a === 'despues'){ if(e) mqMarcar(sw, cid, 'de'); }
-  else if(a === 'comentar'){ if(e) mqHojaCo(sw, cid); }
+  else if(a === 'masinfo'){ if(e) mqHojaCo(sw, cid); }
   else if(a === 'co-listo'){
     var c4 = b.getAttribute('data-cid'), tc = sw.sheetEl.querySelector('textarea[data-com]');
     if(!tc || !tc.value.trim()){ if(tc){ tc.value = ''; tc.placeholder = 'Escribí el comentario para seguir'; tc.focus(); } return true; }
     swipeCerrarHoja();
     if(primeraActiva(sw) === c4) mqMarcar(sw, c4, 'co'); else swipeRender();
   }
-  else if(a === 'vcp'){ if(e) mqHojaVc(sw, cid); }
-  else if(a === 'vc-listo'){
-    var c2 = b.getAttribute('data-cid');
+  else if(a === 'editar'){ if(e){ if(mqOpciones(e.it)) mqHojaOpEd(sw, cid); else mqHojaEd(sw, cid); } }
+  else if(a === 'op-ed-listo'){
+    var c6 = b.getAttribute('data-cid'), e6 = sw.por[c6];
+    var ids6 = Array.prototype.map.call(sw.sheetEl.querySelectorAll('input[data-edop]:checked'), function(i){ return i.getAttribute('data-edop'); });
+    var tc6 = sw.sheetEl.querySelector('textarea[data-com]'), hay6 = !!(tc6 && tc6.value.trim());
+    var ab6 = ids6.some(function(i){ return mqAbierta((mqOpciones(e6 && e6.it) || {lista: []}).lista.filter(function(o){ return String(o.id) === i; })[0]); });
+    if(!hay6 && (!ids6.length || ab6)){   // sin marcar ninguna (o una abierta) el texto es la respuesta: se pide
+      if(tc6){ tc6.value = ''; tc6.placeholder = ids6.length ? 'Escribí cuál' : 'Marcá una o escribí qué querés'; tc6.focus(); }
+      return true;
+    }
+    if(!ids6.length) ids6 = [MQ_OTRA.id];
+    if(e6 && sw.sheetEl.querySelector('.sw-f')) setMarca(e6.clave, e6.n, 'f', mqEdLeer(sw.sheetEl));
     swipeCerrarHoja();
-    if(primeraActiva(sw) === c2) mqMarcar(sw, c2, 'vc'); else swipeRender();
+    if(e6) mqMarcar(sw, c6, 'op', ids6);
+  }
+  else if(a === 'ed-volver'){
+    var w = b.closest('.sw-f'), inp = w && w.querySelector('[data-f]');
+    if(inp){ inp.value = w.getAttribute('data-orig'); inp.dispatchEvent(new Event('input', {bubbles: true})); inp.focus(); }
+  } else if(a === 'ed-listo'){
+    var c5 = b.getAttribute('data-cid'), e5 = sw.por[c5], f5 = mqEdLeer(sw.sheetEl), tc5 = sw.sheetEl.querySelector('textarea[data-com]');
+    var hay = Object.keys(f5).length > 0 || !!(tc5 && tc5.value.trim());
+    if(e5) setMarca(e5.clave, e5.n, 'f', f5);
+    swipeCerrarHoja();
+    if(primeraActiva(sw) === c5) mqMarcar(sw, c5, hay ? 'vc' : 'go'); else swipeRender();
+  }
+  else if(a === 'vc-listo'){
+    var c2 = b.getAttribute('data-cid'), tc2 = sw.sheetEl.querySelector('textarea[data-com]');
+    var hay2 = !!(tc2 && tc2.value.trim());   // Editar sin campos y sin escribir nada es un Va liso (igual que «Va como está»)
+    swipeCerrarHoja();
+    if(primeraActiva(sw) === c2) mqMarcar(sw, c2, hay2 ? 'vc' : 'go'); else swipeRender();
   } else if(a === 'cond'){
     var ta = sw.sheetEl.querySelector('textarea[data-com]'); if(!ta) return;
     var t = b.getAttribute('data-t'), v = ta.value.trim();
@@ -2172,7 +2353,7 @@ function swipeRender(){
       '<div class="sw-card" id="sw-card" tabindex="0" role="group" aria-label="Card ' + esc(pos) + ' de ' + esc(ct.tot) + '">' +
         '<div class="sw-ct">' + swChipHTML(e) + swTagsHTML(it) + '<h2>' + esc(it.titulo) + '</h2>' +
         (it.contexto ? '<p class="sw-ctx">' + esc(it.contexto) + '</p>' : '') +
-        swDibujo(it, 'sw-dib') + swIcono(it, 'sw-ico') + imagenHTML(it, 'sw-img', true) + swAntecHTML(it) + swRecoHTML(it) + '</div>' +
+        swDibujo(it, 'sw-dib') + swIcono(it, 'sw-ico') + imagenHTML(it, 'sw-img', true) + swAntecHTML(it) + swRecoHTML(it) + swPendHTML(e) + '</div>' +
         '<div class="sw-fade" aria-hidden="true">Tocá para ver más</div></div></div>';
   } else if(v === 'salt'){
     var ns = (sw.cola[sw.tema] || []).length, sg = siguienteTema(sw);
@@ -2422,7 +2603,7 @@ function swDetCuerpoHTML(e){
   return swChipHTML(e, true) + swTagsHTML(it) + '<h2>' + esc(it.titulo) + '</h2>' +
     (it.contexto ? '<p class="sw-s">' + lnk(it.contexto) + '</p>' : '') + swDibujo(it, 'sw-dib') + swIcono(it, 'sw-ico') + imagenHTML(it, 'sw-img grande') +
     (an.length ? '<div class="sw-s"><b>Qué pasó hasta acá</b><ul>' + an.map(function(x){ return '<li>' + lnk(x) + '</li>'; }).join('') + '</ul></div>' : '') +
-    fila('Si no decidís', it.si_no_decidis) + swRecoHTML(it) + imp +
+    fila('Si no decidís', it.si_no_decidis) + swRecoHTML(it) + swPendHTML(e) + imp +
     fila('Por qué', it.porque) + fila('Si va', it.si_va) + fila('Si no va', it.si_no_va) +
     fuenteHTML(it, 'sw-s');
 }
@@ -2432,7 +2613,7 @@ function swTemaDe(sw, cid){
   for(var i = 0; i < sw.temas.length; i++) if(sw.temas[i].items.some(function(x){ return x.cid === cid; })) return i;
   return -1;
 }
-// la card tocada pasa a ser la del frente de su tema: así Va, pero…, Comentar y las opciones corren igual que en el mazo
+// la card tocada pasa a ser la del frente de su tema: así Editar, +info y las opciones corren igual que en el mazo
 function swListaFoco(sw, cid){
   var e = sw.por[cid], ti = swTemaDe(sw, cid); if(!e || ti < 0) return false;
   var q = sw.cola[ti], i = q.indexOf(cid); if(i < 0) return false;
@@ -2461,8 +2642,12 @@ function swListaSalir(sw){
 }
 function swMarcaTxt(e, st){
   var a = swAcc(e.it);
-  if(st.m === 'op') return (st.o || []).map(function(id){ return mqEtiqueta(e.it, id); }).join(' · ') || 'Elegida';
-  return {go: a.va, no: a.no, vc: 'Va, pero…', de: 'Al inbox', co: 'Comentada', ne: 'No entiendo', yh: 'Ya está hecho'}[st.m] || st.m;
+  if(st.m === 'op'){
+    var cfo = mqCamposTxt(e.it, st.f);
+    return ((st.o || []).map(function(id){ return mqEtiqueta(e.it, id); }).join(' · ') || 'Elegida') + (cfo || (st.c && st.c.trim()) ? ' · con cambios' + (cfo ? ' · ' + cfo : '') : '');
+  }
+  if(st.m === 'vc' || st.m === 'go'){ var cf = mqCamposTxt(e.it, st.f); if(st.m === 'vc' || cf) return 'Va con cambios' + (cf ? ' · ' + cf : ''); }
+  return {go: a.va, no: a.no, de: 'Al inbox', co: 'Comentada', ne: 'No entiendo', yh: 'Ya está hecho'}[st.m] || st.m;
 }
 function swListaRender(sw){
   var sc0 = sw.main.querySelector('.sw-lscroll'), top0 = sc0 ? sc0.scrollTop : 0;
@@ -2506,7 +2691,7 @@ function swListaRender(sw){
           (st.c ? '<p class="sw-lcom">' + esc(st.c) + '</p>' : '') + '</div></div>';
         return h2 + '<div><label class="sw-lbl" for="' + idc + '">Comentario</label>' +
           '<textarea id="' + idc + '" class="sw-com" data-com="1" data-cid="' + esc(e.cid) + '" rows="2" placeholder="Opcional" autocomplete="off">' + esc(st.c) + '</textarea></div>' +
-          // en la lista no van «Al final» (ya ves todo) ni «Comentar» (el comentario está en la card)
+          // en la lista no van «Al final» (ya ves todo) ni «+info» (el comentario está en la card)
           '<div class="sw-lbar">' + mqBarraHTML(it, swAcc(it)) + '<div class="sw-sec"><button type="button" class="sw-b" data-a="despues">Al inbox</button></div></div></div>';
       }).join('');
   }).join('') +
@@ -2556,14 +2741,16 @@ function swClick(e){
     var le = sw.por[lcid], lop = (mqOpciones(le.it) || {lista: []}).lista, ta = lc.querySelector('textarea[data-com]');
     function abiertaId(id){ return mqAbierta(lop.filter(function(o){ return String(o.id) === id; })[0]); }
     var lchk = Array.prototype.map.call(lc.querySelectorAll('input[data-chk]:checked'), function(i){ return i.getAttribute('data-chk'); });
-    var pide = a === 'vcp' || a === 'com-go' || a === 'com-no' || (a === 'op' && abiertaId(b.getAttribute('data-id'))) ||
+    if(a === 'editar' && mqOpciones(le.it)){ mqHojaOpEd(sw, lcid); return; }   // en opciones, Editar abre su hoja (elegir + qué cambia)
+    if(a === 'editar' && mqCampos(le.it).length){ mqHojaEd(sw, lcid); return; }   // con campos, Editar abre su hoja también en «todas juntas»
+    var pide = a === 'editar' || a === 'com-go' || a === 'com-no' || (a === 'op' && abiertaId(b.getAttribute('data-id'))) ||
       (a === 'op-listo' && lchk.some(abiertaId));
     if(pide && ta){
       if(!ta.value.trim()){
-        ta.placeholder = a === 'vcp' ? '¿Qué cambia o de qué depende?' : 'Escribí cuál';
+        ta.placeholder = a === 'editar' ? '¿Qué cambia o de qué depende?' : 'Escribí cuál';
         ta.focus(); return;
       }
-      if(a === 'vcp') swipeMarcar(sw, lcid, 'vc');
+      if(a === 'editar') swipeMarcar(sw, lcid, 'vc');
       else if(a === 'com-go' || a === 'com-no') swipeMarcar(sw, lcid, a === 'com-no' ? 'no' : 'go');
       else mqMarcar(sw, lcid, 'op', a === 'op' ? [b.getAttribute('data-id')] : lchk);
       return;
@@ -2605,12 +2792,23 @@ function swClick(e){
 // el comentario se guarda al escribir, aunque despues no marques
 function swInput(e){
   var i = e.target, sw = estado.sw;
+  if(i && i.getAttribute && i.getAttribute('data-edop') != null && i.checked){   // Editar de una opción: marcar una desmarca las otras (y se puede dejar ninguna)
+    var gr = i.closest('[data-uno]');
+    if(gr) Array.prototype.forEach.call(gr.querySelectorAll('input[data-edop]'), function(o){ if(o !== i) o.checked = false; });
+    return;
+  }
   if(i && i.getAttribute && sw && i.getAttribute('data-fin')){
     // el comentario final: en el mazo de una botonera va a sus notas; en el multi, a todas las del envío
     if(sw.multi) sw.notaFin = i.value; else if(estado.swd) setNotas(estado.swd.clave, i.value);
     return;
   }
   if(i && i.getAttribute && sw && i.getAttribute('data-finc')){ setNotas(i.getAttribute('data-finc'), i.value); return; }   // el de abajo de «todas juntas»
+  if(i && i.getAttribute && sw && sw.sheet === 'mq' && i.getAttribute('data-f') != null){   // Editar: los campos se guardan al escribir
+    var ed = i.closest('.sw-ed'), ee = ed && sw.por[ed.getAttribute('data-cid')];
+    if(ee) setMarca(ee.clave, ee.n, 'f', mqEdLeer(sw.sheetEl));
+    mqEdSync(sw.sheetEl); return;
+  }
+  if(i && i.getAttribute && sw && sw.sheet === 'mq' && i.getAttribute('data-com') && sw.sheetEl.querySelector('.sw-f')) mqEdSync(sw.sheetEl);   // el comentario también cambia el botón de abajo
   if(!i || !i.getAttribute || !sw || !i.getAttribute('data-com')) return;
   var en = sw.por[i.getAttribute('data-cid')];
   if(en) setMarca(en.clave, en.n, 'c', i.value);
@@ -2686,7 +2884,12 @@ function swCancel(e){
 }
 window.addEventListener('blur', function(){ var s2 = estado.sw; if(s2 && s2.g) swAbortar(s2); });
 document.addEventListener('keydown', function(e){
-  var sw = estado.sw; if(!sw || !sw.el || e.metaKey || e.ctrlKey || e.altKey) return;
+  var sw = estado.sw; if(!sw || !sw.el) return;
+  // Cmd/Ctrl+Enter en una hoja (Otra cosa, Editar, +info…) = tocar su Listo
+  if(e.key === 'Enter' && (e.metaKey || e.ctrlKey) && sw.sheet === 'mq'){
+    var bl = sw.sheetEl.querySelector('.sw-dbar .sw-act'); if(bl){ e.preventDefault(); bl.click(); } return;
+  }
+  if(e.metaKey || e.ctrlKey || e.altKey) return;
   if(e.key === 'Escape'){ if(sw.sheet){ e.preventDefault(); swVolverHoja(sw); } return; }
   var tg = e.target;
   if(tg && /^(INPUT|TEXTAREA|SELECT)$/.test(tg.tagName)) return;
@@ -2872,7 +3075,7 @@ function catFilaHTML(c, attr){
   var pct = c.tot ? Math.round(c.marc / c.tot * 100) : 0;
   return '<button type="button" class="hrow" ' + attr + ' data-cat="' + esc(c.id) + '" aria-label="Swipear ' + esc(c.cat.nombre) + '">' +
     '<span class="hic" style="background:' + esc(c.cat.color) + '">' + catIcono(c.cat, '') + '</span>' +
-    '<span class="htx"><b>' + esc(c.cat.nombre) + '</b><span class="hs">' + esc(pl(c.pend, 'card', 'cards') + (c.hoy ? ' · ' + venceTxt(c.hoy) : '')) + '</span>' +
+    '<span class="htx"><b>' + esc(c.cat.nombre) + '</b><span class="hs">' + esc(pl(c.bots.filter(function(b){ return b.pend > 0; }).length, 'mazo', 'mazos') + ' · ' + pl(c.pend, 'card', 'cards') + (c.hoy ? ' · ' + venceTxt(c.hoy) : '')) + '</span>' +
     '<span class="hbar"><i style="width:' + pct + '%"></i></span></span>' +
     '<span class="hpl">' + HOME_ICO_PLAY + '</span></button>';
 }
@@ -2937,7 +3140,39 @@ function avisosIcono(n){
   try{ (n ? navigator.setAppBadge(n) : navigator.clearAppBadge()).catch(function(){}); }catch(e){}
 }
 
-function homeHTML(){
+// la fila «Con error»: lo que murio sin avisar y el usuario todavia no vio. Sin errores no se pinta nada.
+function erroresHTML(){
+  var l = estado.errores || [];
+  if(!l.length) return '';
+  var TIPO = {tarea: 'Tarea programada', sesion: 'Respuesta sin aplicar'}, MAX = 5;
+  return '<div class="herr" role="alert"><div class="herr-k">' + esc('Con error · ' + l.length) + '</div>' +
+    l.slice(0, MAX).map(function(e){
+      return '<div class="herr-i"><span class="herr-tx"><b>' + esc(e.titulo) + '</b>' +
+        (e.motivo ? '<span class="herr-m">' + esc(e.motivo) + '</span>' : '') +
+        '<span class="herr-w">' + esc((TIPO[e.tipo] || 'Error') + ' · ' + haceCuanto(e.ocurrio_at)) + '</span></span>' +
+        '<button type="button" class="herr-v" data-home="visto" data-id="' + esc(e.id) + '" aria-label="Marcar como visto: ' + esc(e.titulo) + '">Visto</button></div>';
+    }).join('') +
+    (l.length > MAX ? '<div class="herr-mas">' + esc('y ' + (l.length - MAX) + ' más') + '</div>' : '') + '</div>';
+}
+function cargarErrores(){
+  var token = estado.token; if(!token) return;
+  sb.rpc('bm_errores_lista', {p_token: token}).then(function(r){
+    if(token !== estado.token) return;
+    if(r.error){ if(tokenMalo(r.error)) sesionVencida(); else console.warn('errores', r.error); return; }   // sin la migracion la RPC no existe: no hay fila y nada se rompe
+    estado.errores = Array.isArray(r.data) ? r.data : [];
+    homePintar();
+  }, function(err){ console.warn('errores', err); });
+}
+function errorVisto(id){
+  var token = estado.token, n = Number(id); if(!token || !isFinite(n)) return;
+  estado.errores = (estado.errores || []).filter(function(e){ return Number(e.id) !== n; });   // sale al toque; si la base falla, vuelve con el proximo poll
+  homePintar();
+  sb.rpc('bm_error_visto', {p_token: token, p_id: n}).then(function(r){
+    if(r.error){ if(tokenMalo(r.error)) sesionVencida(); else { console.warn('visto', r.error); cargarErrores(); } }
+  }, function(err){ console.warn('visto', err); cargarErrores(); });
+}
+function homeHTML(){ return erroresHTML() + homeHTMLBase(); }
+function homeHTMLBase(){
   if(!estado.listaCargada) return '';
   var H = homeCalc();
   if(H.cargando && !estado.homeVisto) return '<div class="home-hero"><div class="home-k">Por decidir</div><div class="home-t">Cargando…</div></div>';
@@ -3023,7 +3258,8 @@ function alClickHome(e){
   var tg = e.target; if(!tg || !tg.closest) return;
   var b = tg.closest('[data-home]'); if(!b) return;
   var a = b.getAttribute('data-home');
-  if(a === 'enviar') homeEnviar();
+  if(a === 'visto') errorVisto(b.getAttribute('data-id'));
+  else if(a === 'enviar') homeEnviar();
   else if(a === 'avisos') avisosActivar();
   else if(a === 'cat') homeElegirCat(b.getAttribute('data-cat'));
   else if(a === 'volver'){ estado.homeCat = null; homePintar(); }

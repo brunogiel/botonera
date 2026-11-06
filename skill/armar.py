@@ -28,6 +28,13 @@ Campos opcionales (un JSON sin ellos arma igual que siempre):
          `path` es un png/jpg/webp local: se achica a 1200 px de ancho y viaja como data: URI (el
          la web solo deja ver imágenes data:). `link` (https) abre lo mismo afuera, p. ej. el board.
 
+  ítem:  campos [{id, etiqueta, valor, tipo: texto|numero|fecha|opcion, opciones?}]: los valores que propuso el agente, para que
+         el botón Editar los abra ya cargados en campos (máx. 5; etiqueta ≤6 palabras). Solo en cards sí/no. La respuesta vuelve
+         «N. va con cambios · título → acción · campos: id=nuevo (antes viejo); … · comentario: …».
+  ítem:  aplicar {va, no_va | <id de cada opción>, comun?}: el plan concreto de cada respuesta posible (qué hacer, qué
+         archivo o comando), ≤40 palabras cada uno. Lo lee retomar.py cuando la sesión ya no está viva. Opcional, pero
+         una card sin `aplicar` da un aviso (no frena): sin plan, nadie más puede aplicar la respuesta.
+
 Obligatorio: `impacto` {positivo, negativo} en cada ítem (los dos lados de la decisión). Las URLs https de fuente, antecedentes e intro salen como link.
 
 --publicar manda la tanda a Supabase (maestro.py) después de escribir la salida local. Siempre
@@ -65,6 +72,10 @@ TECHOS = {"titulo": 9, "contexto": 25, "reco_motivo": 15}
 OBLIGATORIOS = ("n", "titulo", "contexto", "reco", "reco_motivo")
 TECHO_ANTECEDENTE = 15   # palabras por viñeta (y por si_no_decidis)
 OTRAS = "otras"
+TECHO_APLICAR = 40       # palabras por plan de `aplicar` (y por su `comun`)
+MAX_CAMPOS = 5           # campos editables por card (botón Editar)
+TIPOS_CAMPO = ("texto", "numero", "fecha", "opcion")
+PREFIJO_BOT = "bot-"     # los bots publican con session_id «bot-<nombre>» y su secret solo sirve para claves así
 ORDEN_OTRAS = 999   # `otras` va siempre al final, sin importar dónde esté en el catálogo
 COLOR_LIBRE = "#E0DCD2"   # gris neutro de las categorías libres y de `otras`
 ICONO_LIBRE = ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" '
@@ -234,6 +245,102 @@ def validar_opciones(n, it):
     return errores
 
 
+def validar_campos(n, it):
+    """`campos`: los valores editables de una card sí/no (botón Editar). Máx. 5, etiqueta ≤6 palabras, valor del tipo declarado."""
+    cs = it.get("campos")
+    if cs is None:
+        return []
+    if not (isinstance(cs, list) and 1 <= len(cs) <= MAX_CAMPOS):
+        return [f"ítem {n}: 'campos' tiene que ser una lista de 1 a {MAX_CAMPOS} {{id, etiqueta, valor, tipo}}"]
+    errores, ids = [], []
+    if it.get("opciones") is not None:
+        errores.append(f"ítem {n}: 'campos' va solo en cards sí/no (en una card con 'opciones', Editar abre la elección + el comentario, sin campos)")
+    for c in cs:
+        if not isinstance(c, dict):
+            errores.append(f"ítem {n}: cada campo tiene que ser {{id, etiqueta, valor, tipo}}")
+            continue
+        cid = c.get("id")
+        if not (isinstance(cid, str) and ID_OPCION.fullmatch(cid.lower()) and cid == cid.lower()):
+            errores.append(f"ítem {n}: el 'id' de un campo va en minúscula, sin espacios (a-z 0-9 _ -, hasta 30)")
+            continue
+        if cid in ids:
+            errores.append(f"ítem {n}: id de campo repetido ('{cid}')")
+        ids.append(cid)
+        et = c.get("etiqueta")
+        if not (isinstance(et, str) and et.strip()):
+            errores.append(f"ítem {n}: el campo '{cid}' no tiene 'etiqueta'")
+        elif palabras(et) > 6:
+            errores.append(f"ítem {n}: la etiqueta de '{cid}' tiene {palabras(et)} palabras (techo 6)")
+        tipo, val = c.get("tipo"), c.get("valor")
+        if tipo not in TIPOS_CAMPO:
+            errores.append(f"ítem {n}: el tipo del campo '{cid}' tiene que ser {' | '.join(TIPOS_CAMPO)}")
+            continue
+        if tipo != "opcion" and c.get("opciones") is not None:
+            errores.append(f"ítem {n}: 'opciones' va solo en un campo de tipo opcion ('{cid}')")
+        if tipo == "numero":
+            ok = (isinstance(val, (int, float)) and not isinstance(val, bool)) or (isinstance(val, str) and re.fullmatch(r"-?\d+(\.\d+)?", val.strip() or "x"))
+            if not ok:
+                errores.append(f"ítem {n}: el valor del campo numérico '{cid}' tiene que ser un número")
+        elif tipo == "fecha":
+            try:
+                if not (isinstance(val, str) and re.fullmatch(r"\d{4}-\d{2}-\d{2}", val)):
+                    raise ValueError
+                datetime.date.fromisoformat(val)
+            except ValueError:
+                errores.append(f"ítem {n}: el valor del campo fecha '{cid}' tiene que ser AAAA-MM-DD válida")
+        elif tipo == "opcion":
+            ops = c.get("opciones")
+            if not (isinstance(ops, list) and 2 <= len(ops) <= 8 and all(isinstance(o, str) and o.strip() for o in ops)):
+                errores.append(f"ítem {n}: el campo '{cid}' (opcion) necesita 'opciones': una lista de 2 a 8 textos")
+            else:
+                if any(palabras(o) > 6 for o in ops):
+                    errores.append(f"ítem {n}: una opción de '{cid}' pasa las 6 palabras")
+                if val not in ops:
+                    errores.append(f"ítem {n}: el valor de '{cid}' tiene que ser una de sus opciones")
+        else:  # texto
+            if not (isinstance(val, str) and val.strip()):
+                errores.append(f"ítem {n}: el valor del campo de texto '{cid}' tiene que ser un texto")
+            elif len(val) > 200:
+                errores.append(f"ítem {n}: el valor de '{cid}' pasa los 200 caracteres")
+    return errores
+
+
+def claves_aplicar(it):
+    """Las claves que admite `aplicar` en esta card: va / no_va en sí/no, el id de cada opción en `opciones`; siempre `comun`."""
+    ops = it.get("opciones")
+    base = [o["id"] for o in ops if isinstance(o, dict) and isinstance(o.get("id"), str)] if isinstance(ops, list) else ["va", "no_va"]
+    return base + ["comun"]
+
+
+def validar_aplicar(n, it):
+    ap = it.get("aplicar")
+    if ap is None:
+        return []
+    if not isinstance(ap, dict) or not ap:
+        return [f"ítem {n}: 'aplicar' tiene que ser un objeto {{va, no_va, comun?}} (o {{<id de opción>: plan}} en una card con 'opciones')"]
+    errores = []
+    admitidas = claves_aplicar(it)
+    if not any(k in ap for k in admitidas if k != "comun"):
+        errores.append(f"ítem {n}: 'aplicar' no trae el plan de ninguna respuesta (claves posibles: {', '.join(k for k in admitidas if k != 'comun')})")
+    for k, v in ap.items():
+        if k not in admitidas:
+            errores.append(f"ítem {n}: 'aplicar.{k}' no es una respuesta de esta card (claves posibles: {', '.join(admitidas)})")
+        elif not (isinstance(v, str) and v.strip()):
+            errores.append(f"ítem {n}: 'aplicar.{k}' tiene que ser un texto con el plan")
+        elif palabras(v) > TECHO_APLICAR:
+            errores.append(f"ítem {n}: 'aplicar.{k}' tiene {palabras(v)} palabras (techo {TECHO_APLICAR})")
+    return errores
+
+
+def avisos_aplicar(d):
+    """Aviso (no error) por cada card sin `aplicar`: si la sesión muere, nadie sabe qué hacer con la respuesta."""
+    sin = [str(it.get("n", "?")) for it in d.get("items", []) if not it.get("aplicar")]
+    if sin:
+        return (f"aviso: {len(sin)} de {len(d.get('items', []))} ítems sin 'aplicar' (n: {', '.join(sin)}). Si la sesión no está viva cuando "
+                "decidís, nadie sabe qué aplicar y la respuesta queda sin plan. Sumá el plan de cada respuesta (≤40 palabras).")
+    return None
+
+
 def validar(d):
     errores = []
     for k in ("titulo", "fecha", "clave", "items"):
@@ -276,6 +383,8 @@ def validar(d):
             errores.append(f"ítem {n}: número repetido")
         vistos.add(n)
         errores += validar_opciones(n, it)
+        errores += validar_aplicar(n, it)
+        errores += validar_campos(n, it)
         if it.get("icono") and it["icono"] not in ICONOS:
             errores.append(f"ítem {n}: icono '{it.get('icono')}' no existe (o pasá 'svg' propio)")
         dib = it.get("dibujo")
@@ -550,7 +659,7 @@ HEADER_SVG = (AQUI / "elicit-header.svg").read_text(encoding="utf-8").strip()  #
 
 
 CLASES_INLINE = {
-    # Las de trazo llevan fill:none: sin eso, una flecha <path> sale rellena de negro (2026-10-22).
+    # Las de trazo llevan fill:none: sin eso, una flecha <path> sale rellena de negro.
     "a": "stroke:var(--text-accent);fill:none", "b": "fill:var(--border-warning)", "fa": "fill:var(--text-accent)",
     "t": "fill:var(--text-primary);font:500 12px var(--font-sans)", "tm": "fill:var(--text-secondary);font:400 11px var(--font-sans)",
     "go": "fill:var(--text-success)", "no": "fill:var(--text-danger)",
@@ -561,7 +670,7 @@ CLASES_INLINE = {
 
 def svg_inline(svg):
     """Íconos y dibujos usan clases; el widget no lleva <style> para eso, así que van a style inline."""
-    # Acepta comillas simples y dobles: con simples no traducía nada y el dibujo salía roto (2026-10-20).
+    # Acepta comillas simples y dobles: con simples no traducía nada y el dibujo salía roto.
     return re.sub(r'class=(["\'])(\w+)\1', lambda m: f'style="{CLASES_INLINE[m.group(2)]}"' if m.group(2) in CLASES_INLINE else m.group(0), svg)
 
 
@@ -659,9 +768,16 @@ def armar_inline(d):
     return "\n".join(out)
 
 
+def id_sesion():
+    """El session_id que viaja con la tanda: el de la sesión de Claude Code (CLAUDE_CODE_HOST_SESSION_ID) o,
+    si no hay, BM_SESSION_ID (lo pone un bot: `bot-<nombre>`). Sin ninguno, None."""
+    return (os.environ.get("CLAUDE_CODE_HOST_SESSION_ID") or os.environ.get("BM_SESSION_ID") or "").strip() or None
+
+
 def marcar_sesion(session_id):
-    """Deja la marca que habilita a entregar.py en esta sesión: sin marca, el hook sale sin ir a la red."""
-    if not session_id:
+    """Deja la marca que habilita a entregar.py en esta sesión: sin marca, el hook sale sin ir a la red.
+    Solo para sesiones de Claude Code: un id `bot-…` no tiene hook que despertar, no se marca."""
+    if not session_id or session_id.startswith(PREFIJO_BOT):
         return
     try:
         d = Path(os.path.expanduser("~/.cache/botonera/sesiones"))
@@ -684,7 +800,7 @@ def publicar(datos):
         res = maestro.rpc("bm_publicar", {
             "p_secret": maestro.config()["BM_SECRET"],
             "p_clave": datos["clave"],
-            "p_session_id": os.environ.get("CLAUDE_CODE_HOST_SESSION_ID"),
+            "p_session_id": id_sesion(),
             "p_sesion_titulo": origen.get("sesion_titulo"),
             "p_skill": origen.get("skill") or "botonera",
             "p_proyecto": origen.get("proyecto"),
@@ -700,7 +816,7 @@ def publicar(datos):
     quedo = str(res or "").strip().lower()
     if quedo in ("creada", "actualizada"):
         print(f"maestro: {quedo} · {datos['clave']}")
-        marcar_sesion(os.environ.get("CLAUDE_CODE_HOST_SESSION_ID"))
+        marcar_sesion(id_sesion())
         return 0
     if quedo.startswith("ya_decidida:"):
         print(f"maestro: NO publicado: la clave {datos['clave']} ya está {quedo.split(':', 1)[1]}. Usá una clave nueva.", file=sys.stderr)
@@ -728,6 +844,9 @@ def main():
     datos["categoria"], aviso_cat = resolver_categoria(datos.get("origen"))   # nunca frena: la categoría viaja embebida en datos
     if aviso_cat:
         print(aviso_cat, file=sys.stderr)
+    aviso_ap = avisos_aplicar(datos)
+    if aviso_ap:
+        print(aviso_ap, file=sys.stderr)
     n = len(datos["items"])
     modo_html = forzado == "--html" or (forzado is None and n > MAX_INLINE)
     salida = Path(args[1])

@@ -76,6 +76,8 @@ Con 0 decisiones: una línea en el chat, sin botonera.
     "si_no_decidis": "≤15 palabras: qué pasa si nadie toca nada",
     "vence": "AAAA-MM-DD (opcional)",
     "impacto": {"positivo": "qué mejora y dónde", "negativo": "qué empeora o cuesta, y dónde"},
+    "campos": [{"id": "precio", "etiqueta": "Precio (ARS)", "valor": 3500, "tipo": "numero"}],
+    "aplicar": {"va": "Qué hacer si va, ≤40 palabras", "no_va": "Qué hacer si no va"},
     "dibujo": {"viewBox": "0 0 240 100", "alt": "qué muestra", "svg": "… (opcional)"},
     "imagen": {"path": "png/jpg local", "alt": "qué muestra", "link": "https://… (opcional)"},
     "porque": "opcional, plegado", "si_va": "opcional", "si_no_va": "opcional",
@@ -90,6 +92,12 @@ Con 0 decisiones: una línea en el chat, sin botonera.
   (editalo a gusto: `orden` sale de la posición en la lista; `privada: true` hace que los avisos no
   nombren esa categoría). Sin id, `armar.py` prueba los alias, después usa `origen.proyecto` como
   categoría propia, y si no hay nada cae en `otras`. Nunca frena el armado.
+- **`campos`** (opcional, solo cards sí/no, hasta 5): los valores que propusiste, `{id, etiqueta, valor, tipo}` con
+  `tipo` = `texto` | `numero` | `fecha` (AAAA-MM-DD) | `opcion` (más `opciones`: 2 a 8 textos). `id` en minúscula
+  sin espacios; `etiqueta` ≤6 palabras. Editar los abre cargados y la respuesta trae los valores nuevos.
+- **`aplicar`** (recomendado): el plan concreto de cada respuesta, ≤40 palabras. Claves: `va` y `no_va` en una card
+  sí/no; el `id` de cada opción en una con `opciones`; `comun` para el contexto compartido (rutas, archivos). Si la
+  sesión murió antes de aplicar, `retomar.py` lo usa. Sin `aplicar`, `armar.py` avisa (no frena).
 - **`dibujo` solo si explica algo**: antes → después, A contra B, un flujo, una cantidad, quién depende
   de qué. Un ícono que decora es peor que nada. Clases del SVG: `a` trazo · `fa` relleno · `b` acento ·
   `t` texto · `tm` texto suave · `go`/`no` relleno verde y rojo · `sgo`/`sno` trazo verde y rojo · `box` caja.
@@ -102,23 +110,25 @@ Con 0 decisiones: una línea en el chat, sin botonera.
 
 ### El tipo de card
 
-- **Sí/no** (sin campos extra). Abajo sale **No va · Va, pero… · Va**. La recomendada va siempre a la
-  derecha: **`reco` es siempre `va`**. Si recomendás no hacerlo, escribí el título y los botones al revés
-  para que Va sea eso («Seguir con la campaña», no «Pausarla»). `armar.py` rechaza `reco: no va`.
-  «Va, pero…» abre el comentario: un sí con un cambio.
+- **Sí/no.** Abajo sale **No va · Editar · Va**. La recomendada va siempre a la derecha: **`reco` es siempre
+  `va`**. Si recomendás no hacerlo, escribí el título y los botones al revés para que Va sea eso («Seguir con
+  la campaña», no «Pausarla»). `armar.py` rechaza `reco: no va`. **Editar** abre la hoja de un sí con un
+  cambio: con `campos`, los valores que propusiste cargados para tocar; sin ellos, solo el comentario libre.
+  La fila chica de abajo trae Al final, Al inbox y +info (comentar sin decidir).
 - **Una opción** (`opciones`): cuando la otra salida no es un no liso.
 - **Varias** (`opciones` + `varias: true`): dos o más destinos a la vez.
 
 ```json
-{"n": 1, "titulo": "El presupuesto de la prueba", "contexto": "…", "reco": "u10", "reco_motivo": "…",
- "opciones": [{"id": "u5", "etiqueta": "USD 5 por día"}, {"id": "u10", "etiqueta": "USD 10 por día"},
-              {"id": "otro", "etiqueta": "Otro monto", "abierta": true}],
+{"n": 1, "titulo": "Qué día sale el newsletter", "contexto": "…", "reco": "jue", "reco_motivo": "…",
+ "opciones": [{"id": "lun", "etiqueta": "Los lunes"}, {"id": "jue", "etiqueta": "Los jueves"},
+              {"id": "otro", "etiqueta": "Otro día", "abierta": true}],
  "impacto": {"positivo": "…", "negativo": "…"}}
 ```
 
 `opciones`: 2 a 5 `{id, etiqueta, abierta?}`; `id` en minúscula sin espacios, nunca `otra`; `etiqueta`
 ≤6 palabras. `reco` es el `id` recomendado (con `varias`, una lista). Con `opciones` no van
-`accion_va`/`accion_no_va`. `condiciones` (opcional): 1 a 3 frases de ≤8 palabras, salen como chips en «Va, pero…».
+`accion_va`/`accion_no_va`. `condiciones` (opcional): 1 a 3 frases de ≤8 palabras, salen como chips en Editar. En estas cards,
+Editar permite elegir (o no) una opción y escribir qué se cambia; no lleva `campos`.
 
 ## Reglas de contenido
 
@@ -137,8 +147,9 @@ Con 0 decisiones: una línea en el chat, sin botonera.
 `esperar.py` imprime un bloque `/botonera respuesta · <clave>` con una línea por ítem:
 
 - `N. va|no va|sin marcar · título → acción · comentario: …`
-- `N. va con cambios · título → acción · comentario: …`: aplicá con el comentario.
-- `N. eligió <id> · título → etiqueta` (con varias: `eligió <id>, <id>`). `eligió otra` = «Otra cosa…»: el comentario es la opción.
+- `N. va con cambios · título → acción [· campos: id=nuevo (antes viejo); …] [· comentario: …]`: Editar. Aplicá con
+  esos valores exactos (reemplazan a los de tu plan) y con el comentario.
+- `N. eligió <id> · título → etiqueta [· comentario: …]` (con varias: `eligió <id>, <id>`). `eligió otra`: no marcó ninguna y el comentario es la opción.
 - `N. comentario · título · comentario: …`: comentó sin decidir. Nunca es un Va. Una orden clara se aplica;
   una pregunta se contesta en una segunda vuelta.
 - `N. después · título`: no se aplica; anotalo donde el usuario guarda sus pendientes.
@@ -165,10 +176,42 @@ Otros estados:
 - `marcar.py` solo acepta transiciones válidas. «NO se marcó» = el estado no era el esperado: no lo fuerces.
 - Si la salida de `esperar.py` arranca con `maestro: REENTREGA`, chequeá si ya la aplicaste antes de repetir.
 
+## Retomar una decisión sin la sesión viva
+
+Si `esperar.py` murió y la sesión que preguntó ya no está, la respuesta sigue en la base:
+
+```bash
+python3 ~/.claude/skills/botonera/retomar.py <clave> --tomar
+```
+
+Imprime un brief: tu respuesta, el comentario final y, por card, el plan `aplicar` de **esa** respuesta (`--tomar`
+pasa la tanda a `recibida` para poder cerrarla con `marcar.py … aplicada`; `--json` es para otro script). Reglas:
+el comentario manda sobre el plan; lo `sin marcar` y lo `después` no se hacen; un `comentario` sin decidir no es un
+Va; `eligió otra` no tiene plan; una respuesta sin plan escrito va al inbox, no se inventa. Lo interno y reversible
+se aplica; lo que sale a un tercero, borra o mueve plata necesita un Va explícito.
+
+## Fila «Con error»
+
+Lo que murió sin avisar se publica en el home, y queda hasta que el usuario toca «Visto»:
+
+```bash
+python3 ~/.claude/skills/botonera/errores.py publicar '{"tipo":"tarea","origen_id":"<id>","titulo":"…","motivo":"…"}'
+python3 ~/.claude/skills/botonera/errores.py desde-runs <runs.json> [--horas 24] [--seco]
+```
+
+`tipo` es `tarea` o `sesion`. Repetir la lectura no duplica. `colgadas.py --archivar <clave> "<por qué>"` archiva una
+tanda colgada y, si ya tenía respuesta sin aplicar, publica el error `sesion`.
+
+## Un bot con su propio secreto
+
+Un agente que no es tu sesión de Claude Code publica con un secreto aparte (`secret-bot.py`, ver el README). Solo
+sirve para claves y `session_id` que empiezan con `bot-`: `BM_SESSION_ID=bot-<nombre>` y `clave: "bot-…"`. Su tanda
+no lleva link a ninguna sesión y `colgadas.py` no la archiva. El bot no ve el PIN, ni lo sin cerrar, ni publica errores.
+
 ## Mantenimiento
 
 - `pendientes.py [--horas N]`: lo decidido que nadie aplicó.
-- `colgadas.py`: las tandas que no llegaron a un estado cerrado.
+- `colgadas.py`: las tandas que no llegaron a un estado cerrado, con su «plan aplicar N/M».
 - `pin.py poner | desbloquear | estado`: el PIN de la web (10 fallos seguidos la bloquean). Poner uno nuevo cierra todas las sesiones.
 - **Red de seguridad opcional**: `entregar.py` como hook de Claude Code (`./install.sh --hook` imprime el bloque
   para `~/.claude/settings.json`). Al arrancar cada turno busca lo decidido para esta sesión y lo inyecta.

@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 """Cliente mínimo de la botonera (Supabase). Lo usan armar.py, esperar.py y marcar.py.
 
-La config vive fuera del repo, en ~/.config/botonera/env (KEY=VALUE):
-  SUPABASE_URL, SUPABASE_ANON_KEY, BM_SECRET
+La config sale de dos lugares, en este orden:
+  1. Variables de entorno SUPABASE_URL, SUPABASE_ANON_KEY y BM_SECRET, pero solo si están las TRES
+     (así un SUPABASE_URL suelto de otro proyecto no pisa tu config). Es lo que usa un bot: su secret
+     llega por el secret store como variable de entorno.
+  2. Si no, el archivo fuera del repo ~/.config/botonera/env (KEY=VALUE) con las mismas tres claves.
 BM_SECRET viaja en el body de cada RPC (p_secret): la anon key sola no alcanza.
 
   config()           -> dict con las tres claves, o None si falta el archivo o alguna clave
@@ -36,6 +39,10 @@ def ruta_env():
 
 
 def config():
+    # Variables de entorno primero, solo si están las tres.
+    env = {k: os.environ.get(k, "").strip().strip('"').strip("'") for k in CLAVES}
+    if all(env.values()):
+        return env
     try:
         texto = ruta_env().read_text(encoding="utf-8")
     except OSError:

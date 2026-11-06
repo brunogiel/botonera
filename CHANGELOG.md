@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.1.0 · 2026-11-06
+
+- **Editar.** La barra de la card es «No va · Editar · Va», y la fila chica suma «+info» para comentar sin decidir. Una card sí/no puede traer `campos` (hasta 5, de tipo texto, número, fecha u opción): salen cargados con lo que propuso Claude, el que cambiás queda marcado con «Antes: X» y «Volver al original», y la respuesta vuelve como `va con cambios · título → acción · campos: id=nuevo (antes viejo)`. Si cambiás un valor, salís con ‹ Volver y decidís Va, el cambio viaja igual y la card muestra «N cambios pendientes». En las cards de una opción o varias, «Editar» permite elegir y escribir qué cambia. Cmd/Ctrl+Enter equivale a «Listo» en cualquier hoja.
+- **Retomar sin la sesión viva.** Cada card puede traer `aplicar`, el plan de cada respuesta posible (≤40 palabras); `armar.py` avisa cuando falta. `retomar.py <clave>` lee la respuesta y esos planes con `bm_retomar` y arma un brief que cualquier sesión nueva puede aplicar. `colgadas.py` suma «plan aplicar N/M» a cada tanda decidida y el flag `--archivar`.
+- **Fila «Con error».** Arriba del home aparece lo que murió sin avisar (una tarea programada que falló, una tanda archivada con una respuesta sin aplicar) hasta que tocás «Visto». Se publica con `errores.py` (`publicar`, `desde-runs`, `--seco`).
+- **Contador en el home.** Cada fila de categoría dice cuántos mazos y cuántas cards tiene («2 mazos · 5 cards»).
+- **Rol de bot.** `secret-bot.py` genera un secreto aparte para agentes que no son tu sesión de Claude Code. Solo sirve con claves y `session_id` que empiezan con `bot-`: no ve las demás tandas, ni el PIN, ni publica errores. `maestro.py` también lee la config de las variables de entorno `SUPABASE_URL`, `SUPABASE_ANON_KEY` y `BM_SECRET`.
+- Dos migraciones nuevas (`20261106…`); `install.sh` las suma a `instalar.sql`. Las migraciones se pueden repetir, así que actualizar desde la 1.0.x es volver a correr el instalador y pegar el SQL.
+- `tests/e2e-editar.js`: 23 casos de la web con Playwright, sin Supabase. `tests/prueba_local.py` suma los chequeos de campos, retomar, errores y rol de bot.
+
 ## 1.0.0 · 2026-11-05
 
 Primera versión pública.

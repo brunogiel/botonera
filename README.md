@@ -9,7 +9,9 @@ Cada card trae:
 - **Qué se decide** y el dato que lo decide, en dos líneas.
 - **Qué recomienda Claude y por qué.** El botón recomendado va siempre a la derecha, bordeado, sin marcar.
 - **Botones que dicen la acción** («Cerrá el PR» / «Dejalo abierto»), o varias opciones cuando no es un sí o no.
-- **«Va, pero…»** para decir que sí con un cambio, y un comentario libre en cada card.
+- **«Editar»** para decir que sí con un cambio: los valores que propuso Claude salen cargados en campos
+  (texto, número, fecha u opción) y cambiás solo lo que no te cierra. Un comentario libre en cada card,
+  y **«+info»** para preguntar sin decidir.
 - **Qué pasa si no decidís**, qué pasó hasta acá y, plegado, el impacto de cada lado.
 
 *English: a Claude Code skill that turns the pending decisions of a session into swipeable cards
@@ -35,6 +37,7 @@ Claude Code ──armar.py──▶ Supabase (tu proyecto) ◀──PIN── tu
 - `armar.py` valida el JSON de la tanda (techos de palabras, campos obligatorios), arma la página y la publica.
 - `esperar.py` corre en segundo plano en la sesión y sale cuando decidiste: su salida es tu respuesta.
 - `marcar.py` cierra el loop; la web muestra qué se aplicó y qué no.
+- `retomar.py` aplica una decisión aunque la sesión que preguntó ya no esté viva: lee la respuesta y el plan de cada card.
 - La web no ejecuta nada. Ejecuta siempre la sesión de Claude.
 
 ## Instalación
@@ -88,6 +91,12 @@ la función de avisos.
 
 8. **En Claude Code** decí `/botonera`.
 
+### Si venís de la 1.0.x
+
+Volvé a correr `./install.sh` (reusa tu secreto y tu config), pegá el `instalar.sql` nuevo en el *SQL Editor*
+y redesplegá la web. Las migraciones se pueden repetir, así que no se rompe nada. El skill se pisa con la
+versión nueva (el instalador te pregunta antes).
+
 ### Opcional: red de seguridad
 
 Si la sesión se reinicia mientras esperaba, la respuesta queda guardada en la base. `entregar.py`
@@ -111,11 +120,44 @@ Mantenimiento:
 
 ```bash
 python3 ~/.claude/skills/botonera/pendientes.py   # decidido y sin aplicar
-python3 ~/.claude/skills/botonera/colgadas.py     # tandas que no cerraron
+python3 ~/.claude/skills/botonera/colgadas.py     # tandas que no cerraron (con su plan de aplicar)
+python3 ~/.claude/skills/botonera/retomar.py <clave>   # el brief para aplicar una decisión sin la sesión viva
 python3 ~/.claude/skills/botonera/pin.py estado   # PIN, sesiones y avisos
 ```
 
 Para apagarla, borrá `~/.config/botonera/env`. `armar.py` sigue armando el html local y avisa que no publicó.
+
+### Editar y retomar
+
+- Una card sí/no puede traer `campos` (hasta 5): lo que Claude propone, listo para editar. La respuesta
+  vuelve con lo que cambiaste: `1. va con cambios · título → acción · campos: precio=4200 (antes 3500)`.
+- Cada card puede traer `aplicar`: el plan de cada respuesta posible (≤40 palabras). Si la sesión murió,
+  `retomar.py <clave>` junta tu respuesta y esos planes en un brief que cualquier sesión nueva puede aplicar.
+
+### Fila «Con error»
+
+Lo que murió sin avisar (una tarea programada que pegó el límite de uso, una tanda archivada con tu respuesta sin
+aplicar) aparece arriba del home hasta que tocás **Visto**. Se publica con `errores.py`:
+
+```bash
+python3 ~/.claude/skills/botonera/errores.py publicar '{"tipo":"tarea","origen_id":"mi-tarea","titulo":"Reporte semanal","motivo":"Límite de uso"}'
+```
+
+`colgadas.py --archivar <clave> "<por qué>"` publica solo un error cuando archiva una tanda que ya tenía tu respuesta.
+
+### Un bot, sin tu secreto completo
+
+Un agente que no es tu sesión de Claude Code puede publicar tandas y recibir tus respuestas con un secreto
+propio, que solo sirve para claves `bot-…`:
+
+```bash
+python3 ~/.claude/skills/botonera/secret-bot.py   # escribe ~/.config/botonera/env-bot e imprime el SQL con su hash
+```
+
+Ejecutá ese SQL en el *SQL Editor* y dale el contenido de `env-bot` al bot (o sus tres claves como variables
+de entorno). El bot publica con `BM_SESSION_ID=bot-<nombre>` y una `clave` que empieza con `bot-`; no ve el
+resto de las tandas, ni el PIN, ni publica errores. Para darlo de baja:
+`delete from public.bm_config where k = 'bot_secret_sha256';`.
 
 ## Privacidad
 
@@ -131,12 +173,21 @@ Para apagarla, borrá `~/.config/botonera/env`. `armar.py` sigue armando el html
 Con Docker y el CLI de Supabase, y los puertos 54321 a 54323 libres:
 
 ```bash
-supabase start                       # aplica la migración sola
-python3 tests/prueba_local.py        # publica, entra con PIN, decide, recibe y marca
+supabase start                       # aplica las migraciones solas
+python3 tests/prueba_local.py        # publica, entra con PIN, decide, recibe, marca, retoma y prueba el rol de bot
 ```
 
 La prueba usa un HOME temporal (no toca tu `~/.claude` ni tu `~/.config`), aplica la config con
 `docker exec` (no hace falta `psql`) y solo corre contra localhost.
+
+La web tiene su propia prueba, sin Supabase (le inyecta un stub a la librería y corta la red):
+
+```bash
+cd tests && npm install && npx playwright install chromium   # una vez
+node e2e-editar.js                                           # Editar, +info, el contador y la fila «Con error»
+```
+
+Correla antes de tocar `web/index.html`: todos los casos tienen que dar PASA.
 
 ## Licencia
 
