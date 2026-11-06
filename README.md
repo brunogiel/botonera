@@ -4,6 +4,8 @@ Un skill para [Claude Code](https://claude.com/claude-code) que te junta lo que 
 y te lo deja como cards para swipear en el celu. Claude investiga y recomienda; vos elegís con un
 dedo. La respuesta vuelve sola a la sesión que preguntó, y Claude aplica solo lo que marcaste.
 
+<p align="center"><img src="docs/botonera.gif" width="320" alt="La botonera en el celu: el home con cuatro categorías, un mazo de Ads decidido con swipe, Editar y una opción, y el envío con confeti"></p>
+
 Cada card trae:
 
 - **Qué se decide** y el dato que lo decide, en dos líneas.
