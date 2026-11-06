@@ -1,37 +1,40 @@
 # Botonera
 
-Un skill para [Claude Code](https://claude.com/claude-code) que te junta lo que tenés que decidir
-y te lo deja como cards para swipear en el celu. Claude investiga y recomienda; vos elegís con un
-dedo. La respuesta vuelve sola a la sesión que preguntó, y Claude aplica solo lo que marcaste.
+Un skill para tu agente de código que te junta lo que tenés que decidir y te lo deja como cards para
+swipear en el celu. Funciona con [Claude Code](https://claude.com/claude-code), Codex, Grok, Cursor o
+cualquier agente que pueda correr un comando de Python ([con otros agentes](#con-otros-agentes)). El
+agente investiga y recomienda; vos elegís con un dedo. La respuesta vuelve sola a la sesión que
+preguntó, y el agente aplica solo lo que marcaste.
 
 <p align="center"><img src="docs/botonera.gif" width="320" alt="La botonera en el celu: el home con cuatro categorías, un mazo de Ads decidido con swipe, Editar y una opción, y el envío con confeti"></p>
 
 Cada card trae:
 
 - **Qué se decide** y el dato que lo decide, en dos líneas.
-- **Qué recomienda Claude y por qué.** El botón recomendado va siempre a la derecha, bordeado, sin marcar.
+- **Qué recomienda el agente y por qué.** El botón recomendado va siempre a la derecha, bordeado, sin marcar.
 - **Botones que dicen la acción** («Cerrá el PR» / «Dejalo abierto»), o varias opciones cuando no es un sí o no.
-- **«Editar»** para decir que sí con un cambio: los valores que propuso Claude salen cargados en campos
+- **«Editar»** para decir que sí con un cambio: los valores que propuso el agente salen cargados en campos
   (texto, número, fecha u opción) y cambiás solo lo que no te cierra. Un comentario libre en cada card,
   y **«+info»** para preguntar sin decidir.
 - **Qué pasa si no decidís**, qué pasó hasta acá y, plegado, el impacto de cada lado.
 
-*English: a Claude Code skill that turns the pending decisions of a session into swipeable cards
-on your own phone web app (PIN-protected, installable as a PWA, with push notifications). Claude
-researches and recommends; you swipe. Your answer flows back into the waiting Claude session, which
-applies only what you marked. Runs on your own free Supabase project plus any static host (Vercel by
+*English: a skill for your coding agent (Claude Code, Codex, Grok, Cursor, or any agent that can run a
+Python command) that turns the pending decisions of a session into swipeable cards on your own phone
+web app (PIN-protected, installable as a PWA, with push notifications). The agent researches and
+recommends; you swipe. Your answer flows back into the waiting session, which applies only what you
+marked. Runs on your own free Supabase project plus any static host (Vercel by
 default). Requires Python 3.9+. Docs, card copy and UI are in Spanish.*
 
 ## En 3 pasos
 
 1. Creá tu proyecto Supabase y corré `./install.sh` (ver [Instalación](#instalación)).
-2. En Claude Code, en medio de cualquier trabajo, decí **`/botonera`**.
+2. En Claude Code, en medio de cualquier trabajo, decí **`/botonera`**. En otro agente, pedile que siga el `SKILL.md`.
 3. Abrí tu botonera en el celu, swipeá y tocá Enviar. La sesión se despierta y aplica.
 
 ## Cómo funciona
 
 ```
-Claude Code ──armar.py──▶ Supabase (tu proyecto) ◀──PIN── tu web en el celu
+tu agente  ──armar.py──▶ Supabase (tu proyecto) ◀──PIN── tu web en el celu
      ▲                        │                          (swipe, Enviar)
      └──── esperar.py ◀───────┘  la respuesta despierta a la sesión
 ```
@@ -40,7 +43,22 @@ Claude Code ──armar.py──▶ Supabase (tu proyecto) ◀──PIN── tu
 - `esperar.py` corre en segundo plano en la sesión y sale cuando decidiste: su salida es tu respuesta.
 - `marcar.py` cierra el loop; la web muestra qué se aplicó y qué no.
 - `retomar.py` aplica una decisión aunque la sesión que preguntó ya no esté viva: lee la respuesta y el plan de cada card.
-- La web no ejecuta nada. Ejecuta siempre la sesión de Claude.
+- La web no ejecuta nada. Ejecuta siempre la sesión de tu agente.
+
+## Con otros agentes
+
+El skill viene listo para Claude Code, pero el trabajo lo hacen scripts de Python y tu base de
+Supabase. Cualquier agente que pueda correr un comando en tu máquina los usa igual:
+
+1. Instalá con `./install.sh --skill-dir <carpeta>`, donde tu agente lea sus instrucciones.
+2. Dale el `SKILL.md` como instrucciones (o pedile que lo lea antes de armar una tanda).
+3. Poné `BM_SESSION_ID` con un nombre para esa sesión, así la web agrupa sus tandas.
+4. El agente publica con `armar.py --publicar` y espera con `esperar.py <clave>`, que sale cuando decidiste.
+
+Dos cosas son solo de Claude Code: el link «Abrir la conversación» de la web y el hook
+`entregar.py`. Si tu agente no puede dejar `esperar.py` corriendo hasta que contestes, pedile la
+respuesta después con `retomar.py <clave>`. Para un agente al que no querés darle acceso a todo, usá
+el [rol de bot](#un-bot-sin-tu-secreto-completo).
 
 ## Instalación
 
@@ -149,8 +167,8 @@ python3 ~/.claude/skills/botonera/errores.py publicar '{"tipo":"tarea","origen_i
 
 ### Un bot, sin tu secreto completo
 
-Un agente que no es tu sesión de Claude Code puede publicar tandas y recibir tus respuestas con un secreto
-propio, que solo sirve para claves `bot-…`:
+Un agente al que no querés darle tu secreto completo puede publicar tandas y recibir tus respuestas con un
+secreto propio, que solo sirve para claves `bot-…`:
 
 ```bash
 python3 ~/.claude/skills/botonera/secret-bot.py   # escribe ~/.config/botonera/env-bot e imprime el SQL con su hash

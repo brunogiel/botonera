@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.1 · 2026-11-06
+
+- **Con cualquier agente.** El README explica cómo usar la botonera con Codex, Grok, Cursor o cualquier agente que corra Python: `--skill-dir`, el `SKILL.md` como instrucciones y `BM_SESSION_ID` para agrupar las tandas.
+- La web arma el link «Abrir la conversación» solo para sesiones de la app de Claude Code; las de otros agentes se muestran sin link.
+- GIF de la botonera en el celu al principio del README.
+
 ## 1.1.0 · 2026-11-06
 
 - **Editar.** La barra de la card es «No va · Editar · Va», y la fila chica suma «+info» para comentar sin decidir. Una card sí/no puede traer `campos` (hasta 5, de tipo texto, número, fecha u opción): salen cargados con lo que propuso Claude, el que cambiás queda marcado con «Antes: X» y «Volver al original», y la respuesta vuelve como `va con cambios · título → acción · campos: id=nuevo (antes viejo)`. Si cambiás un valor, salís con ‹ Volver y decidís Va, el cambio viaja igual y la card muestra «N cambios pendientes». En las cards de una opción o varias, «Editar» permite elegir y escribir qué cambia. Cmd/Ctrl+Enter equivale a «Listo» en cualquier hoja.

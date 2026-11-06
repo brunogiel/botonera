@@ -702,7 +702,8 @@ function hora(t){
 // los bots publican con session_id «bot-<nombre>»: no es una sesion de Claude, no hay link
 function urlSesion(id){
   var s = String(id || '');
-  return (s && /^[A-Za-z0-9_-]+$/.test(s) && !/^bot-/.test(s)) ? 'claude://claude.ai/epitaxy/' + s : '';
+  // Solo las sesiones de la app de Claude Code (local_<uuid>) tienen un link para abrirlas; otro agente no lleva link.
+  return /^local_[A-Za-z0-9_-]+$/.test(s) ? 'claude://claude.ai/epitaxy/' + s : '';
 }
 // segunda vuelta: una clave «<base>-r2», «<base>-r3»…
 function vuelta(clave){
