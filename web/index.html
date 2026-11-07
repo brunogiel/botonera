@@ -533,19 +533,34 @@
   .sw-nota{flex:none;margin:-4px 16px 8px;text-align:center;font-size:12px;color:#6b6866;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow-wrap:anywhere}
   .sw-nota b{color:#1C1B1B}
   button.sw-catchip{font-family:inherit;line-height:inherit;cursor:pointer}
-  /* card de contexto: no es una decision (crema, sin recomendacion ni Va / No va) */
-  /* el contexto va negro (como «Por decidir» del home): ninguna decision es negra, asi no se confunde */
-  .sw-card.ctx,.sw-dcard.ctx{background:#1C1B1B;color:#F5F0E8;border-color:#1C1B1B}
-  .ctx h2{color:#F5F0E8}
-  .ctx .sw-ctx{color:#E5DED3}
-  .ctx .sw-cx-k{color:#8ECAC8}
-  .ctx .sw-cx-ses{color:#BDB6AD}
-  .ctx .sw-cx-n{color:#F5F0E8}
-  .ctx .sw-blk{background:#2C2A29;border-color:#3A3836;color:#E5DED3}
-  .ctx .sw-blk b,.ctx .sw-fyi summary,.ctx .sw-fyi .gt{color:#F5F0E8}
-  .ctx .sw-fyi{border-color:#5A5652;color:#E5DED3}
+  /* card de contexto: una carpeta tintada con el color de la categoria, con la pila de cartas asomando por arriba.
+     --k cartas (1-4), --Y alto libre arriba de la carpeta, --tinte el frente, --cat la pestaña. No es una decision: sin recomendacion ni Va / No va */
+  .sw-card.ctx,.sw-dcard.ctx{background:var(--tinte,#F5F0E8);color:#1C1B1B;border-color:#1C1B1B;overflow:visible}
+  .sw-card.ctx{top:var(--Y,42px)}
+  .sw-dcard.ctx{position:relative;margin-top:var(--Y,42px)}
+  .sw-hints.ctx{top:var(--Y,42px)}
+  .sw-card.ctx .sw-cscroll{border-radius:10px;padding-top:14px}
+  .ctx .sw-cx-k,.ctx .sw-cx-ses{color:#3a3837}
   .sw-dcard.ctx ul{color:inherit}
-  .sw-cscroll{height:100%;overflow-y:auto;overflow-x:hidden;padding:18px;display:flex;flex-direction:column;gap:12px;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+  /* la pila: cada carta asoma 7px mas arriba y 7px mas angosta que la de abajo; blancas y tintadas alternadas */
+  .sw-hoja{
+    position:absolute;z-index:calc(5 - var(--i));bottom:calc(100% + 2px);height:calc(3px + var(--i)*7px);
+    left:calc(3px + var(--i)*7px);right:calc(3px + var(--i)*7px);
+    border:2px solid #1C1B1B;border-bottom:0;border-radius:10px 10px 0 0;background-color:#fff;
+    background-image:linear-gradient(to bottom,transparent 0 3px,rgba(28,27,27,.10) 3px 9px,transparent 9px);
+    pointer-events:none
+  }
+  .sw-hoja:nth-of-type(even){background-color:var(--tinte,#F5F0E8)}
+  .sw-tab{
+    position:absolute;z-index:6;left:12px;top:-40px;height:40px;max-width:calc(100% - 24px);display:flex;align-items:center;gap:6px;padding:0 14px 0 10px;
+    background:var(--cat,#E0DCD2);border:2px solid #1C1B1B;border-bottom:0;border-radius:12px 12px 0 0;
+    font-size:13px;font-weight:800;color:#1C1B1B;white-space:nowrap
+  }
+  .sw-tab img,.sw-tab .cemo{flex:none;width:18px;height:18px;font-size:16px}
+  .sw-tn{min-width:0;overflow:hidden;text-overflow:ellipsis}
+  .sw-tc{flex:none;margin-left:2px}
+  .sw-tc b{font:600 20px/1 "Noto Serif",Georgia,serif;letter-spacing:-.02em;margin-left:2px}
+  .sw-cscroll{height:100%;overflow-y:auto;overflow-x:hidden;padding:18px;display:flex;flex-direction:column;gap:12px;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;touch-action:none}   /* none: sin desborde el scroller no le roba el gesto a la card (el navegador cancelaba el arrastre a los 2 moves) */
   .sw-cscroll.ov{touch-action:pan-y}
   .sw-cx-k{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#6b6866}
   .sw-cx-ses{margin:0;font-size:13px;color:#6b6866}
@@ -564,10 +579,68 @@
   .sw-hints.ctx .sw-h{background:#E5E5E5;color:#1C1B1B}
   .sw-hints.ctx .sw-h svg{stroke:#1C1B1B}
   .sw-bar .sw-big{align-self:center}
+  /* ---------- snooze: sheet que sube desde abajo, aviso con Deshacer y fila «Snoozeadas» del home ---------- */
+  .sw-b .ic{width:16px;height:16px;flex:none}
+  .sw-snz-b{display:inline-flex;align-items:center;justify-content:center;gap:6px}
+  .sw-sheet.snz{background:transparent;overflow:hidden}
+  .sw-snz-scrim{position:absolute;inset:0;background:rgba(28,27,27,.52);animation:snz-vela .2s ease-out}
+  .sw-snz-pos{position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:center;pointer-events:none}
+  .sw-snz-hoja{
+    width:100%;max-width:460px;pointer-events:auto;background:#F5F0E8;border-top:2px solid #1C1B1B;border-radius:24px 24px 0 0;
+    padding:8px 14px max(16px,env(safe-area-inset-bottom));animation:snz-sube .24s cubic-bezier(.2,.8,.2,1);
+  }
+  .sw-snz-hoja:focus{outline:none}
+  .sw-snz-asa{display:block;width:44px;height:5px;margin:0 auto 12px;border-radius:3px;background:#CFC8BB}
+  .sw-snz-hoja h3{margin:0 2px 2px;font:600 22px/1.25 "Noto Serif",Georgia,"Times New Roman",serif;color:#1C1B1B}
+  .sw-snz-sub{margin:0 2px 12px;font-size:13px;color:#3A3837}
+  .sw-snz-ops{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
+  .sw-snz-op{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;min-height:54px;border:2px solid #1C1B1B;border-radius:12px;
+    background:#fff;color:#1C1B1B;padding:8px 14px;text-align:left;line-height:1.25;
+  }
+  .sw-snz-op[disabled]{opacity:.55;cursor:default}
+  .sw-snz-op .op-l{display:flex;flex-direction:column;align-items:flex-start;gap:3px;min-width:0;font-size:15px;font-weight:700}
+  .sw-snz-op .op-w{flex:none;font-size:14px;font-weight:700;color:#3A3837;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .sw-snz-op .op-w b{font-weight:800;color:#1C1B1B}
+  .tag-warn{display:inline-block;font-size:11.5px;font-weight:800;line-height:1.4;border-radius:99px;padding:0 9px;border:1.5px solid currentColor;color:#8A5A10;background:#F6E2BF}
+  .sw-snz-err{margin:0 2px 8px;font-size:13px;font-weight:600;color:#A1263A}
+  .sw-snz-err:empty{display:none}
+  .sw-snz-hoja .sw-big{max-width:none}
+  .snz-toast{
+    position:fixed;left:10px;right:10px;bottom:max(10px,env(safe-area-inset-bottom));z-index:60;max-width:440px;margin:0 auto;overflow:hidden;
+    border:2px solid #1C1B1B;border-radius:12px;background:#FFF1C7;color:#1C1B1B;font-family:Manrope,-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+  }
+  .snz-toast.en-mazo{position:relative;left:auto;right:auto;bottom:auto;z-index:auto;flex:none;width:calc(100% - 28px);max-width:432px;margin:0 auto max(10px,env(safe-area-inset-bottom))}   /* con mazo: fila propia abajo del todo (hijo del mazo, en el flujo): la card se achica y el aviso no tapa nada */
+  .snz-live{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+  .snz-toast .snz-toast-in{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 8px 8px 12px;font-size:13.5px;font-weight:700;line-height:1.3}
+  .snz-toast .snz-toast-in button{flex:none;border:0;background:none;min-height:36px;padding:0 8px;font:inherit;font-size:14px;font-weight:800;text-decoration:underline;color:#1F6F6B;cursor:pointer}
+  .snz-toast-t{display:block;height:4px;background:#E0D9CC}
+  .snz-toast-t i{display:block;height:100%;background:#1C1B1B;transform-origin:left;animation:snz-barra 5s linear forwards}
+  @keyframes snz-sube{from{transform:translateY(100%)}to{transform:none}}
+  @keyframes snz-vela{from{opacity:0}to{opacity:1}}
+  @keyframes snz-barra{from{transform:scaleX(1)}to{transform:scaleX(0)}}
+  @media (prefers-reduced-motion: reduce){
+    .sw-snz-hoja,.sw-snz-scrim{animation:none}
+    .snz-toast-t{display:none}
+  }
+  .hsnz{background:#fff;border:2px solid #1C1B1B;border-radius:16px;overflow:hidden}
+  .hrows + .hsnz,.home-hero + .hsnz,.hcat-env + .hsnz,.htandas + .hsnz{margin-top:10px}
+  .hsnz-h{display:flex;align-items:center;gap:12px;width:100%;padding:10px 12px;text-align:left;background:none;border:0;color:#1C1B1B}
+  .hsnz-h .hic{background:#E0DCD2}
+  .hic svg{width:26px;height:26px;fill:none;stroke:#1C1B1B;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  .hchev{width:38px;height:38px;flex:none;display:grid;place-items:center;border-radius:50%;border:2px solid #1C1B1B;background:#fff}
+  .hchev svg{width:16px;height:16px;fill:none;stroke:#1C1B1B;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+  .hsnz-i{display:flex;align-items:center;gap:12px;padding:12px;border-top:2px dashed #E5E5E5}
+  .hsnz-i .htx b{white-space:normal;overflow:visible;line-height:1.25}
+  .hsnz-i .hs{display:flex;align-items:center;gap:5px;margin-top:3px;font-size:12.5px;font-weight:600;color:#3A3837}
+  .hsnz-i .hs svg{width:13px;height:13px;flex:none;fill:none;stroke:#3A3837;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+  .hsnz-i .hs.mal{color:#8a3b2a}
+  .hsnz-i .sw-b{flex:none;color:#1C1B1B;cursor:pointer}
 </style>
 </head>
 <body>
 <div class="wrap" id="raiz"></div>
+<div class="snz-live" id="snz-live" role="status" aria-live="polite" aria-atomic="true"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="/config.js"></script>
@@ -680,6 +753,10 @@ function fuenteHTML(it, cls){
   return '<p class="' + cls + '"><span>Fuente:</span> ' + (/https:\/\//.test(f) ? lnk(f) : '<code>' + esc(f) + '</code>') + '</p>';
 }
 function ms(t){ return t ? new Date(t).getTime() : 0; }
+// snooze: una botonera esta dormida si snooze_hasta > ahora. Un solo lugar para el filtro
+function dormida(f){ return !!f && f.estado === 'abierta' && !!f.snooze_hasta && ms(f.snooze_hasta) > Date.now(); }   // una fila cerrada con snooze_hasta futuro no duerme
+// la llegada de una fila: greatest(created_at, snooze_hasta) cuando ya desperto (la calcula bm_lista); sin ella, created_at
+function llegadaDe(f){ return f ? (f.llegada || f.created_at) : null; }
 function haceCuanto(t){
   if(!t) return '';
   var d = Math.max(0, Date.now() - ms(t));
@@ -731,7 +808,9 @@ function armarTandas(filas){
     var prim = t.baseFila || t.vueltas[0], ult = t.vueltas[t.vueltas.length - 1];
     t.ultima = ult;
     t.abierta = null;
+    t.dormida = null;
     t.vueltas.forEach(function(f){ if(f.estado === 'abierta') t.abierta = f; });
+    if(t.abierta && dormida(t.abierta)){ t.dormida = t.abierta; t.abierta = null; }   // dormida: sigue abierta en la base, pero no cuenta
     var ab = t.abierta;
     // esperando: la mas reciente. trabajando: una recibida (la mas reciente) o, si no, una decidida
     function ultimaDe(est, campo){
@@ -750,7 +829,8 @@ function armarTandas(filas){
       clave: b, titulo: prim.titulo || b, session_id: prim.session_id, sesion_titulo: prim.sesion_titulo,
       skill: prim.skill, proyecto: prim.proyecto, n_items: prim.n_items,
       estado: estT,
-      created_at: (ab || ult).created_at,
+      created_at: llegadaDe(ab || ult),   // la llegada: una que desperto del snooze vuelve arriba y cuenta la edad desde ahi
+      dormida: !!t.dormida,
       decided_at: ref.decided_at, received_at: ref.received_at, applied_at: ref.applied_at, updated_at: ref.updated_at,
       trab_desde: t.trabajando ? (t.trabajando.received_at || t.trabajando.decided_at || t.trabajando.updated_at) : null,
       trab_recibida: !!t.trabajando && t.trabajando.estado === 'recibida',
@@ -778,6 +858,7 @@ function itemsTxt(n){ n = Number(n) || 0; return n + (n === 1 ? ' ítem' : ' ít
 function agrupar(filas, ahora){
   var abiertas = [], enCurso = [], aplicadas = [], viejas = [], esperan = [];
   armarTandas(filas).entradas.forEach(function(f){
+    if(f.dormida) return;   // las dormidas viven en «Snoozeadas» del home
     var edad = ahora - ms(f.created_at);
     if(f.estado === 'esperando'){
       esperan.push(f);
@@ -824,7 +905,7 @@ function tokenMalo(err){ return !!(err && /token inv[aá]lido/i.test(String(err.
 function sesionVencida(){
   detenerVivo();
   borrarToken();
-  estado.token = null; estado.filas = []; estado.sel = null; estado.vivo = null; estado.orig = null; estado.panelKey = null; estado.decidido = null; estado.pend = null;
+  estado.token = null; estado.snzLocal = {}; estado.listaApl = 0; estado.filas = []; estado.sel = null; estado.vivo = null; estado.orig = null; estado.panelKey = null; estado.decidido = null; estado.pend = null;
   vistaEntrada();
 }
 
@@ -890,7 +971,7 @@ function salir(){
   detenerVivo();
   // se borra local primero: aunque bm_salir falle, la pantalla vuelve al PIN
   borrarToken();
-  estado.token = null; estado.filas = []; estado.sel = null; estado.vivo = null; estado.orig = null; estado.panelKey = null; estado.decidido = null; estado.pend = null;
+  estado.token = null; estado.snzLocal = {}; estado.listaApl = 0; estado.filas = []; estado.sel = null; estado.vivo = null; estado.orig = null; estado.panelKey = null; estado.decidido = null; estado.pend = null;
   vistaEntrada();
   if(t) sb.rpc('bm_salir', {p_token: t}).then(function(){}, function(){});
 }
@@ -923,16 +1004,21 @@ function vistaApp(){
 function cargarLista(){
   var token = estado.token;
   if(!token) return Promise.resolve();
+  var seq = estado.listaSeq = (estado.listaSeq || 0) + 1;   // numero de pedido: una respuesta pedida antes de un snooze/despertar no lo pisa (snzLocal)
   return sb.rpc('bm_lista', {p_token: token})
     .then(function(r){
       if(token !== estado.token) return; // salio o cambio de sesion mientras tanto
+      if(seq < (estado.listaApl || 0)) return;   // llego una mas nueva antes que esta: esta ya es vieja
       if(r.error){
         if(tokenMalo(r.error)) sesionVencida(); else console.warn('lista', r.error);
         return;
       }
       estado.filas = r.data || [];
+      estado.listaApl = seq;
+      snzAplicarLocal(seq);   // lo que snoozeaste o despertaste aca y esta respuesta (pedida antes) todavia no sabe
       estado.listaCargada = true;
       limpiarMarcas();
+      snzSacarDormidas();   // una que paso a dormida desde otro dispositivo sale del mazo abierto
       pintarLista();
       homeCargar();
       cargarErrores();
@@ -1712,6 +1798,7 @@ var SW_ICONOS = {"mail":"<rect class=\"a\" fill=\"none\" stroke-width=\"3.5\" st
 var SW_ICO_GO = '<svg viewBox="0 0 24 24" fill="none" stroke="#1C1B1B" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
 var SW_ICO_NO = '<svg viewBox="0 0 24 24" fill="none" stroke="#E5E5E5" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
 var SW_ICO_UNDO = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#1C1B1B" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg>';
+var SW_ICO_SNZ = '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#1C1B1B" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>';
 var SW_ICO_UP = '<svg viewBox="0 0 24 24" fill="none" stroke="#1C1B1B" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V6M6.5 11.5L12 6l5.5 5.5"/></svg>';
 
 /* ----- tipos de card -----
@@ -1854,9 +1941,9 @@ function mqBarraHTML(it, a){
 function mqSecHTML(){
   return '<button type="button" class="sw-b" data-a="salt">Al final</button><button type="button" class="sw-b" data-a="despues">Al inbox</button><button type="button" class="sw-b" data-a="masinfo">+info</button>';
 }
-function swSecHTML(sw, bloq, conMq){
+function swSecHTML(sw, bloq, conMq, conSnz){
   return '<div class="sw-sec"><button type="button" class="sw-b sw-undo" data-a="deshacer" aria-label="Deshacer" title="Deshacer"' + (sw.hist.length && !bloq ? '' : ' disabled') + '>' + SW_ICO_UNDO + '</button>' +
-    (conMq ? mqSecHTML() : '') + '</div>';
+    (conMq ? mqSecHTML() : '') + (conSnz ? '<button type="button" class="sw-b sw-snz-b" data-a="snooze">' + SW_ICO_SNZ + 'Snooze</button>' : '') + '</div>';
 }
 // la misma barra de abajo que la card, para el Detalle: tocar uno cierra la hoja y actúa sobre la card de atrás (ver swClick)
 function swBarraCardHTML(sw, it, a){
@@ -1935,6 +2022,7 @@ function mqHojaCo(sw, cid){
 }
 // ‹ Volver del Detalle (o Escape) con texto nuevo y sin marca: eso ya es comentar, y si no el comentario queda sin poder enviarse
 function swVolverHoja(sw){
+  if(sw.sheet === 'snz'){ snzCerrar(sw); return; }   // Cancelar / tocar afuera / Esc del snooze
   var ta = sw.sheet === 'det' && sw.sheetEl.querySelector('textarea[data-com]');
   var cid = ta ? ta.getAttribute('data-cid') : null, e = cid != null && sw.por[cid];
   var pasa = e && ta.value.trim() && ta.value !== sw.detC && !marcaDe(e.clave, e.n).m;
@@ -2127,7 +2215,9 @@ function swipeDesmontar(){
     if(sw.el && sw.el.parentNode) sw.el.parentNode.removeChild(sw.el);
   }
   estado.sw = null;
+  snzInert(false);
   document.documentElement.classList.remove('sw-lock');
+  snzToastPoner();
   if(sw && estado.festejo) setTimeout(festejoChequear, 0);
 }
 // cola por tema = las cards sin marcar, en orden. prev conserva las salteadas (al final, en su orden) y el tema donde estaba
@@ -2166,6 +2256,7 @@ function swipeRearmar(){
 function swipeOcupado(sw){ return !!(sw && (sw.arr || sw.anim || sw.sheet)); }
 function swLibre(){
   var sw = estado.sw;
+  if(sw && sw.sacar && !swipeOcupado(sw)) snzSacarDormidas();
   if(sw && sw.rearmar && !swipeOcupado(sw)) swipeRearmar();
 }
 function primeraActiva(sw){
@@ -2265,17 +2356,41 @@ function swChipHTML(e, inerte){
     : '<button type="button" class="sw-catchip" data-a="ctx" style="' + st + '" aria-label="Ver de qué va ' + esc(b.titulo) + '">' + cont + '</button>';
   return '<div class="sw-orig">' + chip + (sw.multi ? '<span class="sw-bt">' + esc(b.titulo) + '</span>' : '') + '</div>';
 }
-// cuerpo del card de contexto (el mismo en el mazo y en la hoja): chip, titulo, contexto, sesion, cuantas cards, intro y fyi plegado
+// mezcla un hex con blanco (pct = cuanto blanco, 0-1) y lo devuelve como #rrggbb. Si no es un hex valido usa el color de «Otras»
+function catTinte(hex, pct){
+  var h = String(hex || '').replace('#', '');
+  if(h.length === 3 || h.length === 4) h = h.split('').map(function(c){ return c + c; }).join('');
+  if(!/^[0-9a-f]{6}([0-9a-f]{2})?$/i.test(h)) return catTinte(CAT_OTRAS.color, pct);
+  var o = '#';
+  for(var i = 0; i < 3; i++){
+    var v = Math.round(parseInt(h.substr(i * 2, 2), 16) * (1 - pct) + 255 * pct);
+    o += (v < 16 ? '0' : '') + v.toString(16);
+  }
+  return o;
+}
+// cartas que asoman de la carpeta: tantas como cards, tope 4
+function swCtxK(b){ return Math.max(1, Math.min(4, b.items.length)); }
+// las variables de la carpeta (tinte del frente, color de la pestaña, cartas y alto libre de arriba)
+function swCtxEstilo(b){
+  var k = swCtxK(b);
+  return '--k:' + k + ';--Y:' + Math.max(k * 7 + 24, 42) + 'px;--tinte:' + catTinte(b.cat.color, 0.7) + ';--cat:' + catTinte(b.cat.color, 0);
+}
+// la pila y la pestaña de la carpeta («Casa · 4»): van dentro de la card, por fuera del scroll
+function swCtxCarpeta(b){
+  var h = '', k = swCtxK(b);
+  for(var i = 1; i <= k; i++) h += '<span class="sw-hoja" style="--i:' + i + '" aria-hidden="true"></span>';
+  return h + '<div class="sw-tab">' + catIcono(b.cat) + '<span class="sw-tn">' + esc(b.cat.nombre) + '</span><span class="sw-tc"> · <b>' + b.items.length + '</b></span></div>';
+}
+// cuerpo del card de contexto (el mismo en el mazo y en la hoja): titulo, contexto, sesion, temas, intro y fyi plegado. La categoria y el numero de cards van en la pestaña
 function swCtxCuerpo(b){
-  var dat = b.dat, cat = b.cat, n = b.items.length, hace = haceCuanto(b.creada);
+  var dat = b.dat, n = b.items.length, hace = haceCuanto(b.creada);
   var ses = b.sesion ? 'De ' + b.sesion + (hace ? ' · ' + hace : '') : (hace ? 'Armada ' + hace : '');
   var intro = Array.isArray(dat.intro) ? dat.intro : [];
   var f = dat.fyi && typeof dat.fyi === 'object' ? dat.fyi : null;
   var h = '<div class="sw-cx-k">De qué va</div>' +
-    '<div class="sw-orig"><span class="sw-catchip" style="background:' + esc(cat.color) + '">' + catIcono(cat, 'sw-cic') + esc(cat.nombre) + '</span></div>' +
     '<h2>' + esc(b.titulo) + '</h2>' + (dat.contexto ? '<p class="sw-ctx">' + lnk(dat.contexto) + '</p>' : '') +
     (ses ? '<p class="sw-cx-ses">' + esc(ses) + '</p>' : '') +
-    '<p class="sw-cx-n">' + esc(pl(n, 'card', 'cards') + (b.nTemas > 1 ? ' en ' + b.nTemas + ' temas' : '')) + '</p>';
+    '<p class="sw-cx-n">' + esc(b.nTemas > 1 ? 'Repartidas en ' + b.nTemas + ' temas' : pl(n, 'card', 'cards')) + '</p>';
   intro.forEach(function(bl){
     if(!bl || typeof bl !== 'object') return;
     h += '<div class="sw-blk">' + (bl.titulo ? '<b>' + esc(bl.titulo) + '</b>' : '') +
@@ -2301,12 +2416,20 @@ function swRecoHTML(it){
 }
 
 /* ----- pintado ----- */
+// el contexto scrollea por dentro; .ov (pan-y) solo si desborda. Se recalcula cada vez que cambia el alto del contenido o del contenedor
+function swCtxOv(){
+  var sw = estado.sw, cs = sw && sw.main && sw.main.querySelector('.sw-cscroll');
+  if(cs) cs.classList.toggle('ov', cs.scrollHeight > cs.clientHeight + 1);
+}
+document.addEventListener('toggle', swCtxOv, true);   // abrir o cerrar el «Para tu info» (el evento no burbujea: captura)
+window.addEventListener('resize', swCtxOv);           // rotar, teclado, alto del viewport
+try{ if(document.fonts && document.fonts.ready) document.fonts.ready.then(swCtxOv); }catch(_){}   // la fuente tardía cambia los saltos de línea
 function swipeRender(){
   var sw = estado.sw; if(!sw || !sw.main) return;
   if(sw.tw){ sw.tw.cancel(); sw.tw = null; }
   sw.anim = false;
   if(sw.tema >= sw.temas.length) sw.tema = Math.max(0, sw.temas.length - 1);
-  if(sw.lista){ swListaRender(sw); return; }
+  if(sw.lista){ swListaRender(sw); snzToastPoner(); return; }
   var v = swipeVista(sw), T = sw.temas[sw.tema], c = swConteo(), ct = swConteo(sw.tema), env = sw.envio || {};
   var bloq = env.st === 'enviando' || env.st === 'ok' || sw.enviadoAlgo;
   var pos = Math.min(ct.tot, ct.hechas + 1), prog;
@@ -2336,13 +2459,13 @@ function swipeRender(){
   h += '<div class="sw-stage">';
   if(v === 'ctx'){
     e = swCtxPend(sw); cb = swBotInfo(sw, e.clave); n = 'ctx|' + e.clave;
-    h += '<div class="sw-stack" id="sw-stack">' +
+    h += '<div class="sw-stack" id="sw-stack"' + (cb ? ' style="' + swCtxEstilo(cb) + '"' : '') + '>' +
       '<div class="sw-hints ctx" aria-hidden="true">' +
         '<div class="sw-h go"><i>' + SW_ICO_GO + 'Empezar</i></div>' +
-        '<div class="sw-h no"><i>' + SW_ICO_GO + 'Empezar</i></div>' +
+        '<div class="sw-h no snz"><i>' + SW_ICO_SNZ + 'Snooze</i></div>' +
         '<div class="sw-h up"><i>' + SW_ICO_GO + 'Empezar</i></div></div>' +
       '<div class="sw-card ctx" id="sw-card" tabindex="0" role="group" aria-label="Contexto de ' + esc(cb ? cb.titulo : '') + '">' +
-        '<div class="sw-cscroll">' + (cb ? swCtxCuerpo(cb) : '') + '</div></div></div>';
+        (cb ? swCtxCarpeta(cb) : '') + '<div class="sw-cscroll">' + (cb ? swCtxCuerpo(cb) : '') + '</div></div></div>';
   } else if(v === 'card'){
     n = primeraActiva(sw); e = sw.por[n]; it = e.it; a = swAcc(it);
     h += '<div class="sw-stack" id="sw-stack">' +
@@ -2389,17 +2512,17 @@ function swipeRender(){
   if(v === 'card'){
     h += mqBarraHTML(it, a);
   }
-  h += swSecHTML(sw, bloq, v === 'card') +
-    (v === 'card' ? '<div class="sw-keys">' + (mqOpciones(it) ? '↑ Al final · tocá una opción' : '← No va · ↑ Al final · → Va') + '</div>' : v === 'ctx' ? '<div class="sw-keys">← ↑ → Empezar</div>' : '') + '</div>';
+  h += swSecHTML(sw, bloq, v === 'card', v === 'ctx') +
+    (v === 'card' ? '<div class="sw-keys">' + (mqOpciones(it) ? '↑ Al final · tocá una opción' : '← No va · ↑ Al final · → Va') + '</div>' : v === 'ctx' ? '<div class="sw-keys">← Snooze · ↑ → Empezar</div>' : '') + '</div>';
   sw.main.innerHTML = h;
   // el contexto scrollea por dentro; solo si desborda deja el gesto vertical al navegador (si no, arriba lo pasa como cualquier swipe)
-  var cs = sw.main.querySelector('.sw-cscroll');
-  if(cs && cs.scrollHeight > cs.clientHeight + 1) cs.classList.add('ov');
+  swCtxOv();
   var card = sw.main.querySelector('#sw-card');
   sw.d = card ? {card: card, hgo: sw.main.querySelector('.sw-h.go'), hno: sw.main.querySelector('.sw-h.no'), hup: sw.main.querySelector('.sw-h.up')} : null;
   sw.px = 0; sw.py = 0;
   if(card && sw.ultN !== n){ sw.ultN = n; swEntrar(sw); }
   else if(!card) sw.ultN = null;
+  snzToastPoner();   // el aviso del snooze sobrevive a los swipes siguientes: se vuelve a poner en cada pintado
 }
 /* ----- animaciones (por tiempo; el reloj cae a setTimeout si el navegador pausa requestAnimationFrame) ----- */
 function sigFrame(fn){
@@ -2572,7 +2695,8 @@ function swipeRepasar(todo){
 /* ----- hojas: Temas y detalle (viven aparte del mazo, asi abrirlas no repinta la card) ----- */
 function swipeCerrarHoja(){
   var sw = estado.sw; if(!sw || !sw.sheet) return;
-  sw.sheet = null; sw.sheetEl.innerHTML = '';
+  sw.sheet = null; sw.sheetEl.innerHTML = ''; sw.sheetEl.className = 'sw-sheet'; sw.snzCtx = null;
+  snzInert(false);
   swLibre();
 }
 function swipeTemas(){
@@ -2591,7 +2715,7 @@ function swipeContexto(){
   var e = sw.por[primeraActiva(sw)], b = e && swBotInfo(sw, e.clave); if(!b) return;
   sw.sheet = 'ctx';
   sw.sheetEl.innerHTML = '<div class="sw-sheet-in"><div class="sw-top"><button type="button" class="sw-b" data-a="cerrar">‹ Volver</button><span class="sw-st">Contexto</span><span style="width:78px"></span></div>' +
-    '<div class="sw-dscroll"><div class="sw-dcard ctx">' + swCtxCuerpo(b) + '</div></div></div>';
+    '<div class="sw-dscroll"><div class="sw-dcard ctx" style="' + swCtxEstilo(b) + '">' + swCtxCarpeta(b) + swCtxCuerpo(b) + '</div></div></div>';
   var sc = sw.sheetEl.querySelector('.sw-dscroll'); if(sc) sc.scrollTop = 0;
 }
 // todo lo que dice una card: el Detalle y la vista «todas juntas» lo pintan igual
@@ -2725,6 +2849,7 @@ function swClick(e){
   // click fantasma: con el mouse (detail > 0) vale solo si la presion arranco en ese mismo boton, no en lo que haya quedado debajo del cursor
   if(e.detail > 0 && sw.pd && !b.contains(sw.pd)) return;
   var a = b.getAttribute('data-a');
+  if(sw.sheet === 'snz' && a !== 'snz-op' && a !== 'snz-cerrar') return;   // con «¿Cuándo vuelve?» abierto, nada del mazo de atrás reacciona
   if(sw.sheet === 'det' && SW_BARRA[a]){
     // las casillas marcadas en el Detalle pasan a las de la card antes de que «Listo» las lea
     var chk = Array.prototype.map.call(sw.sheetEl.querySelectorAll('input[data-chk]'), function(i){ return i.checked; });
@@ -2767,6 +2892,9 @@ function swClick(e){
     var g = sw.main.querySelector('#sw-lg-' + b.getAttribute('data-i')); if(g) g.scrollIntoView({block: 'start', behavior: reducido() ? 'auto' : 'smooth'});
     return;
   }
+  if(a === 'snooze'){ snzAbrir(); return; }
+  if(a === 'snz-cerrar'){ snzCerrar(sw); return; }
+  if(a === 'snz-op'){ snzElegir(b.getAttribute('data-id')); return; }
   if(mqClick(sw, a, b)) return;
   if(a === 'salir'){ if(sw.multi) swipeSalirMulti(); else volverALista(); }
   else if(a === 'temas') swipeTemas();
@@ -2875,6 +3003,7 @@ function swUp(e){
   var dir = arriba ? 'up' : der ? 'right' : izq ? 'left' : null;
   if(dir !== 'up' && mqCardOp(sw)) dir = null;
   sw.arr = false;
+  if(dir === 'left' && swipeVista(sw) === 'ctx'){ snzAbrir(); swVolver(v.x, v.y); return; }   // izquierda en la card negra = Snooze: la card vuelve a su lugar
   if(dir) swSalir(dir); else swVolver(v.x, v.y);
 }
 function swCancel(e){
@@ -2899,10 +3028,300 @@ document.addEventListener('keydown', function(e){
   if(sw.sheet || sw.anim || (vk !== 'card' && vk !== 'ctx')) return;
   if((e.key === 'ArrowRight' || e.key === 'ArrowLeft') && vk === 'card' && mqCardOp(sw)) return;
   if(e.key === 'ArrowRight'){ e.preventDefault(); swSalir('right'); }
-  else if(e.key === 'ArrowLeft'){ e.preventDefault(); swSalir('left'); }
+  else if(e.key === 'ArrowLeft'){ e.preventDefault(); if(vk === 'ctx') snzAbrir(); else swSalir('left'); }
   else if(e.key === 'ArrowUp'){ e.preventDefault(); swSalir('up'); }
   else if(e.key === 'Enter' && tg && tg.classList && tg.classList.contains('sw-card')){ e.preventDefault(); if(vk === 'ctx') swSalir('up'); else swipeDetalle(); }
 });
+
+/* ---------- snooze de una botonera ----------
+   En la card negra de contexto, izquierda (gesto, flecha ← o el boton Snooze) abre «¿Cuando vuelve?». Elegir llama a bm_snoozear y,
+   recien con el OK, la botonera sale del mazo. En la base sigue `abierta` (con snooze_hasta): sus marcas se conservan (limpiarMarcas no la toca)
+   y la pagina nunca la envia mientras duerme. Todas las horas se calculan y se muestran en la zona horaria del dispositivo. */
+var SNZ_DIAS = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'];
+var SNZ_TOAST_MS = 5000;
+// fecha y hora de un instante en la zona horaria del dispositivo: {y, m, d, h, mi, s, dow}
+function snzPartes(t){
+  var x = new Date(t);
+  return {y: x.getFullYear(), m: x.getMonth() + 1, d: x.getDate(), h: x.getHours(), mi: x.getMinutes(), s: x.getSeconds(), dow: x.getDay()};
+}
+// el instante de «y-m-d h:mi» en hora local (d puede salirse del mes: Date lo acomoda; el horario de verano lo resuelve el navegador)
+function snzInstante(y, m, d, h, mi){
+  return new Date(y, m - 1, d, h, mi, 0, 0).getTime();
+}
+function snzFecha(t){ var p = snzPartes(t); return p.y + '-' + ('0' + p.m).slice(-2) + '-' + ('0' + p.d).slice(-2); }
+// UNA sola funcion de formato para el sheet, el toast y el home: «vie 18:00»; a mas de 6 dias suma el numero de dia: «lun 16 8:00»
+function snzCuando(t, ref){
+  var p = snzPartes(t), h = snzPartes(ref == null ? Date.now() : ref);
+  var dias = Math.round((Date.UTC(p.y, p.m - 1, p.d) - Date.UTC(h.y, h.m - 1, h.d)) / 86400000);
+  return SNZ_DIAS[p.dow] + (dias > 6 ? ' ' + p.d : '') + ' ' + p.h + ':' + ('0' + p.mi).slice(-2);
+}
+// las 4 opciones fijas, segun la hora local de t
+function snzOpciones(t){
+  var p = snzPartes(t), out = [];
+  function en(dias, h){ return snzInstante(p.y, p.m, p.d + dias, h, 0); }
+  function op(id, rot, hasta){ out.push({id: id, rot: rot, hasta: hasta, cuando: snzCuando(hasta, t), fecha: snzFecha(hasta)}); }
+  if(p.h < 17) op('hoy', 'Hoy más tarde', en(0, 18));
+  op('manana', 'Mañana', en(1, 8));
+  if(p.dow !== 0 && p.dow !== 6) op('finde', 'El finde', en(6 - p.dow, 9));
+  if(p.dow !== 0) op('lunes', 'Próximo lunes', en(((1 - p.dow + 7) % 7) || 7, 8));   // el lunes de hoy ya paso: va el de la semana que viene
+  return out;
+}
+function snzFila(clave){ return estado.filas.filter(function(f){ return f.clave === clave; })[0] || null; }
+// lo que la pagina sabe y la proxima bm_lista todavia no refleja (snooze/despertar hechos aca): {hasta, ts}. ts = el numero de la ultima bm_lista
+// pedida cuando la base contesto el OK. Una respuesta de bm_lista pedida ANTES (seq <= ts) es vieja y se le reaplica; una pedida despues ya lo refleja y lo borra
+function snzFijarLocal(clave, hasta){
+  var L = estado.snzLocal || (estado.snzLocal = {});
+  L[clave] = {hasta: hasta, ts: estado.listaSeq || 0};
+}
+function snzAplicarLocal(seq){
+  var L = estado.snzLocal; if(!L) return;
+  Object.keys(L).forEach(function(clave){
+    var x = L[clave];
+    if(seq > x.ts){ delete L[clave]; return; }   // pedida despues del OK: ya lo refleja
+    var f = snzFila(clave); if(!f || f.estado !== 'abierta') return;
+    f.snooze_hasta = x.hasta;
+    if(ms(x.hasta) <= Date.now()) f.llegada = x.hasta;   // despertada: vuelve arriba
+  });
+}
+// lo de atras del sheet no recibe foco ni toques ni lectores de pantalla (inert) mientras esta abierto
+var snzInertes = [];
+function snzInert(on){
+  if(!on){ (snzInertes || []).forEach(function(el){ try{ el.inert = false; }catch(_){} }); snzInertes = []; return; }
+  var sw = estado.sw; if(!sw) return;
+  var cand = [];
+  Array.prototype.forEach.call(sw.el.children, function(el){ if(el !== sw.sheetEl) cand.push(el); });   // el mazo y el aviso
+  Array.prototype.forEach.call(document.body.children, function(el){ if(el !== sw.el && el.id !== 'snz-live' && !/^(SCRIPT|STYLE|LINK)$/.test(el.tagName) && !el.classList.contains('snz-toast')) cand.push(el); });
+  cand.forEach(function(el){ if(!el.inert){ try{ el.inert = true; snzInertes.push(el); }catch(_){} } });
+}
+// marca de cada opcion si algun item vence antes de esa hora
+function snzOpsConAviso(clave, ops){
+  var sw = estado.sw, b = sw && swBotInfo(sw, clave);
+  ops.forEach(function(o){ o.antes = !!b && b.items.some(function(it){ var v = venceOk(it); return !!v && v < o.fecha; }); });   // un ítem vence antes de esa hora: se avisa, se puede elegir igual
+  return ops;
+}
+function snzOpsHTML(ops){
+  return ops.map(function(o){
+    var i = o.cuando.lastIndexOf(' ');
+    return '<button type="button" class="sw-snz-op" data-a="snz-op" data-id="' + o.id + '"><span class="op-l"><span class="rot">' + esc(o.rot) + '</span>' +
+      (o.antes ? '<span class="tag-warn">vence antes</span>' : '') + '</span><span class="op-w"><b>' + esc(o.cuando.slice(0, i)) + '</b> ' + esc(o.cuando.slice(i + 1)) + '</span></button>';
+  }).join('');
+}
+// el sheet «¿Cuando vuelve?»: sube desde abajo sobre la card oscurecida. Solo desde la card negra de contexto
+function snzAbrir(){
+  var sw = estado.sw; if(!sw || sw.sheet || sw.anim) return false;
+  if(sw.enviando || (sw.envio && sw.envio.st === 'enviando')) return false;   // con un envio en curso no se snoozea
+  if(swipeVista(sw) !== 'ctx') return false;
+  var e = swCtxPend(sw), b = e && swBotInfo(sw, e.clave); if(!b) return false;
+  var ops = snzOpsConAviso(e.clave, snzOpciones(Date.now()));
+  sw.sheet = 'snz'; sw.snzCtx = {clave: e.clave, ops: ops, cancelada: false}; sw.snzBusy = false;
+  sw.sheetEl.className = 'sw-sheet snz';
+  sw.sheetEl.innerHTML = '<div class="sw-snz-scrim" data-a="snz-cerrar"></div><div class="sw-snz-pos"><div class="sw-snz-hoja" role="dialog" aria-modal="true" aria-labelledby="snz-tit" tabindex="-1">' +
+    '<span class="sw-snz-asa" aria-hidden="true"></span><h3 id="snz-tit">¿Cuándo vuelve?</h3>' +
+    '<p class="sw-snz-sub">Se va de «Por decidir» y vuelve sola con tus marcas.</p><div class="sw-snz-ops">' + snzOpsHTML(ops) + '</div><div class="sw-snz-err" role="alert"></div>' +
+    '<button type="button" class="sw-big alt" data-a="snz-cerrar">Cancelar</button></div></div>';
+  snzInert(true);
+  var dlg = sw.sheetEl.querySelector('.sw-snz-hoja'); if(dlg) try{ dlg.focus({preventScroll: true}); }catch(_){}   // el foco entra al sheet sin marcar ninguna opcion
+  return true;
+}
+// Cancelar / tocar afuera / Esc: cierran siempre. Con la RPC en vuelo la eleccion queda cancelada y, si despues llega el OK, la pagina se queda con lo que diga la base
+function snzCerrar(sw){
+  if(!sw || sw.sheet !== 'snz') return;
+  if(sw.snzBusy && sw.snzCtx) sw.snzCtx.cancelada = true;
+  sw.snzBusy = false;
+  swipeCerrarHoja();
+  var c = sw.main.querySelector('#sw-card'); if(c) try{ c.focus({preventScroll: true}); }catch(_){}
+}
+function snzError(sw, motivo){
+  var er = sw.sheetEl.querySelector('.sw-snz-err');
+  if(er) er.textContent = 'No se pudo snoozear: ' + motivo + '. Probá de nuevo.';
+  Array.prototype.forEach.call(sw.sheetEl.querySelectorAll('.sw-snz-op'), function(x){ x.disabled = false; });
+}
+// la opcion elegida ya paso (el sheet estuvo abierto un buen rato): se recalculan las opciones con la hora de ahora
+function snzHoraVieja(sw, c){
+  sw.snzBusy = false;
+  if(estado.sw !== sw || sw.sheet !== 'snz' || sw.snzCtx !== c) return;
+  c.ops = snzOpsConAviso(c.clave, snzOpciones(Date.now()));
+  var ul = sw.sheetEl.querySelector('.sw-snz-ops'); if(ul) ul.innerHTML = snzOpsHTML(c.ops);
+  var er = sw.sheetEl.querySelector('.sw-snz-err'); if(er) er.textContent = 'Esa hora ya pasó, elegí otra.';
+  var dlg = sw.sheetEl.querySelector('.sw-snz-hoja'); if(dlg) try{ dlg.focus({preventScroll: true}); }catch(_){}
+}
+// elegir una opcion: bm_snoozear; recien con el OK la botonera sale del mazo
+function snzElegir(id){
+  var sw = estado.sw, c = sw && sw.snzCtx; if(!sw || sw.sheet !== 'snz' || !c || sw.snzBusy) return;
+  var op = c.ops.filter(function(o){ return o.id === id; })[0], token = estado.token; if(!op || !token) return;
+  var hasta = new Date(op.hasta).toISOString();
+  sw.snzBusy = true;
+  Array.prototype.forEach.call(sw.sheetEl.querySelectorAll('.sw-snz-op'), function(x){ x.disabled = true; });
+  var er = sw.sheetEl.querySelector('.sw-snz-err'); if(er) er.textContent = '';
+  function falla(motivo){ sw.snzBusy = false; if(estado.sw === sw && sw.sheet === 'snz' && sw.snzCtx === c) snzError(sw, motivo); }
+  sb.rpc('bm_snoozear', {p_token: token, p_clave: c.clave, p_hasta: hasta}).then(function(r){
+    if(token !== estado.token) return;
+    if(r.error && tokenMalo(r.error)){ sesionVencida(); return; }
+    if(c.cancelada){   // se cerro el sheet con la RPC en vuelo: no se saca nada del mazo; la proxima bm_lista manda
+      if(!r.error){ if(r.data === 'abierta') snzFijarLocal(c.clave, hasta); cargarLista(); }
+      return;
+    }
+    if(r.error){
+      if(/hora inv[aá]lida/i.test(String(r.error.message || ''))) snzHoraVieja(sw, c); else falla(r.error.message || 'error');
+      return;
+    }
+    if(r.data !== 'abierta'){ falla('ya estaba ' + r.data); cargarLista(); return; }   // otro dispositivo la decidio o la cerro
+    sw.snzBusy = false;
+    if(estado.sw === sw) snzListo(sw, c, op, hasta);
+  }, function(err){ if(token === estado.token && !c.cancelada) falla((err && err.message) || 'sin conexión'); });
+}
+// la base dijo OK: la botonera duerme desde ya (el proximo bm_lista lo confirma), sale del mazo y aparece el aviso con Deshacer
+function snzListo(sw, c, op, hasta){
+  snzFijarLocal(c.clave, hasta);
+  var f = snzFila(c.clave); if(f) f.snooze_hasta = hasta;
+  estado.tandasDe = null;
+  homeCargar();   // poda del home la que duerme ANTES de repintar el mazo: si no, la pantalla de fin la ofrece en «Seguí en …»
+  var sel = sw.multi ? null : estado.sel;   // el mazo de una sola botonera se destruye al volver a la lista: el Deshacer necesita saber a cual volver
+  swipeCerrarHoja();
+  snzToastMostrar(c.clave, snzCuando(op.hasta), sel);
+  if(sw.multi){ snzQuitar(sw, c.clave); sw.ultN = null; swipeRender(); }   // el mazo pasa a la siguiente botonera, o a la pantalla de fin
+  else volverALista();
+  homeCargar(); homePintar();
+}
+// saca la botonera del mazo de varias (cola, conteos, resumen y envio) y guarda lo sacado para el Deshacer
+function snzQuitar(sw, clave){
+  sw.snz = sw.snz || {};
+  if(sw.snz[clave]) return;   // ya esta sacada y guardada: una segunda llamada no pisa lo guardado (el Deshacer quedaria vacio)
+  var st = {bot: null, bi: -1, todas: [], mazo: [], cola: []}, cids = {};
+  Object.keys(sw.por).forEach(function(cid){ if(sw.por[cid].clave === clave) cids[cid] = true; });
+  (sw.bots || []).forEach(function(b, i){ if(b.clave === clave){ st.bot = b; st.bi = i; } });
+  sw.bots = (sw.bots || []).filter(function(b){ return b.clave !== clave; });
+  sw.todas = sw.todas.filter(function(e){ if(!cids[e.cid]) return true; st.todas.push(e); return false; });
+  sw.temas.forEach(function(t, ti){
+    t.items = t.items.filter(function(e, i){ if(!cids[e.cid]) return true; st.mazo.push({ti: ti, i: i, e: e}); return false; });
+  });
+  sw.cola = sw.cola.map(function(q, ti){ return q.filter(function(cid){ if(!cids[cid]) return true; st.cola.push({ti: ti, cid: cid}); return false; }); });
+  Object.keys(cids).forEach(function(cid){ delete sw.salt[cid]; });
+  sw.hist = sw.hist.filter(function(h){ return !cids[h.n]; });
+  sw.snz[clave] = st;
+}
+// el Deshacer del aviso: la botonera vuelve al frente del mazo, con su card negra
+function snzVolver(sw, clave){
+  var st = sw.snz && sw.snz[clave]; if(!st) return;
+  delete sw.snz[clave];
+  if(st.bot){ sw.bots = sw.bots || []; sw.bots.splice(Math.min(st.bi, sw.bots.length), 0, st.bot); }
+  st.todas.forEach(function(e){ sw.todas.push(e); });
+  st.mazo.forEach(function(x){ var t = sw.temas[x.ti]; if(t) t.items.splice(Math.min(x.i, t.items.length), 0, x.e); });
+  var por = {};
+  st.cola.forEach(function(x){ (por[x.ti] = por[x.ti] || []).push(x.cid); });
+  Object.keys(por).forEach(function(ti){ sw.cola[ti] = por[ti].concat(sw.cola[ti] || []); });
+  var t0 = st.cola.length ? st.cola[0].ti : sw.tema;
+  delete sw.ctxVisto[clave];
+  sw.tema = t0; sw.resumen = false; sw.lista = null; sw.aviso = ''; sw.ultN = null;
+  swipeRender();
+}
+// una botonera que paso a dormida (desde otro dispositivo) sale del mazo abierto en la proxima bm_lista, tambien en modo multi
+function snzSacarDormidas(){
+  var sw = estado.sw; if(!sw) return;
+  var dor = {};
+  estado.filas.forEach(function(f){ if(f.estado === 'abierta' && dormida(f)) dor[f.clave] = true; });
+  var hay = sw.multi ? (sw.bots || []).filter(function(b){ return dor[b.clave]; }) : (sw.clave && dor[sw.clave] ? [{clave: sw.clave}] : []);
+  if(!hay.length){ sw.sacar = false; return; }
+  if(swipeOcupado(sw)){ sw.sacar = true; return; }   // gesto, animacion u hoja abierta: swLibre lo retoma
+  sw.sacar = false;
+  if(!sw.multi){ volverALista(); return; }
+  hay.forEach(function(b){ snzQuitar(sw, b.clave); });
+  sw.ultN = null; swipeRender();
+}
+/* ----- aviso «Snoozeada hasta … · Deshacer» (5 s): vive aparte del mazo (hijo del mazo, no de la card) y se anuncia en la region viva ----- */
+function snzAnunciar(txt){ var l = document.getElementById('snz-live'); if(l) l.textContent = txt; }
+function snzToastMostrar(clave, cuando, sel){
+  snzToastQuitar();
+  var el = document.createElement('div');
+  el.className = 'snz-toast';
+  el.innerHTML = '<div class="snz-toast-in"><span class="snz-msg">' + esc('Snoozeada hasta ' + cuando) + '</span><button type="button" data-snz="deshacer">Deshacer</button></div>' +
+    '<span class="snz-toast-t" aria-hidden="true"><i></i></span>';
+  el.addEventListener('click', function(ev){ if(ev.target.closest && ev.target.closest('[data-snz="deshacer"]')) snzDeshacer(); });
+  var t = estado.snzToast = {el: el, clave: clave, sw: estado.sw, sel: sel || null, t0: performance.now(), busy: false, timer: setTimeout(snzToastQuitar, SNZ_TOAST_MS)};
+  setTimeout(function(){ if(estado.snzToast === t) snzAnunciar('Snoozeada hasta ' + cuando + '. Podés deshacerlo.'); }, 60);   // la region ya existe vacia: el texto llega despues
+  snzToastPoner();
+}
+function snzToastQuitar(){
+  var t = estado.snzToast; if(!t) return;
+  clearTimeout(t.timer);
+  if(t.el.parentNode) t.el.parentNode.removeChild(t.el);
+  estado.snzToast = null;
+  snzAnunciar('');
+  swCtxOv();   // la card recupera su alto
+}
+// con mazo, el aviso es hijo del mazo (fila propia abajo del todo, la card se achica); sin mazo, abajo de la pantalla. Solo se mueve si cambio el contenedor
+function snzToastPoner(){
+  var t = estado.snzToast; if(!t) return;
+  var sw = estado.sw, dest = sw && sw.el && document.body.contains(sw.el) ? sw.el : document.body;
+  t.el.className = 'snz-toast' + (dest === document.body ? '' : ' en-mazo');
+  if(t.el.parentNode !== dest) dest.appendChild(t.el);
+  var barra = t.el.querySelector('.snz-toast-t i');
+  if(barra) barra.style.animationDelay = '-' + Math.max(0, (performance.now() - t.t0) / 1000).toFixed(2) + 's';   // al repintar, la barra sigue donde iba
+  swCtxOv();
+}
+// la base no la dejo despertar (la decidieron o la cerraron en otro lado): se dice y se vuelve a leer la lista, no se restaura nada
+function snzNoDespertada(estadoBase){ return estadoBase === 'no_existe' ? 'ya no existe' : 'ya estaba ' + estadoBase; }
+function snzDeshacer(){
+  var t = estado.snzToast, token = estado.token; if(!t || t.busy || !token) return;
+  t.busy = true; clearTimeout(t.timer);
+  var clave = t.clave, sw = t.sw, msg = t.el.querySelector('.snz-msg');
+  function falla(m){
+    t.busy = false;
+    if(msg) msg.textContent = 'No se pudo deshacer: ' + m;
+    snzAnunciar('No se pudo deshacer: ' + m);
+    if(estado.snzToast === t) t.timer = setTimeout(snzToastQuitar, SNZ_TOAST_MS);
+  }
+  sb.rpc('bm_despertar', {p_token: token, p_clave: clave}).then(function(r){
+    if(token !== estado.token) return;
+    if(r.error && tokenMalo(r.error)){ sesionVencida(); return; }
+    if(r.error){ falla(r.error.message || 'error'); return; }
+    if(r.data !== 'abierta'){ falla(snzNoDespertada(r.data)); cargarLista(); return; }
+    if(estado.snzToast === t) snzToastQuitar();   // si ya hay otro aviso, no se lo saca
+    var ahora = new Date().toISOString();
+    snzFijarLocal(clave, ahora);
+    var f = snzFila(clave); if(f){ f.snooze_hasta = ahora; f.llegada = ahora; }
+    estado.tandasDe = null;
+    if(sw && estado.sw === sw && sw.multi) snzVolver(sw, clave);
+    else if(sw && !sw.multi && !estado.sw && !estado.sel && t.sel) elegir(t.sel);   // el mazo de una sola botonera ya no existe: se reabre (y vuelve a mostrar la card negra)
+    homeCargar(); homePintar(); cargarLista();
+  }, function(err){ if(token === estado.token) falla((err && err.message) || 'sin conexión'); });
+}
+/* ----- home: fila «Snoozeadas (n)» con «Despertar ahora» por botonera ----- */
+var SNZ_RELOJ = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>';
+function snoozeadasHTML(H){
+  var l = H.dormidas; if(!l.length) return '';
+  var abierta = estado.snzAbierta !== false, env = estado.snzEnv || {};
+  return '<div class="hsnz"><button type="button" class="hsnz-h" data-home="snz-abrir" aria-expanded="' + abierta + '">' +
+    '<span class="hic">' + SNZ_RELOJ + '</span><span class="htx"><b>' + esc('Snoozeadas (' + l.length + ')') + '</b><span class="hs">' +
+    esc((l.length === 1 ? 'Vuelve ' : 'La próxima vuelve ') + snzCuando(l[0].hasta)) + '</span></span>' +
+    '<span class="hchev"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="' + (abierta ? 'M6 15l6-6 6 6' : 'M6 9l6 6 6-6') + '"/></svg></span></button>' +
+    (abierta ? l.map(function(d){
+      var e = env[d.clave] || '';
+      return '<div class="hsnz-i" data-clave="' + esc(d.clave) + '"><span class="htx"><b>' + esc(d.titulo) + '</b><span class="hs">' + SNZ_RELOJ + esc('vuelve ' + snzCuando(d.hasta)) + '</span>' +
+        (/^error/.test(e) ? '<span class="hs mal">' + esc('No se pudo despertar: ' + e.slice(7) + '. Probá de nuevo.') + '</span>' : '') + '</span>' +
+        '<button type="button" class="sw-b" data-home="despertar" data-clave="' + esc(d.clave) + '"' + (e === 'despertando' ? ' disabled' : '') + '>' + (e === 'despertando' ? 'Despertando…' : 'Despertar ahora') + '</button></div>';
+    }).join('') : '') + '</div>';
+}
+// Despertar ahora: bm_despertar (snooze_hasta = ahora, sin push); vuelve arriba en «Por decidir»
+function snzDespertarAhora(clave){
+  var token = estado.token; if(!token) return;
+  var env = estado.snzEnv || (estado.snzEnv = {});
+  if(env[clave] === 'despertando') return;
+  env[clave] = 'despertando'; homePintar();
+  function falla(m){ env[clave] = 'error: ' + m; homePintar(); }
+  sb.rpc('bm_despertar', {p_token: token, p_clave: clave}).then(function(r){
+    if(token !== estado.token) return;
+    if(r.error && tokenMalo(r.error)){ sesionVencida(); return; }
+    if(r.error){ falla(r.error.message || 'error'); return; }
+    if(r.data !== 'abierta'){ falla(snzNoDespertada(r.data)); cargarLista(); return; }   // la decidieron o la cerraron en otro lado: se dice y se relee la lista
+    delete env[clave];
+    var ahora = new Date().toISOString();
+    snzFijarLocal(clave, ahora);
+    var f = snzFila(clave); if(f){ f.snooze_hasta = ahora; f.llegada = ahora; }
+    estado.tandasDe = null;
+    homeCargar(); homePintar(); cargarLista();
+  }, function(err){ if(token === estado.token) falla((err && err.message) || 'sin conexión'); });
+}
 
 /* ----- envio: bm_decidir_pin con el texto de respuestaVuelta(), igual que enviarVuelta ----- */
 // las notas generales (el comentario final de la pantalla de cierre, o las de la plantilla vieja) van en la linea «notas:»
@@ -3058,6 +3477,7 @@ function homeCalc(){
     r.pend = pend; r.hoy = hoy; r.marc = marc;
     r.titulo = (r.tanda && r.tanda.entrada.titulo) || r.clave;
     r.creada = prim ? ms(prim.created_at) : 0;
+    r.llega = Math.max(r.creada, ms(llegadaDe(r.tanda && r.tanda.abierta)));   // una que desperto del snooze se ordena por su llegada
     var c = cats[r.cat.id] || (cats[r.cat.id] = {id: r.cat.id, cat: r.cat, bots: [], pend: 0, hoy: 0, marc: 0, tot: 0});
     c.bots.push(r); c.pend += pend; c.hoy += hoy; c.marc += marc; c.tot += r.items.length;
     if(pend){ tot.pend += pend; tot.hoy += hoy; tot.bots++; }
@@ -3069,7 +3489,11 @@ function homeCalc(){
     var pa = catPos(a.cat), pb = catPos(b.cat);
     return pa === pb ? 0 : (pa < pb ? -1 : 1);   // sin restar: Infinity - Infinity daria NaN
   });
-  return {bots: bots, listas: listas, cats: filas, todasCats: cats, pend: tot.pend, hoy: tot.hoy, nbots: tot.bots, cargando: cargando, fallan: fallan};
+  // dormidas: las tandas con una botonera abierta que duerme, la que vuelve antes primero
+  var dormidas = [], mapaT = tandas().mapa;
+  Object.keys(mapaT).forEach(function(b){ var t = mapaT[b]; if(t.dormida) dormidas.push({clave: t.dormida.clave, titulo: t.entrada.titulo, hasta: ms(t.dormida.snooze_hasta)}); });
+  dormidas.sort(function(a, b){ return (a.hasta - b.hasta) || (a.clave < b.clave ? -1 : 1); });
+  return {bots: bots, listas: listas, cats: filas, todasCats: cats, pend: tot.pend, hoy: tot.hoy, nbots: tot.bots, cargando: cargando, fallan: fallan, dormidas: dormidas};
 }
 // una fila de categoria: icono, cards pendientes, avance y play. attr dice quien la escucha (el home o el mazo)
 function catFilaHTML(c, attr){
@@ -3194,6 +3618,7 @@ function homeHTMLBase(){
       '<div class="home-acts"><button type="button" class="home-cta" data-home="todo">' + HOME_ICO_CARTAS + 'Swipear todo</button>' + btnL + '</div></div>' +
       '<div class="hrows">' + H.cats.map(function(c){ return catFilaHTML(c, 'data-home="cat"'); }).join('') + '</div>';
   }
+  h += snoozeadasHTML(H);
   var envs = estado.homeEnvs || {}, claves = Object.keys(envs);
   if(claves.length){
     h += '<div class="home-res" role="status">' + claves.map(function(c){
@@ -3220,7 +3645,7 @@ function datosDe(r){
 }
 // las tarjetitas negras de una categoria: una por botonera con cards pendientes, la mas vieja primero. attr = quien escucha el click
 function homeTandasHTML(c, attr, sinTop){
-  var bots = c.bots.filter(function(r){ return r.pend > 0; }).sort(function(a, b){ return (a.creada - b.creada) || (a.clave < b.clave ? -1 : 1); });
+  var bots = c.bots.filter(function(r){ return r.pend > 0; }).sort(function(a, b){ return (a.llega - b.llega) || (a.clave < b.clave ? -1 : 1); });
   var h = sinTop ? '' : '<div class="hcat-top"><button type="button" class="hcat-vol" ' + attr + '="volver">‹ Categorías</button><b>' + esc(c.cat.nombre) + ' · ' + esc(pl(bots.length, 'botonera', 'botoneras')) + '</b></div>';
   return h + '<div class="htandas">' + bots.map(function(r){
     var dat = datosDe(r), ses = (r.tanda && r.tanda.entrada && r.tanda.entrada.sesion_titulo) || '', hace = haceCuanto(r.creada);
@@ -3262,6 +3687,8 @@ function alClickHome(e){
   if(a === 'visto') errorVisto(b.getAttribute('data-id'));
   else if(a === 'enviar') homeEnviar();
   else if(a === 'avisos') avisosActivar();
+  else if(a === 'despertar') snzDespertarAhora(b.getAttribute('data-clave'));
+  else if(a === 'snz-abrir'){ estado.snzAbierta = estado.snzAbierta === false; homePintar(); }
   else if(a === 'cat') homeElegirCat(b.getAttribute('data-cat'));
   else if(a === 'volver'){ estado.homeCat = null; homePintar(); }
   else if(a === 'tanda') homeSwipear(null, b.getAttribute('data-clave'));
@@ -3458,10 +3885,10 @@ function homeSwipear(catId, soloClave){
   if(catId && !H.todasCats[catId]) return;
   var bots = H.bots.filter(function(r){ return (!catId || r.cat.id === catId) && (!soloClave || r.clave === soloClave); });
   if(soloClave){ if(!bots.length) return; catId = bots[0].cat.id; }
-  bots.sort(function(a, b){ return (a.creada - b.creada) || (a.clave < b.clave ? -1 : a.clave > b.clave ? 1 : 0); });   // la mas vieja primero
+  bots.sort(function(a, b){ return (a.llega - b.llega) || (a.clave < b.clave ? -1 : a.clave > b.clave ? 1 : 0); });   // la mas vieja primero (por llegada)
   var por = {}, todas = [], recs = [];
   bots.forEach(function(r){
-    var rec = {clave: r.clave, titulo: r.titulo, cat: r.cat, d: r.d, items: r.items.slice(), entradas: [], creada: r.creada, secs: r.secs,
+    var rec = {clave: r.clave, titulo: r.titulo, cat: r.cat, d: r.d, items: r.items.slice(), entradas: [], creada: r.creada, llega: r.llega, secs: r.secs,
       sesion: (r.tanda && r.tanda.entrada && r.tanda.entrada.sesion_titulo) || ''};
     recs.push(rec);
     // la nota de la seccion de cada card (solo con 2 o mas secciones, como el mazo de una botonera): el mazo la muestra bajo el nombre
@@ -3487,7 +3914,7 @@ function homeSwipear(catId, soloClave){
     mazo.sort(function(a, b){
       var va = venceOk(a.it) || '9999-99-99', vb = venceOk(b.it) || '9999-99-99';
       if(va !== vb) return va < vb ? -1 : 1;
-      if(a.bot.creada !== b.bot.creada) return a.bot.creada - b.bot.creada;
+      if(a.bot.llega !== b.bot.llega) return a.bot.llega - b.bot.llega;
       if(a.clave !== b.clave) return a.clave < b.clave ? -1 : 1;
       return a.ord - b.ord;
     });
@@ -3524,7 +3951,7 @@ function swFinMultiHTML(sw, ct){
   }
   // con «Terminar y enviar» a mitad del mazo no se termino nada: se mando hasta aca, y lo que falta sigue en el home
   var corto = !!sw.enviadoAlgo && ct.sin > 0;
-  var tit = !R.length ? 'No marcaste nada' : corto ? 'Mandaste hasta acá' : sk ? 'Terminaste el recorrido' : 'Marcaste todo';
+  var tit = !R.length ? (sw.snz && Object.keys(sw.snz).length && !sw.todas.length ? 'No queda nada por decidir' : 'No marcaste nada') : corto ? 'Mandaste hasta acá' : sk ? 'Terminaste el recorrido' : 'Marcaste todo';
   var h = '<div class="sw-msg multi"><h2>' + tit + '</h2>' +
     '<p class="sw-tot">' + ct.va + ' Va · ' + ct.no + ' No va · ' + (ct.ot ? ct.ot + ' otra salida · ' : '') + ct.sin + ' sin marcar</p>' +
     (corto ? '<p>' + esc(ct.sin === 1 ? 'La que falta te espera en el home.' : 'Las ' + ct.sin + ' que faltan te esperan en el home.') + '</p>' : '') + '<div class="sw-lst">' +
@@ -3593,10 +4020,12 @@ function swipeSalirMulti(){
   cargarLista();
   try{ window.scrollTo(0, 0); }catch(e){}
 }
+// solo para pruebas locales: el filtro de dormidas, tal cual
+window.__dormida = dormida;
 // solo para pruebas locales: lo que muestra el home
 window.__home = function(){
   var H = homeCalc();
-  return {pend: H.pend, hoy: H.hoy, botoneras: H.nbots, listas: H.listas.map(function(b){ return b.clave; }), cargando: H.cargando, fallan: H.fallan,
+  return {pend: H.pend, hoy: H.hoy, botoneras: H.nbots, listas: H.listas.map(function(b){ return b.clave; }), cargando: H.cargando, fallan: H.fallan, dormidas: H.dormidas.map(function(d){ return d.clave; }),
     filas: H.cats.map(function(c){ return {id: c.id, nombre: c.cat.nombre, pend: c.pend, hoy: c.hoy, marc: c.marc, tot: c.tot, bots: c.bots.map(function(b){ return b.clave; })}; })};
 };
 

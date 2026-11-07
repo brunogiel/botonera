@@ -50,6 +50,11 @@ instalaste en otra carpeta, usá esa ruta.
    `/botonera respuesta · <clave> …` y eso despierta a la sesión.
    Si la espera muere (se cerró la app, se reinició la sesión), en el turno siguiente corré
    `pendientes.py --horas 0` y relanzá `esperar.py <clave>`: sale al toque si ya estaba decidida.
+   **Si en vez de la respuesta imprime `maestro: <clave> snoozeada hasta <dd-mmm HH:MM>`** (hora local de esta
+   máquina): el usuario pateó la botonera para más tarde (en la card de contexto, a la izquierda). La botonera
+   sigue `abierta`. Relanzá `esperar.py <clave>` en background, **sin `marcar.py`**, y cerrá el turno con una línea:
+   «La botonera quedó snoozeada hasta X; sigo esperando». Relanzada con el mismo snooze, `esperar.py` sigue
+   esperando; si el usuario la re-snoozea a otra hora, avisa de nuevo y repetís lo mismo.
 7. **Entregar.** En el chat, una línea: cuántas cards hay en la botonera, la más urgente y las
    preguntas que quedaron afuera.
 
@@ -175,6 +180,7 @@ Otros estados:
 - Una tanda cuya sesión ya no existe: `marcar.py <clave> archivada "<por qué>"`.
 - `marcar.py` solo acepta transiciones válidas. «NO se marcó» = el estado no era el esperado: no lo fuerces.
 - Si la salida de `esperar.py` arranca con `maestro: REENTREGA`, chequeá si ya la aplicaste antes de repetir.
+- Si la salida de `esperar.py` es `maestro: <clave> snoozeada hasta …`, la botonera sigue abierta: relanzá `esperar.py <clave>`, sin `marcar.py`.
 
 ## Retomar una decisión sin la sesión viva
 

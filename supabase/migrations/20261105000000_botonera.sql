@@ -231,6 +231,8 @@ begin
   return 'ya_decidida:' || coalesce(v_estado, 'desconocido');
 end $$;
 
+-- bm_lista cambia de columnas en una migración posterior: se suelta antes para poder repetir esta.
+drop function if exists public.bm_lista(text);
 create or replace function public.bm_lista(p_token text)
 returns table(clave text, session_id text, sesion_titulo text, skill text, proyecto text, titulo text,
   n_items integer, estado text, resumen_aplicado text, created_at timestamptz, updated_at timestamptz,

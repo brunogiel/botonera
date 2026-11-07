@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.2.0 · 2026-11-07
+
+- **Snooze.** En la portada de cada botonera, a la izquierda (gesto, flecha ← o el botón «Snooze»), elegís cuándo vuelve: «Hoy más tarde» (antes de las 17:00), «Mañana», «El finde» o «Próximo lunes», hasta 8 días. La botonera duerme en una fila «Snoozeadas» del home con «Despertar ahora», no se envía ni se avisa por push mientras duerme, y al despertar vuelve arriba con tus marcas. Un aviso de 5 segundos con «Deshacer» cierra el gesto. Una opción marca «vence antes» si una card vence antes de que vuelva. Todas las horas se calculan en la zona horaria de tu dispositivo.
+- **Portada en forma de carpeta.** La card de contexto es una carpeta del color de su categoría, con una pestaña que dice la categoría y cuántas cards trae, y una pila de cartas que asoman por arriba (una por card, hasta 4).
+- **La sesión sabe del snooze.** `esperar.py` avisa una vez por snooze (`maestro: <clave> snoozeada hasta <dd-mmm HH:MM>`, en hora local de la máquina) y la sesión lo relanza sin tocar la botonera. El tope de espera pasa a 8 días.
+- Una migración nueva (`20261107…`): `snooze_hasta`, `bm_snoozear` y `bm_despertar`, y `bm_lista`, `bm_recibir`, `bm_sin_cerrar`, `bm_decidir_pin` y los dos avisos aprenden de las botoneras dormidas. `install.sh` la suma a `instalar.sql`; las migraciones se pueden repetir, así que actualizar desde la 1.1.x es volver a correr el instalador y pegar el SQL.
+
 ## 1.1.1 · 2026-11-06
 
 - **Con cualquier agente.** El README explica cómo usar la botonera con Codex, Grok, Cursor o cualquier agente que corra Python: `--skill-dir`, el `SKILL.md` como instrucciones y `BM_SESSION_ID` para agrupar las tandas.

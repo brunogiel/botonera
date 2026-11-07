@@ -16,6 +16,9 @@ Cada card trae:
 - **«Editar»** para decir que sí con un cambio: los valores que propuso el agente salen cargados en campos
   (texto, número, fecha u opción) y cambiás solo lo que no te cierra. Un comentario libre en cada card,
   y **«+info»** para preguntar sin decidir.
+- **«Snooze»** para dejar una botonera entera para más tarde: en su portada, a la izquierda, elegís cuándo vuelve
+  (hoy más tarde, mañana, el finde, el lunes, hasta 8 días). Duerme en «Snoozeadas», sin avisos, y vuelve sola
+  arriba con tus marcas. Las horas son las de la zona horaria de tu dispositivo.
 - **Qué pasa si no decidís**, qué pasó hasta acá y, plegado, el impacto de cada lado.
 
 *English: a skill for your coding agent (Claude Code, Codex, Grok, Cursor, or any agent that can run a
@@ -40,7 +43,7 @@ tu agente  ──armar.py──▶ Supabase (tu proyecto) ◀──PIN── tu 
 ```
 
 - `armar.py` valida el JSON de la tanda (techos de palabras, campos obligatorios), arma la página y la publica.
-- `esperar.py` corre en segundo plano en la sesión y sale cuando decidiste: su salida es tu respuesta.
+- `esperar.py` corre en segundo plano en la sesión y sale cuando decidiste: su salida es tu respuesta. Si snoozeás la botonera, avisa hasta cuándo y la sesión lo relanza.
 - `marcar.py` cierra el loop; la web muestra qué se aplicó y qué no.
 - `retomar.py` aplica una decisión aunque la sesión que preguntó ya no esté viva: lee la respuesta y el plan de cada card.
 - La web no ejecuta nada. Ejecuta siempre la sesión de tu agente.
