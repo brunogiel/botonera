@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.1 · 2026-11-07
+
+- **El aviso de una botonera nueva lleva su título.** Con una sola, el título del aviso es el de la botonera («Volvió: <título>» si despertó de un snooze) y abajo van la categoría y «N cards por decidir». Con varias, el aviso dice «N botoneras nuevas» (o «N botoneras volvieron» si todas despertaron) y abajo van hasta 2 títulos separados por coma, con «+N» por el resto. Los títulos se recortan a 40 letras.
+- **Las categorías `privada` siguen sin nombrarse.** Una botonera de una categoría marcada `privada` en `categorias.json` no muestra su título en el aviso: cuenta en el número y el aviso dice «1 botonera nueva».
+- Una migración nueva (`20261107010000_bm_avisos_titulo.sql`): la función `bm_avisos_titulos` y `bm_avisos_tick` actualizada. `install.sh` la suma a `instalar.sql`; las migraciones se pueden repetir, así que actualizar desde la 1.2.0 es volver a correr el instalador y pegar el SQL.
+
 ## 1.2.0 · 2026-11-07
 
 - **Snooze.** En la portada de cada botonera, a la izquierda (gesto, flecha ← o el botón «Snooze»), elegís cuándo vuelve: «Hoy más tarde» (antes de las 17:00), «Mañana», «El finde» o «Próximo lunes», hasta 8 días. La botonera duerme en una fila «Snoozeadas» del home con «Despertar ahora», no se envía ni se avisa por push mientras duerme, y al despertar vuelve arriba con tus marcas. Un aviso de 5 segundos con «Deshacer» cierra el gesto. Una opción marca «vence antes» si una card vence antes de que vuelva. Todas las horas se calculan en la zona horaria de tu dispositivo.

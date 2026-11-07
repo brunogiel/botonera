@@ -137,7 +137,7 @@ El hook usa el id de sesión que expone la app de escritorio de Claude Code
 - **`/botonera`**: las decisiones abiertas de esta conversación.
 - **`/botonera <tema>`**: las de ese tema, proyecto o archivo.
 - Las categorías del home se editan en `~/.claude/skills/botonera/categorias.json`. El orden de la
-  lista es el orden del home. `privada: true` hace que los avisos no nombren esa categoría.
+  lista es el orden del home. `privada: true` hace que los avisos no nombren esa categoría ni muestren el título de sus botoneras.
 
 Mantenimiento:
 
@@ -188,7 +188,7 @@ resto de las tandas, ni el PIN, ni publica errores. Para darlo de baja:
 - Las tablas tienen RLS prendido y ninguna política: no se leen ni con la clave pública. Las funciones
   piden tu secreto (los scripts) o un token de sesión que da el PIN (la web). Diez PIN mal seguidos
   bloquean la entrada hasta `pin.py desbloquear`.
-- Los avisos push llevan solo conteos y nombres de categoría, nunca el texto de una card. Las claves
+- Los avisos push llevan el título de la botonera (si es de una categoría privada, no), el nombre de la categoría y conteos, nunca el texto de una card. Las claves
   VAPID se generan en tu proyecto y la privada queda en Vault.
 
 ## Probar en local
