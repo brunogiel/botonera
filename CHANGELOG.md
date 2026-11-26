@@ -1,5 +1,33 @@
 # Changelog
 
+## 1.3.0 · 2026-11-26
+
+**Dos versiones en un mismo repo: la completa con cualquier agente, y una versión fácil sin servidor.**
+
+### Versión fácil (nueva)
+
+- **Una página privada de Claude en lugar de tu propia web.** `skill/facil/pagina.html` es la misma web de la botonera (mismo diseño, mismos mazos, mismo menú de abajo) con la base de datos de la página de Claude en lugar de Supabase: sin cuenta, sin claves, sin PIN, sin hosting. La entrada es la cuenta de Claude de la persona; los datos viven ahí.
+- **`install.sh --facil`** copia el skill (con `skill/facil/`) y nada más: no pide URL ni clave, no genera secreto, no escribe `config.js` ni SQL. Se combina con `--agente` y `--skill-dir`.
+- **`armar.py --artifact datos.json salida.json`** corre las mismas validaciones que la versión completa y escribe el documento que lee la página (dibujos saneados, categoría embebida, `creada`, `estado`). Una tarjeta de opciones con un plan `aplicar` solo `comun` se acepta en esta versión. Ejemplo en `skill/ejemplo/agencia.json`.
+- **`SKILL.md`** gana «Qué versión usar» (completa si existe `~/.config/botonera/env`; fácil si la sesión puede publicar páginas; si no, dice cómo instalar una) y la sección de la versión fácil. El detalle va en `skill/facil/LEEME-agente.md`.
+- **`facil/`**: `derivar.py` (regenera la página desde `web/index.html`; `--check` dice si está al día), el adaptador de datos, el paso «Avisar a Claude», el confeti inline y sus pruebas (`facil/tests`: `e2e.js` y `mismo-diseno.js`).
+- **Qué no tiene:** avisos al celu, ícono propio, PIN, otros agentes, obstáculos ni sesiones en vuelo.
+
+### Versión completa
+
+- **Tres pestañas, una vista por vez:** Sesiones · Decisiones · Bloqueos. Sesiones muestra «Trabajando ahora» (con lo que cada sesión anota con `vuelo.py`), «Hechas hoy» y el archivo. Bloqueos junta «Te esperan a vos» y lo que murió con error.
+- **Tarjetas nuevas:** de revisión (un solo botón, Revisado), campo `textarea` para texto largo, `detalle` plegado, imagen a pantalla completa, «Ya no aplica» cuando una tarjeta se reemplaza (`armar.py --reemplaza <clave>#<n>[:<m>]`).
+- **+info con 5 opciones** (más contexto, dibujo corto, dibujo largo, escribilo distinto, otro ejemplo) y `skill/rot.md`, la guía autocontenida para reescribir la tarjeta. **«Esto es regla»** y **«Después»** (antes «Al inbox»). Rótulos: «El agente recomienda» y «Si no decidís».
+- **Obstáculos:** `obstaculo.py` publica lo que solo la persona puede hacer; `pendientes.py` lista los resueltos.
+- **Un solo aviso por tanda de entradas** (ráfaga) en lugar de uno por tarjeta.
+- **Bloqueo del PIN temporal y creciente:** 10 fallos seguidos bloquean 15 minutos; cada tanda nueva de 10 duplica la espera (15, 30, 60… hasta 24 h) y un ingreso correcto la pone en cero. `pin.py desbloquear` la levanta; `pin.py estado` muestra hasta cuándo. Antes quedaba bloqueada hasta desbloquear.
+- **Instalador:** `--agente claude|cursor|codex|otro` (codex instala en `~/.agents/skills/botonera`), reescribe la ruta del skill en `SKILL.md` y `rot.md`, `--solo-skill` (para un bot en un servidor, sin secreto), prueba de conexión (`--sin-probar` la saltea), exige `https://` salvo localhost, avisa si faltan los CLI de Supabase o Vercel, e imprime la ruta absoluta de `instalar.sql` y el comando para copiarlo.
+- **Scripts:** `maestro.py` lee, en orden, las tres variables de entorno, `BM_ENV_FILE`, `~/.config/botonera/env` y `~/.config/botonera/env-bot`, y rechaza una URL `http://` que no sea localhost. `esperar.py --una-vez` consulta una vez (sale 3 si sigue abierta). `armar.py --publicar` sale con error si el servidor rechaza. `pin.py poner` ya no acepta el PIN por argumento (solo teclado oculto). `secret-bot.py` dice dónde poner el archivo en el servidor.
+- **Pruebas:** `tests/prueba_instalador.sh` y ocho e2e de la web (`npm run e2e:todo`, de a un archivo por vez).
+- **Docs:** README con «Elegí tu versión», sección Seguridad (qué ve cada llave, qué sale a terceros, cómo rotar), tabla por agente y «Qué no trae»; `SKILL.md` con «Si tu agente no tiene segundo plano».
+- **Queda afuera de esta versión:** crear una tarea desde el celu, dictado, inbox y lecturas. La fila «Con error» se conserva.
+- Migraciones nuevas (`20261121…`); `install.sh` las suma a `instalar.sql` y se pueden repetir. Actualizar desde la 1.2.x es volver a correr el instalador y pegar el SQL.
+
 ## 1.2.1 · 2026-11-07
 
 - **El aviso de una botonera nueva lleva su título.** Con una sola, el título del aviso es el de la botonera («Volvió: <título>» si despertó de un snooze) y abajo van la categoría y «N cards por decidir». Con varias, el aviso dice «N botoneras nuevas» (o «N botoneras volvieron» si todas despertaron) y abajo van hasta 2 títulos separados por coma, con «+N» por el resto. Los títulos se recortan a 40 letras.

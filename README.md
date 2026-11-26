@@ -1,101 +1,154 @@
 # Botonera
 
-Un skill para tu agente de código que te junta lo que tenés que decidir y te lo deja como cards para
-swipear en el celu. Funciona con [Claude Code](https://claude.com/claude-code), Codex, Grok, Cursor o
-cualquier agente que pueda correr un comando de Python ([con otros agentes](#con-otros-agentes)). El
-agente investiga y recomienda; vos elegís con un dedo. La respuesta vuelve sola a la sesión que
-preguntó, y el agente aplica solo lo que marcaste.
+Un skill para tu agente de código que te junta lo que tenés que decidir y te lo deja como tarjetas para
+swipear en el celu. Hay una versión fácil (una página privada de Claude) y una completa (tu propia web) que
+funciona con [Claude Code](https://claude.com/claude-code), Cursor, Codex o cualquier agente que pueda
+correr un comando de Python ([tabla por agente](#con-qué-agente-se-usa)). El agente
+investiga y recomienda; vos elegís con un dedo. La respuesta vuelve a la sesión que preguntó, y el agente
+aplica solo lo que marcaste.
 
-<p align="center"><img src="docs/botonera.gif" width="320" alt="La botonera en el celu: el home con cuatro categorías, un mazo de Ads decidido con swipe, Editar y una opción, y el envío con confeti"></p>
+<p align="center"><img src="docs/botonera.gif" width="320" alt="La botonera en el celu: el home con cuatro categorías, un mazo decidido con swipe, Editar y una opción, y el envío con confeti"></p>
 
-Cada card trae:
+## Elegí tu versión
+
+Botonera tiene dos versiones. Las dos juntan lo que tenés que decidir en tarjetas y la respuesta vuelve a tu agente; cambia dónde viven las tarjetas.
+
+| | **Fácil** | **Completa** |
+|---|---|---|
+| **Qué es** | Una página privada de Claude con tus tarjetas | Tu propia web, con PIN y avisos, y tu propia base de datos |
+| **Qué necesitás** | Claude, con un plan de Claude que permita publicar páginas, y Python 3.9+ | Python 3.9+, una cuenta gratis de Supabase, un hosting estático (Vercel u otro), el CLI de Supabase y la terminal |
+| **Dónde viven los datos** | En tu cuenta de Claude | En tu proyecto de Supabase |
+| **Cómo entrás** | Con un link, con tu cuenta de Claude | Con la dirección de tu web y un PIN de 4 dígitos |
+| **Cómo vuelve la respuesta** | Tocás «Avisar a Claude» (en la compu), o te llega por comentario (en el celu), o escribís «listo» en el chat | Sola: el agente espera en segundo plano y aplica lo que marcaste |
+| **Avisos al celu** | No | Sí (notificaciones push) |
+| **Agentes** | Solo Claude | Claude Code, Cursor, Codex o cualquiera que corra Python |
+| **Sesiones y Bloqueos** | Sesiones: «Mandada», «Trabajando» y «Hecha». Bloqueos: solo respuestas sin novedad hace más de 24 horas | Completos: qué hace cada sesión, lo que solo vos podés hacer y lo que murió con error |
+
+**La fácil** es para vos si usás Claude y querés ver tus pendientes en tarjetas sin armar nada. **La completa** es para vos si querés avisos en el celu, PIN, otros agentes o bots, y no te molesta usar la terminal y dos cuentas gratis.
+
+La fácil usa el mismo diseño y las mismas tarjetas que la completa (con una derivación de su web, ver [`facil/LEEME.md`](facil/LEEME.md)). Las dos se pueden tener instaladas a la vez en máquinas distintas; en una misma máquina el skill decide cuál usar (si existe `~/.config/botonera/env`, la completa).
+
+> El kit [`agentic-second-brain`](https://github.com/brunogiel/agentic-second-brain) trae además un `/brain-decide` local, aparte de este repo: no necesita ni Claude ni Supabase, y es una tercera cosa.
+
+### Instalar la versión fácil
+
+1. **Cloná el repo e instalá** (es lo único que se hace en la terminal):
+
+   ```bash
+   git clone https://github.com/brunogiel/botonera.git && cd botonera
+   ./install.sh --facil --agente claude
+   ```
+
+   Copia el skill a `~/.claude/skills/botonera`. No pide dirección ni claves, no crea cuentas y no escribe nada fuera de esa carpeta.
+
+2. **En Claude, escribí `/botonera` y pedile que publique tu página.** Es privada: solo la ves vos, con tu cuenta de Claude.
+
+3. **Abrí el link que te da**, en el celu o en la compu, y guardalo en favoritos. Cada vez que Claude tenga algo para que decidas, aparece ahí como tarjetas.
+
+Qué **no** tiene la fácil: no manda avisos al celu (si no abrís la página, nadie te avisa), no tiene ícono propio en el celu, funciona solo con Claude y no tiene PIN: entra quien tenga tu cuenta de Claude. Tus datos viven en tu cuenta de Claude, no en tu compu ni en un servidor tuyo. **Cuánto cuesta:** pide un plan de Claude que permita publicar páginas. Para borrarla, pedile a Claude que borre tu página (o borrala desde la galería de páginas de claude.ai) y borrá `~/.config/botonera/facil-url`.
+
+### Instalar la versión completa
+
+Está más abajo, en [Instalación](#instalación-versión-completa). Usa la terminal (la ventana de comandos) y dos cuentas gratis: **Supabase** guarda las tarjetas y **Vercel** (o cualquier hosting estático) le da una dirección web a tu botonera.
+
+Glosario de una línea: la **clave pública** (en Supabase aparece como *publishable* o *anon*) es la
+llave que identifica tu proyecto y viaja en la web; sola no lee nada. El **secreto** es otra cosa: se
+genera en tu máquina y nunca sale de ahí.
+
+## Qué trae cada tarjeta
 
 - **Qué se decide** y el dato que lo decide, en dos líneas.
-- **Qué recomienda el agente y por qué.** El botón recomendado va siempre a la derecha, bordeado, sin marcar.
+- **El agente recomienda** y por qué. El botón recomendado va siempre a la derecha, bordeado, sin marcar.
 - **Botones que dicen la acción** («Cerrá el PR» / «Dejalo abierto»), o varias opciones cuando no es un sí o no.
 - **«Editar»** para decir que sí con un cambio: los valores que propuso el agente salen cargados en campos
-  (texto, número, fecha u opción) y cambiás solo lo que no te cierra. Un comentario libre en cada card,
-  y **«+info»** para preguntar sin decidir.
-- **«Snooze»** para dejar una botonera entera para más tarde: en su portada, a la izquierda, elegís cuándo vuelve
-  (hoy más tarde, mañana, el finde, el lunes, hasta 8 días). Duerme en «Snoozeadas», sin avisos, y vuelve sola
-  arriba con tus marcas. Las horas son las de la zona horaria de tu dispositivo.
-- **Qué pasa si no decidís**, qué pasó hasta acá y, plegado, el impacto de cada lado.
+  (texto, texto largo, número, fecha u opción). Un comentario libre en cada tarjeta.
+- **«+info»** para pedir que se explique mejor, sin decidir: elegís cómo (más contexto, dibujo corto, dibujo
+  largo, escribirlo distinto, otro ejemplo) y el agente reescribe la tarjeta.
+- **«Esto es regla»** en el detalle: el agente anota la decisión como regla permanente.
+- **«Después»** para no decidir ahora; el agente no aplica nada y lo deja anotado.
+- **Si no decidís**, qué pasó hasta acá y, plegado, el impacto de cada lado. Un **detalle** plegado para lo que no entra en el contexto.
+- **Tarjetas de revisión** («mirá esto que hice»), con un solo botón: Revisado.
+- **«Ya no aplica»** en una tarjeta que el agente reemplazó por otra.
+- **Snooze** para dejar una botonera entera para más tarde (hasta 8 días). Duerme sin avisos y vuelve sola arriba con tus marcas.
 
-*English: a skill for your coding agent (Claude Code, Codex, Grok, Cursor, or any agent that can run a
-Python command) that turns the pending decisions of a session into swipeable cards on your own phone
-web app (PIN-protected, installable as a PWA, with push notifications). The agent researches and
-recommends; you swipe. Your answer flows back into the waiting session, which applies only what you
-marked. Runs on your own free Supabase project plus any static host (Vercel by
-default). Requires Python 3.9+. Docs, card copy and UI are in Spanish.*
-
-## En 3 pasos
-
-1. Creá tu proyecto Supabase y corré `./install.sh` (ver [Instalación](#instalación)).
-2. En Claude Code, en medio de cualquier trabajo, decí **`/botonera`**. En otro agente, pedile que siga el `SKILL.md`.
-3. Abrí tu botonera en el celu, swipeá y tocá Enviar. La sesión se despierta y aplica.
+La web tiene tres pestañas abajo, una vista por vez: **Sesiones** (qué hace cada sesión del agente y lo
+que ya terminó hoy), **Decisiones** (las botoneras) y **Bloqueos** (lo que solo vos podés hacer y lo que
+murió con error).
 
 ## Cómo funciona
 
 ```
 tu agente  ──armar.py──▶ Supabase (tu proyecto) ◀──PIN── tu web en el celu
      ▲                        │                          (swipe, Enviar)
-     └──── esperar.py ◀───────┘  la respuesta despierta a la sesión
+     └──── esperar.py ◀───────┘  la respuesta vuelve a la sesión
 ```
 
-- `armar.py` valida el JSON de la tanda (techos de palabras, campos obligatorios), arma la página y la publica.
-- `esperar.py` corre en segundo plano en la sesión y sale cuando decidiste: su salida es tu respuesta. Si snoozeás la botonera, avisa hasta cuándo y la sesión lo relanza.
-- `marcar.py` cierra el loop; la web muestra qué se aplicó y qué no.
-- `retomar.py` aplica una decisión aunque la sesión que preguntó ya no esté viva: lee la respuesta y el plan de cada card.
+- `armar.py` valida el JSON de la tanda, arma la página y la publica. Si el servidor la rechaza o no hay red, sale con error.
+- `esperar.py` espera en segundo plano y sale cuando decidiste. Con `--una-vez` consulta una sola vez, para agentes que no pueden esperar.
+- `marcar.py` cierra el circuito; la web muestra qué se aplicó y qué no.
+- `retomar.py` aplica una decisión aunque la sesión que preguntó ya no esté viva.
+- `vuelo.py` cuenta qué hace la sesión; `obstaculo.py` publica lo que solo la persona puede hacer.
 - La web no ejecuta nada. Ejecuta siempre la sesión de tu agente.
 
-## Con otros agentes
+## Con qué agente se usa
 
-El skill viene listo para Claude Code, pero el trabajo lo hacen scripts de Python y tu base de
-Supabase. Cualquier agente que pueda correr un comando en tu máquina los usa igual:
+| Agente | Se instala con | Dónde queda el skill | Cómo se invoca |
+|---|---|---|---|
+| Claude Code | `./install.sh --agente claude` (es el default; con `--facil`, la versión fácil)  | `~/.claude/skills/botonera` | `/botonera` |
+| Cursor | `./install.sh --agente cursor` | `~/.claude/skills/botonera` | `/botonera` |
+| Codex | `./install.sh --agente codex` | `~/.agents/skills/botonera` | `$botonera` |
+| Otro agente | `./install.sh --agente otro --skill-dir <carpeta>` | la carpeta donde tu agente lea sus instrucciones | pedile que siga el `SKILL.md` |
+| Bot en un servidor | `./install.sh --solo-skill --skill-dir <carpeta>` | la que quieras | ver la receta de abajo |
 
-1. Instalá con `./install.sh --skill-dir <carpeta>`, donde tu agente lea sus instrucciones.
-2. Dale el `SKILL.md` como instrucciones (o pedile que lo lea antes de armar una tanda).
-3. Poné `BM_SESSION_ID` con un nombre para esa sesión, así la web agrupa sus tandas.
-4. El agente publica con `armar.py --publicar` y espera con `esperar.py <clave>`, que sale cuando decidiste.
+El instalador reescribe la ruta del skill dentro del `SKILL.md` y de `rot.md` que instala, así que un
+agente que no es Claude Code no ve rutas ajenas. Si tu agente no puede dejar un proceso corriendo mientras
+vos decidís, el `SKILL.md` trae el flujo alternativo: publica, te dice la clave, vos escribís «listo» y
+recién ahí consulta con `esperar.py <clave> --una-vez`.
 
-Dos cosas son solo de Claude Code: el link «Abrir la conversación» de la web y el hook
-`entregar.py`. Si tu agente no puede dejar `esperar.py` corriendo hasta que contestes, pedile la
-respuesta después con `retomar.py <clave>`. Para un agente al que no querés darle acceso a todo, usá
-el [rol de bot](#un-bot-sin-tu-secreto-completo).
+Solo de Claude Code: el link «Abrir la conversación» de la web y el hook `entregar.py`.
 
-## Instalación
+**Receta para un bot en un servidor** (un agente sin tu secreto completo):
 
-Necesitás: Python 3.9+, una cuenta gratis de [Supabase](https://supabase.com), un hosting estático
-(abajo, [Vercel](https://vercel.com)) y el [CLI de Supabase](https://supabase.com/docs/guides/cli) para
-la función de avisos.
+1. En tu máquina, con la instalación completa hecha: `python3 <skill>/secret-bot.py`. Escribe `env-bot` e imprime un SQL; ejecutalo en Supabase.
+2. Llevá `env-bot` al servidor, a un archivo con permisos 600, fuera de cualquier repo.
+3. En el bot: `export BM_ENV_FILE=<ruta de ese archivo>` (o las tres variables `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `BM_SECRET`).
+4. Cada sesión: `export BM_SESSION_ID=bot-<nombre>`. Sus claves empiezan con `bot-`.
+5. Opcional, para achicar imágenes: `pip install pillow`.
+6. Que el bot siga el `SKILL.md` instalado (`./install.sh --solo-skill` copia solo el skill: no genera secreto ni SQL).
 
-1. **Creá un proyecto en Supabase.** En *Project Settings → API* copiá la URL del proyecto y la
-   clave pública (*publishable* o *anon*). La clave pública sola no lee nada: todo pasa por funciones
-   que piden tu secreto o tu sesión.
+El secreto de bot solo sirve para claves `bot-…`: no ve el resto de las tandas, ni el PIN, ni publica errores.
+Para darlo de baja: `delete from public.bm_config where k = 'bot_secret_sha256';`.
+
+## Instalación (versión completa)
+
+Necesitás: Python 3.9+, `curl`, una cuenta gratis de [Supabase](https://supabase.com), un hosting estático
+(abajo, [Vercel](https://vercel.com)) y el [CLI de Supabase](https://supabase.com/docs/guides/cli) para la
+función de avisos. El instalador te avisa (sin cortar) si te falta el CLI de Supabase o el de Vercel y te
+dice cómo instalarlos.
+
+1. **Creá un proyecto en Supabase.** En *Project Settings → API* copiá la URL del proyecto (empieza con `https://`) y la
+   clave pública (*publishable* o *anon*).
 
 2. **Cloná y corré el instalador:**
 
    ```bash
-   git clone https://github.com/brunogiel/botonera.git
-   cd botonera
-   ./install.sh --url https://TU-PROYECTO.supabase.co --key TU_CLAVE_PUBLICA
+   git clone https://github.com/brunogiel/botonera.git && cd botonera
+   ./install.sh --agente claude --url https://TU-PROYECTO.supabase.co --key TU_CLAVE_PUBLICA
    ```
 
-   Copia el skill a `~/.claude/skills/botonera/`, guarda tu config en `~/.config/botonera/env`
-   (permisos 600, con un secreto que se genera ahí y nunca se imprime), escribe `web/config.js` y te
-   deja `~/.config/botonera/instalar.sql`.
+   Prueba que la URL y la clave respondan (si no, te manda a *Project Settings → API*; `--sin-probar` saltea
+   la prueba), copia el skill, guarda tu config en `~/.config/botonera/env` (permisos 600, con un secreto que se
+   genera ahí y nunca se imprime), escribe `web/config.js` y deja `~/.config/botonera/instalar.sql`. Al final
+   imprime la ruta completa del SQL y el comando para copiarlo al portapapeles.
 
-3. **Pegá `instalar.sql`** en el *SQL Editor* de Supabase y corrélo. Crea las tablas, las funciones y
-   los dos cron de avisos, y registra el hash de tu secreto.
+3. **Pegá `instalar.sql`** en el *SQL Editor* de Supabase y ejecutalo. Crea las tablas, las funciones y los cron de avisos, y registra el hash de tu secreto.
 
-4. **Subí la función de avisos** (desde la carpeta del repo):
+4. **Subí la función de avisos** (desde la carpeta `botonera`):
 
    ```bash
    supabase login
    supabase functions deploy bm-avisar --project-ref TU-PROYECTO --no-verify-jwt
    ```
-
-   En los 5 minutos siguientes, el cron de la base la llama una vez y la función genera sus claves VAPID.
 
 5. **Subí la web.** Cualquier hosting estático sirve si respeta los headers de `web/vercel.json`. Con Vercel:
 
@@ -103,114 +156,121 @@ la función de avisos.
    cd web && vercel deploy --prod
    ```
 
-6. **Poné tu PIN** (4 dígitos):
+   Vercel te va a preguntar si querés crear el proyecto nuevo, cómo llamarlo y en qué carpeta está el código (la actual, `web`). No hace falta configurar nada más: la web es estática.
+
+6. **Poné tu PIN** de 4 dígitos. Te lo pide con el teclado oculto; no se pasa por argumento.
 
    ```bash
    python3 ~/.claude/skills/botonera/pin.py poner
    ```
 
-7. **En el celu**, abrí la URL de tu web, entrá con el PIN, agregala a la pantalla de inicio y tocá
-   **Activar avisos** en el home. En iPhone los avisos funcionan solo con la web agregada a la pantalla de inicio.
+7. **En el celu**, abrí la URL de tu web, entrá con el PIN, agregala a la pantalla de inicio y tocá **Activar avisos**. En iPhone los avisos funcionan solo con la web agregada a la pantalla de inicio.
 
-8. **En Claude Code** decí `/botonera`.
+8. **En tu agente**, invocá `/botonera` (`$botonera` en Codex).
 
-### Si venís de la 1.0.x
+Podés repetir el instalador cuando quieras: reusa tu secreto y las migraciones se pueden repetir. Si venís de la 1.2.x, volvé a correrlo, pegá el `instalar.sql` nuevo y redesplegá la web.
 
-Volvé a correr `./install.sh` (reusa tu secreto y tu config), pegá el `instalar.sql` nuevo en el *SQL Editor*
-y redesplegá la web. Las migraciones se pueden repetir, así que no se rompe nada. El skill se pisa con la
-versión nueva (el instalador te pregunta antes).
+### Opcional: red de seguridad (Claude Code)
 
-### Opcional: red de seguridad
-
-Si la sesión se reinicia mientras esperaba, la respuesta queda guardada en la base. `entregar.py`
-la entrega igual como hook de Claude Code al arrancar cada turno:
+Si la sesión se reinicia mientras esperaba, la respuesta queda guardada en la base. `entregar.py` la entrega igual como hook de Claude Code:
 
 ```bash
-./install.sh --hook   # imprime el bloque para pegar en ~/.claude/settings.json
+./install.sh --hook   # imprime el bloque para el archivo de ajustes de Claude Code
 ```
-
-El hook usa el id de sesión que expone la app de escritorio de Claude Code
-(`CLAUDE_CODE_HOST_SESSION_ID`). Donde no existe, no hace nada; `esperar.py` sigue siendo el camino principal.
 
 ## Uso
 
-- **`/botonera`**: las decisiones abiertas de esta conversación.
-- **`/botonera <tema>`**: las de ese tema, proyecto o archivo.
-- Las categorías del home se editan en `~/.claude/skills/botonera/categorias.json`. El orden de la
-  lista es el orden del home. `privada: true` hace que los avisos no nombren esa categoría ni muestren el título de sus botoneras.
+- **`/botonera`**: las decisiones abiertas de esta conversación. **`/botonera <tema>`**: las de ese tema.
+- Las categorías del home se editan en `categorias.json`, dentro de la carpeta del skill. El orden de la lista es el orden del home. `privada: true` hace que los avisos no nombren esa categoría.
 
-Mantenimiento:
+Mantenimiento (reemplazá la ruta por la de tu agente si no es Claude Code):
 
 ```bash
-python3 ~/.claude/skills/botonera/pendientes.py   # decidido y sin aplicar
-python3 ~/.claude/skills/botonera/colgadas.py     # tandas que no cerraron (con su plan de aplicar)
+python3 ~/.claude/skills/botonera/pendientes.py        # decidido y sin aplicar, y obstáculos resueltos
+python3 ~/.claude/skills/botonera/colgadas.py          # tandas que no cerraron
 python3 ~/.claude/skills/botonera/retomar.py <clave>   # el brief para aplicar una decisión sin la sesión viva
-python3 ~/.claude/skills/botonera/pin.py estado   # PIN, sesiones y avisos
+python3 ~/.claude/skills/botonera/pin.py estado        # PIN, bloqueo, sesiones y avisos
 ```
 
-Para apagarla, borrá `~/.config/botonera/env`. `armar.py` sigue armando el html local y avisa que no publicó.
+### Lo que solo vos podés hacer: obstáculos
 
-### Editar y retomar
+Si el agente se frena por algo que solo vos podés hacer, lo publica en la pestaña **Bloqueos**, en «Te esperan a vos», con qué hacer y qué frena:
 
-- Una card sí/no puede traer `campos` (hasta 5): lo que Claude propone, listo para editar. La respuesta
-  vuelve con lo que cambiaste: `1. va con cambios · título → acción · campos: precio=4200 (antes 3500)`.
-- Cada card puede traer `aplicar`: el plan de cada respuesta posible (≤40 palabras). Si la sesión murió,
-  `retomar.py <clave>` junta tu respuesta y esos planes en un brief que cualquier sesión nueva puede aplicar.
+```bash
+python3 ~/.claude/skills/botonera/obstaculo.py --titulo "Iniciá sesión en el panel" --link https://ejemplo.com \
+    --frena "el reporte semanal" --por-que "pide un login tuyo" --retoma "corro el reporte" --de "reportes"
+```
+
+Cuando tocás «Listo», `pendientes.py` lo muestra como resuelto y la sesión retoma lo frenado.
 
 ### Fila «Con error»
 
-Lo que murió sin avisar (una tarea programada que pegó el límite de uso, una tanda archivada con tu respuesta sin
-aplicar) aparece arriba del home hasta que tocás **Visto**. Se publica con `errores.py`:
+Lo que murió sin avisar aparece en Bloqueos hasta que tocás **Visto**. Se publica con `errores.py` (`errores.py publicar '{"tipo":"tarea","origen_id":"mi-tarea","titulo":"Reporte","motivo":"Límite de uso"}'`).
 
-```bash
-python3 ~/.claude/skills/botonera/errores.py publicar '{"tipo":"tarea","origen_id":"mi-tarea","titulo":"Reporte semanal","motivo":"Límite de uso"}'
-```
+## Seguridad
 
-`colgadas.py --archivar <clave> "<por qué>"` publica solo un error cuando archiva una tanda que ya tenía tu respuesta.
+**El PIN es una puerta de comodidad, no un control fuerte.** Son 4 dígitos y la base guarda su hash, que con
+tan pocas combinaciones se puede revertir si alguien lee tu base. Y quien entra con el PIN no solo ve
+tarjetas: lo que escribe en un comentario o en un campo llega a tu agente como texto, y el agente puede ejecutar
+una orden clara. El `SKILL.md` le pide confirmar en la conversación cualquier orden que borre, pague, mande algo
+a un tercero o toque credenciales, pero la protección real es que nadie más tenga tu PIN.
 
-### Un bot, sin tu secreto completo
+**Qué ve cada llave:**
 
-Un agente al que no querés darle tu secreto completo puede publicar tandas y recibir tus respuestas con un
-secreto propio, que solo sirve para claves `bot-…`:
+| Llave | Dónde vive | Qué puede |
+|---|---|---|
+| Clave pública | en la web (`config.js`) | nada por sí sola: solo intentar entrar con el PIN |
+| PIN / sesión de la web | tu cabeza / el navegador del celu (vence a los 30 días) | ver tus tarjetas, decidir, snoozear |
+| Secreto total | `~/.config/botonera/env` (600), en la base solo su hash | publicar, leer respuestas, poner el PIN, desbloquear |
+| Secreto de bot | `env-bot` (600) | solo claves y sesiones `bot-…` |
 
-```bash
-python3 ~/.claude/skills/botonera/secret-bot.py   # escribe ~/.config/botonera/env-bot e imprime el SQL con su hash
-```
+La URL de tu web no es un secreto. Las tablas tienen RLS prendido y ninguna política: no se leen con la clave pública.
 
-Ejecutá ese SQL en el *SQL Editor* y dale el contenido de `env-bot` al bot (o sus tres claves como variables
-de entorno). El bot publica con `BM_SESSION_ID=bot-<nombre>` y una `clave` que empieza con `bot-`; no ve el
-resto de las tandas, ni el PIN, ni publica errores. Para darlo de baja:
-`delete from public.bm_config where k = 'bot_secret_sha256';`.
+**Bloqueo del PIN.** Tras 10 fallos seguidos la entrada se bloquea 15 minutos. Cada tanda nueva de 10 fallos
+duplica la espera (15, 30, 60 minutos… hasta un tope de 24 horas) y un ingreso correcto la pone en cero.
+`pin.py desbloquear` la levanta ya, y `pin.py estado` dice si está bloqueada. Como la clave pública es visible,
+cualquiera podría gastar tus intentos: por eso el bloqueo es temporal y no queda afuera hasta que vuelvas.
 
-## Privacidad
+**Qué se manda a terceros:** a **Supabase**, todo el contenido de tus tarjetas y respuestas; a tu **hosting**
+(Vercel), la web estática; a **jsdelivr** y **Google Fonts**, el pedido de código y tipografías cuando abrís la
+web (ven tu IP); a Apple o Google, el **aviso push** (cifrado, con el título de la botonera salvo en las
+categorías `privada`). Tus secretos no van a ninguno.
 
-- Las tandas viven en **tu** proyecto Supabase. No hay servidor de nadie más en el medio.
-- Las tablas tienen RLS prendido y ninguna política: no se leen ni con la clave pública. Las funciones
-  piden tu secreto (los scripts) o un token de sesión que da el PIN (la web). Diez PIN mal seguidos
-  bloquean la entrada hasta `pin.py desbloquear`.
-- Los avisos push llevan el título de la botonera (si es de una categoría privada, no), el nombre de la categoría y conteos, nunca el texto de una card. Las claves
-  VAPID se generan en tu proyecto y la privada queda en Vault.
+**Rotar el secreto:** borrá `~/.config/botonera/env`, corré `./install.sh` de nuevo (genera uno nuevo) y pegá el
+`instalar.sql` nuevo en Supabase. **Cerrar todas las sesiones:** `pin.py poner` con un PIN nuevo. Nunca copies
+`env` ni `env-bot` a un repo, un chat o un log.
+
+**Cuánto cuesta.** Al momento de escribir esto, Supabase y Vercel tienen planes gratis que alcanzan para uso
+personal; los límites cambian, mirá [Supabase](https://supabase.com/pricing) y [Vercel](https://vercel.com/pricing).
+El gasto de tu agente (tokens) es aparte.
+
+## Qué no trae
+
+Esta versión no incluye: crear una tarea nueva desde el celu, dictado, inbox, ni lecturas. Sí conserva la fila
+«Con error». Los avisos «Tarea hecha» tampoco.
 
 ## Probar en local
 
-Con Docker y el CLI de Supabase, y los puertos 54321 a 54323 libres:
+Con Docker y el CLI de Supabase, y los puertos 54321 en adelante libres:
 
 ```bash
 supabase start                       # aplica las migraciones solas
-python3 tests/prueba_local.py        # publica, entra con PIN, decide, recibe, marca, retoma y prueba el rol de bot
+python3 tests/prueba_local.py        # publica, entra con PIN, decide, recibe, marca y retoma
+bash tests/prueba_instalador.sh      # el instalador y los scripts de config, sin red y con un HOME temporal
 ```
 
-La prueba usa un HOME temporal (no toca tu `~/.claude` ni tu `~/.config`), aplica la config con
-`docker exec` (no hace falta `psql`) y solo corre contra localhost.
+La web tiene sus propias pruebas, sin Supabase (Playwright, de a un archivo por vez): `cd tests && npm install && npx playwright install chromium`, y después `npm run e2e:todo` (o uno solo: `npm run e2e:simple`, `e2e:card`, `e2e:snooze`…).
 
-La web tiene su propia prueba, sin Supabase (le inyecta un stub a la librería y corta la red):
+La versión fácil tiene las suyas, con un `window.claude` falso: `node facil/tests/e2e.js` y `node facil/tests/mismo-diseno.js` (que compara la web real con la página fácil, con los mismos datos). Después de tocar `web/index.html`, regenerá la página con `python3 facil/derivar.py`; `python3 facil/derivar.py --check` dice si está al día.
 
-```bash
-cd tests && npm install && npx playwright install chromium   # una vez
-node e2e-editar.js                                           # Editar, +info, el contador y la fila «Con error»
-```
+## Desinstalar
 
-Correla antes de tocar `web/index.html`: todos los casos tienen que dar PASA.
+1. Borrá la carpeta del skill (`~/.claude/skills/botonera`, `~/.agents/skills/botonera` o la que hayas elegido).
+2. Borrá `~/.config/botonera/` (tu secreto, la config y los SQL).
+3. Borrá el proyecto de Vercel y, si querés, el proyecto de Supabase (ahí viven tus tarjetas).
+4. Quitá de los ajustes de tu agente el hook de `entregar.py`, si lo sumaste.
+
+Para pausarla sin desinstalar: borrá `~/.config/botonera/env`. `armar.py` sigue armando el html local y avisa que no publicó.
 
 ## Licencia
 

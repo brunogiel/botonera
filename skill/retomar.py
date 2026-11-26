@@ -14,7 +14,9 @@ clave; este script la lee y arma un brief que se entiende solo, así cualquier s
 Lee con `bm_retomar` (lectura pura, secret normal). Cada ítem puede traer `aplicar` {va, no_va | <id de opción>, comun}:
 el plan concreto de cada respuesta. El comentario del usuario manda sobre el plan.
 Un `va con cambios` de Editar trae `· campos: id=nuevo (antes viejo); …`: esos valores reemplazan a los del plan.
-Un ítem `sin marcar` o `después` no se aplica nunca. Un `comentario` sin decidir tampoco es un Va.
+Un ítem `sin marcar` o `después` no se aplica nunca. Un `revisado` (card de revisión) tampoco: no hay nada que aplicar.
+Un `rot` (el usuario tocó «+info»: no entendió la card) tampoco es un Va: se reescribe la card con `rot.md` (en la carpeta
+de este skill). Un `comentario` sin decidir tampoco es un Va.
 
 Sale 0 siempre que pueda leer; 1 si la clave no existe o no hay config/red.
 """
@@ -63,25 +65,38 @@ def _respuesta(veredicto):
         return "va"
     if v == "no va":
         return "no_va"
+    if v == "revisado":
+        return None  # card de revisión: Revisado = visto, no hay nada que aplicar
     if v.startswith("eligió"):
         ids = [x.strip() for x in veredicto[len("eligió"):].split(",") if x.strip()]
         return ids or None
     return None  # comentario, después, sin marcar, o algo que no conozco: no hay plan que aplicar
 
 
+def es_revision(item):
+    return isinstance(item, dict) and item.get("tipo") == "revision"
+
+
 def plan_de(item, resp):
     """Qué hacer con un ítem según la respuesta ya parseada. Devuelve un dict:
-    accion: 'aplicar' | 'nada' | 'inbox' | 'preguntar'; plan (texto o None); con_plan (bool: el plan de ESTA respuesta existe)."""
+    accion: 'aplicar' | 'nada' | 'despues' | 'preguntar'; plan (texto o None); con_plan (bool: el plan de ESTA respuesta existe)."""
     ap = item.get("aplicar") or {}
     ver = resp["veredicto"].strip().lower() if resp else "sin marcar"
     comun = ap.get("comun")
     if resp is None or ver == "sin marcar":
         return {"accion": "nada", "plan": None, "con_plan": True, "comun": None, "por_que": "sin marcar: no se hace"}
+    if ver == "revisado":
+        return {"accion": "nada", "plan": None, "con_plan": True, "comun": None, "por_que": "revisión: no hay nada que aplicar"}
     if ver == "después":
-        return {"accion": "inbox", "plan": None, "con_plan": True, "comun": None, "por_que": "el usuario eligió «después»: no se aplica, va al inbox"}
+        return {"accion": "despues", "plan": None, "con_plan": True, "comun": None,
+                "por_que": "el usuario eligió «después»: no se aplica. Anotalo donde guardás tus pendientes, o dejalo sin hacer y decile al usuario"}
+    if ver == "rot":
+        return {"accion": "preguntar", "plan": None, "con_plan": True, "comun": comun,
+                "por_que": "el usuario tocó «+info»: no entendió la card (no es un Va). Reescribila siguiendo rot.md (en la carpeta de este skill); "
+                           "si no podés, dejala pendiente y avisale"}
     if ver == "comentario":
         return {"accion": "preguntar", "plan": None, "con_plan": True, "comun": comun,
-                "por_que": "el usuario comentó sin decidir (no es un Va): una orden clara en el comentario se aplica; una pregunta o nota va al inbox"}
+                "por_que": "el usuario comentó sin decidir (no es un Va): una orden clara en el comentario se aplica; una pregunta o nota se responde en el chat, no se aplica"}
     clave = resp["respuesta"]
     if clave == "no_va":
         plan = ap.get("no_va")
@@ -114,7 +129,7 @@ def analizar(res):
         p = plan_de(it, resp)
         filas.append({
             "n": n, "titulo": it.get("titulo"), "veredicto": resp["veredicto"] if resp else "sin marcar",
-            "comentario": resp["comentario"] if resp else "", "campos": resp.get("campos", "") if resp else "", "tiene_aplicar": bool(it.get("aplicar")), **p,
+            "comentario": resp["comentario"] if resp else "", "campos": resp.get("campos", "") if resp else "", "tiene_aplicar": bool(it.get("aplicar")) and not es_revision(it), **p,
         })
     accionables = [f for f in filas if f["accion"] in ("aplicar", "preguntar")]
     return {
@@ -130,7 +145,7 @@ def analizar(res):
 
 def cuantos_con_plan(res):
     """(cards con `aplicar`, total de cards) de la tanda: lo que muestra colgadas.py."""
-    its = res.get("items") or []
+    its = [i for i in (res.get("items") or []) if not es_revision(i)]   # una revisión no lleva `aplicar` obligatorio: no cuenta como «sin plan»
     return sum(1 for i in its if i.get("aplicar")), len(its)
 
 
@@ -156,27 +171,29 @@ def brief(a, ruta_marcar=None):
         L.append(f"\n{f['n']}. {f['titulo']}  →  Usuario: {f['veredicto']}")
         if f.get("campos"):
             L.append(f"   Valores que el usuario cambió (usá estos, no los del plan): {f['campos']}")
+            if "⏎" in f["campos"]:
+                L.append("   (en un campo de texto largo, cada ⏎ es un salto de línea: el texto del usuario viene entero)")
         if f["comentario"]:
             L.append("   Comentario del usuario (manda sobre el plan): " + f['comentario'].replace("\n", "\n      "))
         if f["accion"] == "aplicar":
             if f["plan"]:
                 L.append("   Plan: " + f["plan"].replace("\n", "\n         "))
             if f.get("sin_plan_de"):
-                L.append(f"   SIN PLAN para: {', '.join(f['sin_plan_de'])}. Sin plan escrito no se inventa: va al inbox.")
+                L.append(f"   SIN PLAN para: {', '.join(f['sin_plan_de'])}. Sin plan escrito no se inventa: anotalo donde guardás tus pendientes y avisale al usuario.")
             if not f["plan"] and not f.get("sin_plan_de"):
-                L.append("   SIN PLAN para esta respuesta. Sin plan escrito no se inventa: va al inbox.")
+                L.append("   SIN PLAN para esta respuesta. Sin plan escrito no se inventa: anotalo donde guardás tus pendientes y avisale al usuario.")
             if f.get("comun"):
                 L.append(f"   Contexto común: {f['comun']}")
         elif f["accion"] == "nada":
             L.append(f"   {f['por_que']}." + (f" Plan de «no va» (si lo hay, se hace): {f['plan']}" if f["plan"] and f["plan"].strip().lower().rstrip('.') not in ('nada', 'no se hace nada') else ""))
-        elif f["accion"] == "inbox":
+        elif f["accion"] == "despues":
             L.append(f"   {f['por_que']}.")
         else:
             L.append(f"   {f['por_que']}." + (f" Plan: {f['plan']}" if f["plan"] else ""))
             if f.get("comun"):
                 L.append(f"   Contexto común: {f['comun']}")
     L += ["", "Respuesta original, tal cual llegó:", "  " + (a["respuesta_texto"] or "(vacía)").replace("\n", "\n  "), "",
-          f'Cuando termines: python3 "{marcar}" {clave} aplicada "<una línea por ítem: hecho / al inbox / no hecho y por qué>"']
+          f'Cuando termines: python3 "{marcar}" {clave} aplicada "<una línea por ítem: hecho / anotado en pendientes / no hecho y por qué>"']
     if a["estado"] == "decidida":
         L.append(f"(La tanda está `decidida`, no `recibida`: `aplicada` solo se acepta desde `recibida`. Corré antes "
                  f"`python3 \"{AQUI / 'retomar.py'}\" {clave} --tomar`.)")

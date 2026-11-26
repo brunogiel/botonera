@@ -7,6 +7,15 @@ Uso:
   python3 armar.py --html datos.json salida.html     # fuerza html completo
   python3 armar.py --publicar [--inline|--html] datos.json salida.html
                                                      # además publica la tanda a la botonera
+  python3 armar.py --publicar --reemplaza <clave>#<n>[:<m>] datos.json salida.html
+                                                     # además marca la card vieja «Ya no aplica» (la nueva es la <m>, por defecto la 1)
+  python3 armar.py --artifact datos.json salida.json # versión fácil: en vez de html, el documento que lee la página privada de Claude
+
+--artifact corre las MISMAS validaciones (más: clave solo con letras, números, _ y -; un dibujo con algo que la
+lista blanca saca, como un script o un on*, es error y no aviso) y escribe un JSON, no un html: la tanda con los
+dibujos saneados, `categoria` embebida, `creada` (ISO UTC) y `estado: "abierta"`. Es el documento que la página
+fácil (skill/facil/pagina.html) guarda en `tandas/<clave>`. No se combina con --publicar (no usa Supabase) y no
+pasa de 200 KB.
 
 Por cantidad: hasta 5 decisiones, widget inline; de 6 en
 adelante, html. El índice lateral no va por cantidad: aparece cuando el JSON trae
@@ -31,6 +40,9 @@ Campos opcionales (un JSON sin ellos arma igual que siempre):
   ítem:  campos [{id, etiqueta, valor, tipo: texto|numero|fecha|opcion, opciones?}]: los valores que propuso el agente, para que
          el botón Editar los abra ya cargados en campos (máx. 5; etiqueta ≤6 palabras). Solo en cards sí/no. La respuesta vuelve
          «N. va con cambios · título → acción · campos: id=nuevo (antes viejo); … · comentario: …».
+  ítem:  detalle (≤60 palabras): texto largo plegado en «Ver el detalle». campos de tipo `textarea` (≤3000 caracteres): un borrador entero.
+  ítem:  tipo "revision" {n, titulo, hice, verifique, mirar, imagen|link}: no es una decisión, es algo hecho para mirar; un solo botón (Revisado).
+  tanda: intro [{titulo?, texto?, items?}] y fyi {titulo?, lead?, grupos:[{titulo?, items:[texto]}]}.
   ítem:  aplicar {va, no_va | <id de cada opción>, comun?}: el plan concreto de cada respuesta posible (qué hacer, qué
          archivo o comando), ≤40 palabras cada uno. Lo lee retomar.py cuando la sesión ya no está viva. Opcional, pero
          una card sin `aplicar` da un aviso (no frena): sin plan, nadie más puede aplicar la respuesta.
@@ -38,9 +50,10 @@ Campos opcionales (un JSON sin ellos arma igual que siempre):
 Obligatorio: `impacto` {positivo, negativo} en cada ítem (los dos lados de la decisión). Las URLs https de fuente, antecedentes e intro salen como link.
 
 --publicar manda la tanda a Supabase (maestro.py) después de escribir la salida local. Siempre
-sube el html completo, aunque lo local sea inline. Publicar nunca rompe el armado: sin config o
-con la red caída avisa y sale 0. La única excepción: si la clave ya está decidida (el servidor no
-pisa), avisa por stderr «NO publicado» y sale 2 (el armado local ya quedó escrito).
+sube el html completo, aunque lo local sea inline. Publicar nunca borra el armado local (ya quedó escrito), pero
+avisa con el código de salida: 0 si se publicó (o si no hay config), 1 si el servidor rechazó la tanda o la red falló,
+2 si la clave ya está decidida (el servidor no pisa) o si una card de --reemplaza no se pudo marcar.
+Una sesión de bot (BM_SESSION_ID=bot-…) solo publica claves bot-…: si no, falla en la validación local (código 1).
 
 Seguridad: todo svg que venga en el JSON (dibujo.svg, svg de ícono propio) pasa por una whitelist
 antes de armar nada (sanear_svg): sin scripts, handlers on*, style, href externos ni foreignObject.
@@ -74,7 +87,9 @@ TECHO_ANTECEDENTE = 15   # palabras por viñeta (y por si_no_decidis)
 OTRAS = "otras"
 TECHO_APLICAR = 40       # palabras por plan de `aplicar` (y por su `comun`)
 MAX_CAMPOS = 5           # campos editables por card (botón Editar)
-TIPOS_CAMPO = ("texto", "numero", "fecha", "opcion")
+TIPOS_CAMPO = ("texto", "textarea", "numero", "fecha", "opcion")
+MAX_TEXTAREA = 3000      # caracteres de un campo textarea (un mail entero: ~450 palabras)
+TECHO_DETALLE = 60       # palabras del `detalle` de una card (plegado en «Ver el detalle»)
 PREFIJO_BOT = "bot-"     # los bots publican con session_id «bot-<nombre>» y su secret solo sirve para claves así
 ORDEN_OTRAS = 999   # `otras` va siempre al final, sin importar dónde esté en el catálogo
 COLOR_LIBRE = "#E0DCD2"   # gris neutro de las categorías libres y de `otras`
@@ -297,6 +312,13 @@ def validar_campos(n, it):
                     errores.append(f"ítem {n}: una opción de '{cid}' pasa las 6 palabras")
                 if val not in ops:
                     errores.append(f"ítem {n}: el valor de '{cid}' tiene que ser una de sus opciones")
+        elif tipo == "textarea":
+            if not (isinstance(val, str) and val.strip()):
+                errores.append(f"ítem {n}: el valor del campo textarea '{cid}' tiene que ser un texto")
+            elif len(val) > MAX_TEXTAREA:
+                errores.append(f"ítem {n}: el valor de '{cid}' (textarea) pasa los {MAX_TEXTAREA} caracteres ({len(val)}): recortá el borrador")
+            elif "⏎" in val:
+                errores.append(f"ítem {n}: el valor de '{cid}' (textarea) no puede traer el carácter ⏎ (es el marcador del salto de línea en la respuesta)")
         else:  # texto
             if not (isinstance(val, str) and val.strip()):
                 errores.append(f"ítem {n}: el valor del campo de texto '{cid}' tiene que ser un texto")
@@ -312,7 +334,7 @@ def claves_aplicar(it):
     return base + ["comun"]
 
 
-def validar_aplicar(n, it):
+def validar_aplicar(n, it, artifact=False):
     ap = it.get("aplicar")
     if ap is None:
         return []
@@ -320,7 +342,7 @@ def validar_aplicar(n, it):
         return [f"ítem {n}: 'aplicar' tiene que ser un objeto {{va, no_va, comun?}} (o {{<id de opción>: plan}} en una card con 'opciones')"]
     errores = []
     admitidas = claves_aplicar(it)
-    if not any(k in ap for k in admitidas if k != "comun"):
+    if not artifact and not any(k in ap for k in admitidas if k != "comun"):   # la versión fácil acepta un plan solo `comun`
         errores.append(f"ítem {n}: 'aplicar' no trae el plan de ninguna respuesta (claves posibles: {', '.join(k for k in admitidas if k != 'comun')})")
     for k, v in ap.items():
         if k not in admitidas:
@@ -341,13 +363,125 @@ def avisos_aplicar(d):
     return None
 
 
-def validar(d):
+NOMBRE_TIPO = {"str": "texto", "list": "lista", "dict": "objeto", "int": "número", "float": "número", "bool": "sí/no", "NoneType": "vacío"}
+
+
+def _tipo(x):
+    return NOMBRE_TIPO.get(type(x).__name__, type(x).__name__)
+
+
+def _lista_de_textos(x):
+    return isinstance(x, list) and all(isinstance(i, str) and i.strip() for i in x)
+
+
+def validar_intro(intro):
+    """`intro` es una LISTA de bloques {titulo?, texto?, items?}. Un texto suelto pasaba la validación y rompía el armado inline."""
+    if intro is None:
+        return []
+    forma = "una lista de bloques [{\"titulo\": ..., \"texto\": ..., \"items\": [...]}]"
+    if not isinstance(intro, list):
+        return [f"'intro' tiene que ser {forma}, recibí {_tipo(intro)}. Para un solo párrafo: [{{\"texto\": \"...\"}}]"]
+    errores = []
+    for i, b in enumerate(intro, 1):
+        if not isinstance(b, dict):
+            errores.append(f"intro[{i}] tiene que ser un bloque {{titulo?, texto?, items?}}, recibí {_tipo(b)}")
+            continue
+        for k in ("titulo", "texto"):
+            if b.get(k) is not None and not isinstance(b[k], str):
+                errores.append(f"intro[{i}].{k} tiene que ser un texto")
+        if b.get("items") is not None and not _lista_de_textos(b["items"]):
+            errores.append(f"intro[{i}].items tiene que ser una lista de textos")
+    return errores
+
+
+def validar_fyi(fyi):
+    """`fyi` es UN objeto {titulo?, lead?, grupos:[{titulo?, items:[texto]}]}."""
+    if fyi is None:
+        return []
+    if not isinstance(fyi, dict):
+        return [f"'fyi' tiene que ser un objeto {{titulo, lead?, grupos:[{{titulo, items:[...]}}]}}, recibí {_tipo(fyi)}"]
+    errores = []
+    for k in ("titulo", "lead"):
+        if fyi.get(k) is not None and not isinstance(fyi[k], str):
+            errores.append(f"fyi.{k} tiene que ser un texto")
+    grupos = fyi.get("grupos")
+    if grupos is not None and not isinstance(grupos, list):
+        errores.append("fyi.grupos tiene que ser una lista de grupos {titulo, items:[...]}")
+        return errores
+    for i, g in enumerate(grupos or [], 1):
+        if not isinstance(g, dict) or not g.get("items"):
+            errores.append(f"fyi.grupos[{i}] necesita 'items' (una lista de textos)")
+            continue
+        if not _lista_de_textos(g["items"]):
+            errores.append(f"fyi.grupos[{i}].items tiene que ser una lista de textos")
+        if g.get("titulo") is not None and not isinstance(g["titulo"], str):
+            errores.append(f"fyi.grupos[{i}].titulo tiene que ser un texto")
+    return errores
+
+
+TECHOS_REVISION = {"titulo": 12, "hice": 25, "verifique": 25, "mirar": 25}
+OBLIGATORIOS_REVISION = ("n", "titulo", "hice", "verifique", "mirar")
+PROHIBIDOS_REVISION = ("reco", "reco_motivo", "accion_va", "accion_no_va", "antecedentes", "si_no_decidis", "impacto", "opciones", "campos")
+URL_HTTPS = re.compile(r"https://[^\s\"'<>]+")
+
+
+def es_revision(it):
+    return isinstance(it, dict) and it.get("tipo") == "revision"
+
+
+def validar_revision(n, it):
+    """Ítem `tipo: "revision"`. Sin reco/impacto/opciones (no es una decisión). Solo entra si trae algo para mirar:
+    `imagen` (con `link` https) o `link` https; si no, va como una línea en el `fyi` de la tanda (anti-inundación)."""
+    errores = []
+    for k in OBLIGATORIOS_REVISION:
+        if it.get(k) in (None, ""):
+            errores.append(f"ítem {n}: falta '{k}' (una revisión lleva n, titulo, hice, verifique y mirar)")
+    for campo, techo in TECHOS_REVISION.items():
+        v = it.get(campo)
+        if v in (None, ""):
+            continue
+        if not isinstance(v, str):
+            errores.append(f"ítem {n}: '{campo}' tiene que ser un texto")
+        elif palabras(v) > techo:
+            errores.append(f"ítem {n}: '{campo}' tiene {palabras(v)} palabras (techo {techo} en una revisión)")
+    prohibidos = [k for k in PROHIBIDOS_REVISION if it.get(k) not in (None, "", [], {})]
+    if prohibidos:
+        errores.append(f"ítem {n}: una revisión no lleva {', '.join(repr(k) for k in prohibidos)} (es de una decisión sí/no u opciones): "
+                       "sacalos, o armá una card de decisión")
+    img, link = it.get("imagen"), it.get("link")
+    if not img and not link:
+        errores.append(f"ítem {n}: revisión sin nada para mirar: va como una línea en el `fyi` de la tanda, no como card")
+    else:
+        if link and not (isinstance(link, str) and URL_HTTPS.fullmatch(link)):
+            errores.append(f"ítem {n}: 'link' tiene que ser una URL https")
+        if img:
+            errores += validar_imagen(n, img)
+            if isinstance(img, dict) and not img.get("link") and not link:
+                errores.append(f"ítem {n}: la imagen de una revisión necesita 'link' https (el de la imagen o un 'link' del ítem)")
+    ap = it.get("aplicar")
+    if ap is not None:
+        if not (isinstance(ap, dict) and ap):
+            errores.append(f"ítem {n}: 'aplicar' de una revisión es {{comun: texto}} (o se omite)")
+        else:
+            for k, v in ap.items():
+                if k != "comun":
+                    errores.append(f"ítem {n}: 'aplicar.{k}' no va en una revisión (solo 'comun': no hay un Va ni un No va)")
+                elif not (isinstance(v, str) and v.strip()):
+                    errores.append(f"ítem {n}: 'aplicar.comun' tiene que ser un texto")
+                elif palabras(v) > TECHO_APLICAR:
+                    errores.append(f"ítem {n}: 'aplicar.comun' tiene {palabras(v)} palabras (techo {TECHO_APLICAR})")
+    return errores
+
+
+def validar(d, artifact=False):
     errores = []
     for k in ("titulo", "fecha", "clave", "items"):
         if not d.get(k):
             errores.append(f"falta '{k}' en la raíz")
     if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", str(d.get("fecha", ""))):
         errores.append("fecha tiene que ser AAAA-MM-DD")
+    if artifact and not re.fullmatch(r"[A-Za-z0-9_-]{1,100}", str(d.get("clave", ""))):
+        errores.append("clave: solo letras, números, _ y - (va en la ruta de la base), hasta 100")
     origen = d.get("origen")
     if origen is not None:
         if not isinstance(origen, dict):
@@ -376,6 +510,12 @@ def validar(d):
             errores.append(f"ítem {n}: 'seccion' solo admite letras, números, _ y - (hasta 40)")
         if it.get("svg") is not None and not isinstance(it["svg"], str):
             errores.append(f"ítem {n}: 'svg' tiene que ser un texto")
+        if es_revision(it):   # card de revisión: no es una decisión, no pasa por los chequeos de sí/no
+            if n in vistos:
+                errores.append(f"ítem {n}: número repetido")
+            vistos.add(n)
+            errores += validar_revision(n, it)
+            continue
         for k in OBLIGATORIOS:
             if it.get(k) in (None, ""):
                 errores.append(f"ítem {n}: falta '{k}'")
@@ -383,13 +523,19 @@ def validar(d):
             errores.append(f"ítem {n}: número repetido")
         vistos.add(n)
         errores += validar_opciones(n, it)
-        errores += validar_aplicar(n, it)
+        errores += validar_aplicar(n, it, artifact)
         errores += validar_campos(n, it)
         if it.get("icono") and it["icono"] not in ICONOS:
             errores.append(f"ítem {n}: icono '{it.get('icono')}' no existe (o pasá 'svg' propio)")
         dib = it.get("dibujo")
         if dib is not None and not (isinstance(dib, dict) and isinstance(dib.get("svg"), str) and dib.get("svg")):
             errores.append(f"ítem {n}: 'dibujo' tiene que ser {{viewBox, svg, alt}} con svg")
+        if artifact:   # la página fácil no re-sanea: lo que no pasa la lista blanca frena, no se saca en silencio
+            for campo, svg in (("dibujo", dib.get("svg") if isinstance(dib, dict) else None), ("svg", it.get("svg"))):
+                if isinstance(svg, str) and svg.strip():
+                    quitado = sanear_svg(svg)[1]
+                    if quitado:
+                        errores.append(f"ítem {n}: '{campo}' trae algo que no se permite ({', '.join(quitado[:3])}): sacalo del dibujo")
         imp = it.get("impacto")
         if not (isinstance(imp, dict) and isinstance(imp.get("positivo"), str) and imp["positivo"].strip()
                 and isinstance(imp.get("negativo"), str) and imp["negativo"].strip()):
@@ -422,17 +568,17 @@ def validar(d):
                 datetime.date.fromisoformat(venc)
             except ValueError:
                 errores.append(f"ítem {n}: 'vence' tiene que ser una fecha AAAA-MM-DD válida")
+        det = it.get("detalle")
+        if det is not None:
+            if not (isinstance(det, str) and det.strip()):
+                errores.append(f"ítem {n}: 'detalle' tiene que ser un texto")
+            elif palabras(det) > TECHO_DETALLE:
+                errores.append(f"ítem {n}: 'detalle' tiene {palabras(det)} palabras (techo {TECHO_DETALLE})")
         for campo in ("accion_va", "accion_no_va"):
             if it.get(campo) and palabras(it[campo]) > 6:
                 errores.append(f"ítem {n}: '{campo}' tiene {palabras(it[campo])} palabras (techo 6: es la etiqueta del botón)")
-    fyi = d.get("fyi")
-    if fyi is not None:
-        if not isinstance(fyi, dict):
-            errores.append("'fyi' tiene que ser un objeto {titulo, lead?, grupos:[{titulo, items:[...]}]}")
-        else:
-            for g in (fyi.get("grupos") or []):
-                if not isinstance(g, dict) or not g.get("items"):
-                    errores.append("cada grupo de 'fyi' necesita 'items' (una lista)")
+    errores += validar_intro(d.get("intro"))
+    errores += validar_fyi(d.get("fyi"))
     return errores
 
 
@@ -655,6 +801,35 @@ def armar_html(d):
     return con_csp(doc)
 
 
+COLORES_LIBRES = ["#8ECAC8", "#F2C6A0", "#BFD8A8", "#D9CBA3", "#C9B8E0", "#E8B4B8", "#B8D4E8"]
+MAX_ARTIFACT = 200_000   # bytes: la base de la página privada admite 256 KiB por documento
+
+
+def categoria_artifact(origen):
+    """Categoría embebida en el documento de la versión fácil: la del catálogo si origen.categoria u origen.proyecto
+    coinciden por id o alias; si no, una libre con ese texto (color por id) y, sin nada, «Pendientes»."""
+    origen = origen if isinstance(origen, dict) else {}
+    for rotulo in ("categoria", "proyecto"):
+        c = _por_alias(origen.get(rotulo))
+        if c:
+            return _objeto_categoria(c)
+    nombre = str(origen.get("categoria") or origen.get("proyecto") or "").strip() or "Pendientes"
+    cid = _slug(nombre)
+    return {"id": cid, "nombre": nombre, "color": COLORES_LIBRES[sum(ord(c) for c in cid) % len(COLORES_LIBRES)],
+            "icono": ICONO_LIBRE, "orden": 1, "privada": False}
+
+
+def armar_artifact(d):
+    """El documento que lee la página fácil: la tanda ya validada y saneada (imagen.path -> src, svg limpios),
+    con la categoría embebida, `creada` (ISO UTC) y `estado: "abierta"`."""
+    doc = json.loads(json.dumps(d, ensure_ascii=False))
+    sanear_datos(doc)
+    doc["categoria"] = categoria_artifact(doc.get("origen"))
+    doc["creada"] = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    doc["estado"] = "abierta"
+    return doc
+
+
 HEADER_SVG = (AQUI / "elicit-header.svg").read_text(encoding="utf-8").strip()  # chrome fijo del shell, byte a byte
 
 
@@ -672,6 +847,27 @@ def svg_inline(svg):
     """Íconos y dibujos usan clases; el widget no lleva <style> para eso, así que van a style inline."""
     # Acepta comillas simples y dobles: con simples no traducía nada y el dibujo salía roto.
     return re.sub(r'class=(["\'])(\w+)\1', lambda m: f'style="{CLASES_INLINE[m.group(2)]}"' if m.group(2) in CLASES_INLINE else m.group(0), svg)
+
+
+def inline_revision(it):
+    """Card de revisión para el widget inline: tres líneas, la imagen o el link, un solo botón (Revisado) y el comentario."""
+    e = H.escape
+    n = e(str(it["n"]))
+    img = it.get("imagen") or {}
+    link = img.get("link") or it.get("link")
+    lineas = "".join(f'<p style="margin:2px 0"><span style="font-weight:500">{rot}:</span> {e(it[k])}</p>'
+                     for k, rot in (("hice", "Qué hice"), ("verifique", "Qué verifiqué"), ("mirar", "Qué te queda mirar")))
+    foto = (f'<div style="margin:6px 0 4px"><img src="{e(img["src"])}" alt="{e(img.get("alt") or "")}" '
+            'style="display:block;width:100%;height:auto;border-radius:8px;border:1px solid var(--border)"></div>') if img.get("src") else ""
+    return ('<div class="elicit-group">'
+            f'<label class="elicit-question">{n} · REVISIÓN · {e(it["titulo"])}</label>'
+            f'<div style="font-size:14px;line-height:1.5;color:var(--text-secondary);margin:4px 0 8px">{lineas}</div>'
+            + foto
+            + (f'<div style="font-size:12px;margin-bottom:8px">Abrir: {e(link)}</div>' if link else "")
+            + f'<div class="elicit-pills" data-name="decision_{n}" data-multi="false">'
+              '<button type="button" class="elicit-pill" data-value="Revisado">Revisado</button></div>'
+            + f'<textarea class="elicit-textarea" data-name="comentario_{n}" rows="1" placeholder="Comentar sirve para pedir un cambio"></textarea>'
+            + '</div>')
 
 
 def armar_inline(d):
@@ -700,13 +896,16 @@ def armar_inline(d):
             cuerpo += '<ul style="margin:2px 0 0 16px;font-size:13px;color:var(--text-secondary)">' + "".join(f'<li>{e(i)}</li>' for i in b["items"]) + '</ul>'
         out.append(f'<div style="background:var(--surface-1);border-radius:12px;padding:10px 12px;margin-bottom:8px">{cuerpo}</div>')
     for it in d["items"]:
+        if es_revision(it):
+            out.append(inline_revision(it))
+            continue
         n, va = e(str(it["n"])), es_va(it)
         tag = {"danger": " · ojo", "warning": " · sensible"}.get(it.get("accent") or "", "")
         imp = it.get("impacto") or {}
         det_imp = (f'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px">'
                    f'<div style="padding:6px 8px;border-left:3px solid var(--text-success);background:var(--bg-success)"><span style="font-weight:500">Impacto positivo</span><br>{e(imp.get("positivo") or "nada relevante")}</div>'
                    f'<div style="padding:6px 8px;border-left:3px solid var(--text-danger);background:var(--bg-danger)"><span style="font-weight:500">Impacto negativo</span><br>{e(imp.get("negativo") or "nada relevante")}</div></div>') if imp else ""
-        det = det_imp + "".join(
+        det = (f'<p style="margin:6px 0 0">{e(it["detalle"])}</p>' if it.get("detalle") else "") + det_imp + "".join(
             f'<p style="margin:6px 0 0"><span style="font-weight:500">{lab}:</span> {e(it[k])}</p>'
             for k, lab in (("porque", "Por qué"), ("si_va", "Si va"), ("si_no_va", "Si no va"), ("fuente", "Fuente")) if it.get(k))
         icono = it.get("svg") or (ICONOS[it["icono"]] if it.get("icono") else "")
@@ -746,7 +945,7 @@ def armar_inline(d):
             + (f'<div style="flex:0 0 64px;height:64px;border-radius:12px;background:{fondo.get(it.get("accent") or "", "var(--bg-accent)")};display:flex;align-items:center;justify-content:center">'
                f'<svg viewBox="0 0 64 64" width="46" height="46" aria-hidden="true">{svg_inline(icono)}</svg></div>' if icono and not dib else "")
             +             f'<div style="font-size:14px;line-height:1.5;color:var(--text-secondary)">{e(it["contexto"])}{previo}'
-            f'<br><span style="font-size:13px">Te recomiendo {reco}: {e(it["reco_motivo"])}</span></div></div>'
+            f'<br><span style="font-size:13px">El agente recomienda {reco}: {e(it["reco_motivo"])}</span></div></div>'
             + pills +
             f'<textarea class="elicit-textarea" data-name="comentario_{n}" rows="1" placeholder="Comentario (opcional)"></textarea>'
             + (f'<details style="font-size:13px;color:var(--text-secondary);margin-top:6px"><summary style="cursor:pointer;color:var(--text-accent)">Ver el detalle</summary>{det}</details>' if det else "")
@@ -789,7 +988,8 @@ def marcar_sesion(session_id):
 
 def publicar(datos):
     """Sube la tanda a la botonera. Nunca levanta: el armado local ya está hecho.
-    Devuelve el código de salida: 0 siempre, salvo 2 si la clave ya estaba decidida (no se publicó nada)."""
+    Devuelve el código de salida: 0 si se publicó (o si no hay config: no hay a dónde publicar), 2 si la clave ya estaba
+    decidida (no se publicó nada) y 1 si el servidor rechazó la tanda o la red falló."""
     if not maestro.config():
         print("maestro: sin config (~/.config/botonera/env), no publicado")
         return 0
@@ -811,7 +1011,7 @@ def publicar(datos):
         })
     except maestro.ErrorMaestro as ex:
         print(f"maestro: falló ({ex})", file=sys.stderr)
-        return 0
+        return 1
     # El servidor contesta un texto: "creada", "actualizada" o "ya_decidida:<estado>" (no pisa).
     quedo = str(res or "").strip().lower()
     if quedo in ("creada", "actualizada"):
@@ -822,21 +1022,117 @@ def publicar(datos):
         print(f"maestro: NO publicado: la clave {datos['clave']} ya está {quedo.split(':', 1)[1]}. Usá una clave nueva.", file=sys.stderr)
         return 2
     print(f"maestro: respuesta inesperada del servidor ({quedo!r}), no sé si se publicó", file=sys.stderr)
-    return 0
+    return 1
+
+
+RE_REEMPLAZA = re.compile(r"([A-Za-z0-9._-]{1,120})#(\d{1,4})(?::(\d{1,4}))?")
+
+
+def sacar_reemplaza(args):
+    """Saca de los args cada `--reemplaza <clave>#<n>[:<m>]` y los devuelve como [(clave, n, m)] (m = la card nueva, default 1)."""
+    resto, out, i = [], [], 0
+    while i < len(args):
+        if args[i] == "--reemplaza":
+            m = RE_REEMPLAZA.fullmatch(args[i + 1]) if i + 1 < len(args) else None
+            if not m:
+                sys.exit("--reemplaza necesita <clave>#<n> (opcional :<m>, la card nueva), p. ej. --reemplaza botonera-2026-11-21-x#2")
+            out.append((m.group(1), int(m.group(2)), int(m.group(3) or 1)))
+            i += 2
+        else:
+            resto.append(args[i])
+            i += 1
+    return resto, out
+
+
+def reemplazar(datos, reemplazos):
+    """«Ya no aplica»: marca cada card vieja con bm_reemplazar, DESPUÉS de publicar la tanda nueva.
+    Devuelve el código de salida: 0 si todo salió, 2 si alguna no se pudo marcar (la nueva ya quedó publicada)."""
+    cfg = maestro.config()
+    if not cfg:
+        print("maestro: sin config, no se marcó ninguna card como reemplazada", file=sys.stderr)
+        return 2
+    # antes de dar una card por reemplazada, la nueva tiene que existir en la base
+    try:
+        nueva = maestro.rpc("bm_retomar", {"p_secret": cfg["BM_SECRET"], "p_clave": datos["clave"]})
+    except maestro.ErrorMaestro as ex:
+        nueva = {"estado": f"error: {ex}"}
+    if not isinstance(nueva, dict) or nueva.get("estado") in (None, "no_existe") or str(nueva.get("estado")).startswith("error"):
+        print(f"reemplaza: {datos['clave']} no está en la base: no se marcó ninguna card como reemplazada "
+              f"({(nueva or {}).get('estado') if isinstance(nueva, dict) else nueva})", file=sys.stderr)
+        return 2
+    items_nueva = nueva.get("items") or []
+    fallo = False
+    for clave, n, m in reemplazos:
+        por = f"{datos['clave']}#{m}"
+        if not any(isinstance(i, dict) and i.get("n") == m for i in items_nueva):
+            print(f"reemplaza: la tanda {datos['clave']} que está en la base no tiene card {m} (¿se publicó otra versión?): {clave}#{n} NO marcada", file=sys.stderr)
+            fallo = True
+            continue
+        try:
+            res = str(maestro.rpc("bm_reemplazar", {"p_secret": cfg["BM_SECRET"], "p_clave": clave, "p_n": n, "p_por": por}) or "").strip()
+        except maestro.ErrorMaestro as ex:
+            print(f"reemplaza: {clave}#{n} falló ({ex})", file=sys.stderr)
+            fallo = True
+            continue
+        if res.startswith("reemplazada:"):
+            activas = int(res.split(":", 1)[1] or 0)
+            print(f"reemplaza: {clave}#{n} ya no aplica; la reemplaza {por}")
+            if activas == 0:
+                print(f"aviso: a {clave} no le queda ninguna card activa: nadie la va a contestar. Dejá de esperarla (cortá el esperar.py de esa clave).", file=sys.stderr)
+        elif res.startswith("ya_decidida:"):
+            print(f"aviso: {clave} ya estaba {res.split(':', 1)[1]}: la card {n} no se toca (su respuesta ya salió).", file=sys.stderr)
+        else:
+            print(f"reemplaza: {clave}#{n} NO marcada ({res})", file=sys.stderr)
+            fallo = True
+    return 2 if fallo else 0
 
 
 def main():
     args = sys.argv[1:]
-    forzado = next((a for a in args if a in ("--html", "--inline")), None)
+    args, reemplazos = sacar_reemplaza(args)
+    forzado = next((a for a in args if a in ("--html", "--inline", "--artifact")), None)
     quiere_publicar = "--publicar" in args
-    args = [a for a in args if a not in ("--html", "--inline", "--publicar")]
+    args = [a for a in args if a not in ("--html", "--inline", "--publicar", "--artifact")]
     if len(args) != 2:
-        sys.exit("uso: python3 armar.py [--html|--inline] [--publicar] datos.json salida.html")
+        sys.exit("uso: python3 armar.py [--html|--inline] [--publicar [--reemplaza <clave>#<n>]] datos.json salida.html\n"
+                 "     python3 armar.py --artifact datos.json salida.json   (versión fácil)")
+    if forzado == "--artifact" and (quiere_publicar or reemplazos):
+        sys.exit("--artifact no se combina con --publicar ni --reemplaza: la versión fácil no usa Supabase")
+    if reemplazos and not quiere_publicar:
+        sys.exit("--reemplaza solo va con --publicar: la card vieja se marca después de publicar la nueva")
     datos = json.loads(Path(args[0]).read_text(encoding="utf-8"))
-    errores = validar(datos)
+    errores = validar(datos, artifact=forzado == "--artifact")
+    if quiere_publicar and (id_sesion() or "").startswith(PREFIJO_BOT) and not str(datos.get("clave", "")).startswith(PREFIJO_BOT):
+        errores.append(f"una sesión de bot (BM_SESSION_ID={id_sesion()}) solo publica claves que empiezan con {PREFIJO_BOT}: "
+                       f"'{datos.get('clave')}' no vale")
+    for clave, n, m in reemplazos:
+        if not re.fullmatch(r"[A-Za-z0-9._-]{1,120}", str(datos.get("clave", ""))):
+            errores.append(f"--reemplaza: la clave '{datos.get('clave')}' tiene que ser [A-Za-z0-9._-] (hasta 120) para poder enlazar la card vieja")
+        if clave == datos.get("clave"):
+            errores.append(f"--reemplaza {clave}#{n}: una tanda no se reemplaza a sí misma (usá la misma clave para republicar)")
+        if not any(it.get("n") == m for it in datos.get("items", [])):
+            errores.append(f"--reemplaza {clave}#{n}:{m}: esta tanda no tiene card {m}")
+        if (id_sesion() or "").startswith(PREFIJO_BOT) and not clave.startswith(PREFIJO_BOT):
+            errores.append(f"--reemplaza {clave}#{n}: una sesión de bot solo reemplaza cards de claves {PREFIJO_BOT}")
     if errores:
         print("\n".join(errores), file=sys.stderr)
         sys.exit(1)
+    if forzado == "--artifact":
+        try:
+            doc = armar_artifact(datos)
+        except (ValueError, subprocess.CalledProcessError) as ex:
+            sys.exit(f"imagen: {ex}")
+        texto = json.dumps(doc, ensure_ascii=False, indent=1)
+        if len(texto.encode("utf-8")) > MAX_ARTIFACT:
+            sys.exit(f"el documento pasa los {MAX_ARTIFACT // 1000} KB (la base admite 256 KiB por documento): recortá dibujos, imágenes o textos")
+        aviso_ap = avisos_aplicar({**doc, "items": [i for i in doc["items"] if not es_revision(i)]})
+        if aviso_ap:
+            print(aviso_ap, file=sys.stderr)
+        salida = Path(args[1])
+        salida.parent.mkdir(parents=True, exist_ok=True)
+        salida.write_text(texto, encoding="utf-8")
+        print(f"ok · artifact · {len(doc['items'])} ítems · {salida}")
+        return
     try:
         sanear_datos(datos)   # antes de armar nada: html, inline y lo que sube --publicar salen del mismo JSON limpio
     except (ValueError, subprocess.CalledProcessError) as ex:
@@ -858,7 +1154,10 @@ def main():
     modo = ("html + índice" if con_indice else "html") if modo_html else "inline"
     print(f"ok · {modo} · {n} ítems · {salida}")
     if quiere_publicar:
-        sys.exit(publicar(datos))
+        codigo = publicar(datos)
+        if codigo == 0 and reemplazos:
+            codigo = reemplazar(datos, reemplazos)
+        sys.exit(codigo)
 
 
 if __name__ == "__main__":

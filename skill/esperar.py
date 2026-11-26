@@ -1,11 +1,16 @@
 #!/usr/bin/env python3
-"""Espera en segundo plano la respuesta de una botonera publicada en la botonera.
+"""Espera la respuesta de una botonera publicada en la botonera.
 
 Uso:
   python3 esperar.py <clave> [--cada 15]
+  python3 esperar.py <clave> --una-vez     # una sola consulta y sale (para agentes sin segundo plano)
 
-Lo lanza la sesión de Claude con Bash `run_in_background`. Cuando el proceso termina, la sesión
-se despierta y lee lo que imprimió, así que la última salida tiene que bastarse sola:
+Si tu agente puede dejar un proceso corriendo en segundo plano, lanzalo así; cuando el proceso termina, el agente
+lee lo que imprimió, así que la última salida tiene que bastarse sola. Si no puede, usá --una-vez:
+  - respuesta ya está   -> la imprime y sale 0
+  - todavía abierta     -> imprime `maestro: <clave> todavía abierta` y sale 3 (no es un error: aún no decidió)
+  - el resto de los casos (ya resuelta, no existe, snoozeada) se comporta como abajo.
+Salida de la espera normal:
   - recibida            -> imprime EXACTAMENTE la respuesta (ya empieza con
                            `/botonera respuesta · <clave>`) y sale 0
   - respondida_en_chat / aplicada -> aviso de que no queda nada por aplicar, sale 0
@@ -142,16 +147,21 @@ def snooze_nuevo(clave, hasta, ya_avisadas):
 def main():
     sys.stdout.reconfigure(encoding="utf-8")  # la respuesta trae «·» y acentos; sin esto un stdout cp1252/ASCII revienta
     args = sys.argv[1:]
+    if "-h" in args or "--help" in args:
+        print(__doc__)
+        return
+    una_vez = "--una-vez" in args
+    args = [a for a in args if a != "--una-vez"]
     cada = 15
     if "--cada" in args:
         i = args.index("--cada")
         try:
             cada = max(1, int(args[i + 1]))
         except (IndexError, ValueError):
-            sys.exit("uso: python3 esperar.py <clave> [--cada 15]")
+            sys.exit("uso: python3 esperar.py <clave> [--cada 15] [--una-vez]")
         del args[i:i + 2]
     if len(args) != 1:
-        sys.exit("uso: python3 esperar.py <clave> [--cada 15]")
+        sys.exit("uso: python3 esperar.py <clave> [--cada 15] [--una-vez]")
     clave = args[0]
     cfg = maestro.config()
     if not cfg:
@@ -172,6 +182,9 @@ def main():
             else:
                 seguidos_4xx = 0
             print(f"maestro: reintento ({ex})", file=sys.stderr, flush=True)
+            if una_vez:
+                print(f"maestro: no pude consultar {clave} ({ex})", flush=True)
+                sys.exit(1)
             time.sleep(cada)
             continue
         seguidos_4xx = 0
@@ -199,6 +212,9 @@ def main():
                 if snooze_nuevo(clave, hasta, ya_avisadas):
                     print(f"maestro: {clave} snoozeada hasta {cuando}", flush=True)
                     return
+        if una_vez:
+            print(f"maestro: {clave} todavía abierta", flush=True)
+            sys.exit(3)
         time.sleep(cada)  # abierta (o recibida sin texto todavía)
     print(f"maestro: {clave} sin respuesta tras 8 días, dejo de esperar")
 

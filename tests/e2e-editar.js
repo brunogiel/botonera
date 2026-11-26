@@ -99,6 +99,8 @@ function stub(FX, TOKEN) {
     if (nombre === 'bm_entrar') return ok({ ok: true, token: TOKEN });
     if (nombre === 'bm_salir') return ok(null);
     if (a.p_token !== TOKEN) return { data: null, error: { message: 'token invalido' } };
+    if (nombre === 'bm_acciones_lista') return ok({ items: [] });
+    if (nombre === 'bm_seguimiento') return ok({ vuelo: [], pedidos: [], escucha_at: null, activos: 0 });
     if (nombre === 'bm_errores_lista') return ok(clonar(FX.errores));
     if (nombre === 'bm_error_visto') {
       const antes = FX.errores.length;
@@ -132,10 +134,10 @@ function stub(FX, TOKEN) {
 let browser;
 async function ctxNuevo(fx) {
   const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true, deviceScaleFactor: 2 });
-  // todo lo que no es el servidor local se corta; las dos librerías de la CDN se reemplazan
+  // todo lo que no es el servidor local se corta; las dos librerías de /vendor/ se reemplazan
   await ctx.route(u => !['127.0.0.1', 'localhost'].includes(u.hostname), r => r.abort());
-  await ctx.route(/\/canvas-confetti@/, r => r.fulfill({ contentType: 'text/javascript', body: 'window.confetti = function(){};' }));
-  await ctx.route(/\/@supabase\/supabase-js@/, r => r.fulfill({ contentType: 'text/javascript',
+  await ctx.route(/\/vendor\/confetti\.min\.js/, r => r.fulfill({ contentType: 'text/javascript', body: 'window.confetti = function(){};' }));
+  await ctx.route(/\/vendor\/supabase\.min\.js/, r => r.fulfill({ contentType: 'text/javascript',
     body: `(${stub.toString()})(${JSON.stringify(fixture(fx)).replace(/</g, '\\u003c')}, ${JSON.stringify(TOKEN)});` }));
   await ctx.addInitScript(t => { try { localStorage.setItem('bm-token', t); } catch (e) {} }, TOKEN);
   const page = await ctx.newPage();
@@ -150,11 +152,11 @@ async function libre(page) { // espera a que no haya animación ni gesto
   await page.waitForFunction(() => { const s = window.__swipe && window.__swipe(); return !s || !s.ocupado; }, null, { timeout: 8000 });
   await sleep(120);
 }
-// home -> «Swipear todo» -> card de contexto -> «Empezar a decidir». Deja la card 1 al frente.
+// home -> fila de la categoría (con una sola botonera abre el mazo) -> card de contexto -> «Empezar a decidir». Deja la card 1 al frente.
 async function entrar(page) {
   await page.goto(URL_WEB());
-  await page.waitForSelector('.home-cta', { timeout: 10000 });
-  await page.tap('.home-cta');
+  await page.waitForSelector('.hrow', { timeout: 10000 });
+  await page.tap('.hrow');
   await page.waitForSelector('[data-a="empezar"]', { timeout: 8000 });
   await page.tap('[data-a="empezar"]');
   await page.waitForSelector('.sw-act, .sw-op', { timeout: 8000 });
@@ -400,15 +402,15 @@ const CASOS = {
       await entrar(page);
       await tap(page, '[data-a="masinfo"]'); await esperarHoja(page);
       const tit = (await page.locator('.sw-st').innerText()).trim();
-      await tap(page, '[data-a="co-listo"]'); await sleep(300);     // Listo con el comentario vacío no marca nada
-      const sigueHoja = await page.locator('.sw-sheet-in').count();
+      const ops = await page.locator('.sw-rot-op b').allInnerTexts();
+      await tap(page, '[data-id="dibujo-corto"]'); await tap(page, '[data-id="otro-ejemplo"]');
       await page.locator('#sw-com').fill('¿Cuánto subió el gasto el último mes?'); await sleep(120);
-      await tap(page, '[data-a="co-listo"]'); await libre(page);
+      await tap(page, '[data-a="ro-listo"]'); await libre(page);
       await tap(page, '[data-a="no"]'); await libre(page);   // card 2 «No va»
       const resp = await enviar(page);
-      const esp = `1. comentario · ${T1} · comentario: ¿Cuánto subió el gasto el último mes?`, ob = linea(resp, 1);
-      reg({ caso: 11, titulo: '+info en una card: comentar sin decidir', esperado: esp, obtenido: ob,
-        estado: veredicto(ob === esp && sigueHoja === 1 && tit === '+info' && !/^1\. (va|no va)/.test(ob)), nota: `título de la hoja: «${tit}»; Listo vacío: ${sigueHoja ? 'se quedó en la hoja' : 'cerró'}` });
+      const esp = `1. rot · ${T1} → Dibujo corto + Otro ejemplo · comentario: ¿Cuánto subió el gasto el último mes?`, ob = linea(resp, 1);
+      reg({ caso: 11, titulo: '+info en una card: 5 opciones + comentario, sin decidir', esperado: esp, obtenido: ob,
+        estado: veredicto(ob === esp && tit === '+info' && ops.join('|') === 'Más contexto|Dibujo corto|Dibujo largo|Escribilo distinto|Otro ejemplo'), nota: `título de la hoja: «${tit}»; opciones: ${ops.join(', ')}` });
     } finally { await ctx.close(); }
   },
   '12': async () => {
@@ -459,8 +461,8 @@ const CASOS = {
       await page.locator('#sw-com').fill('Esto sobrevive a la recarga'); await sleep(200);
       await shot(page, 'caso-14-antes-de-recargar');
       await page.goto(URL_WEB());   // recarga EN MEDIO de la hoja abierta: las marcas viven en localStorage
-      await page.waitForSelector('.home-cta', { timeout: 10000 });
-      await tap(page, '.home-cta');
+      await page.waitForSelector('.hrow', { timeout: 10000 });
+      await tap(page, '.hrow');
       await page.waitForSelector('[data-a="empezar"]'); await tap(page, '[data-a="empezar"]'); await page.waitForSelector('.sw-act'); await libre(page);
       await abrirEditar(page);
       const rec = { precio: await page.locator('#sw-f0').inputValue(), alcance: await page.locator('#sw-f2').inputValue(), comentario: await page.locator('#sw-com').inputValue() };
@@ -532,6 +534,8 @@ const CASOS = {
     const { ctx, page } = await ctxNuevo('home');
     try {
       await page.goto(URL_WEB());
+      await page.waitForSelector('.hrow', { timeout: 10000 });
+      await page.tap('[data-tab="bloqueos"]');   // la fila «Con error» vive en Bloqueos
       await page.waitForSelector('.herr', { timeout: 10000 });
       const antes = await page.evaluate(() => ({ titulo: document.querySelector('.herr-k').textContent.trim(), items: [...document.querySelectorAll('.herr-i b')].map(b => b.innerText.trim()),
         tipos: [...document.querySelectorAll('.herr-w')].map(w => w.innerText.split(' · ')[0]) }));

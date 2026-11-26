@@ -192,7 +192,7 @@ def main():
 
         # 2. PIN y publicación
         print("\nPIN y publicación")
-        r = py("pin.py", "poner", PIN)
+        r = py("pin.py", "poner", entorno={**env, "BM_PIN_PRUEBA": PIN})
         registrar(r.returncode == 0 and "puesto" in r.stdout, "pin.py poner", r.stderr or r.stdout)
         r = py("pin.py", "estado")
         registrar(r.returncode == 0 and "puesto=sí" in r.stdout, "pin.py estado dice puesto=sí", r.stderr or r.stdout)
@@ -221,12 +221,12 @@ def main():
         # 4. lista y fila con el token
         st, lista = rpc("bm_lista", {"p_token": token})
         fila = next((x for x in lista if x.get("clave") == clave), None) if isinstance(lista, list) else None
-        registrar(fila is not None and fila.get("estado") == "abierta" and fila.get("n_items") == 3,
-                  "bm_lista con token muestra la tanda abierta con 3 ítems", f"{st} {str(lista)[:200]}")
+        registrar(fila is not None and fila.get("estado") == "abierta" and fila.get("n_items") == 4,
+                  "bm_lista con token muestra la tanda abierta con 4 ítems", f"{st} {str(lista)[:200]}")
         st, fl = rpc("bm_fila", {"p_token": token, "p_clave": clave})
         f = fl[0] if isinstance(fl, list) and fl else (fl if isinstance(fl, dict) else {})
         registrar(st == 200 and f.get("clave") == clave and "<html" in (f.get("html") or "").lower()
-                  and len((f.get("datos") or {}).get("items", [])) == 3,
+                  and len((f.get("datos") or {}).get("items", [])) == 4,
                   "bm_fila con token trae el html y los datos", f"{st} {str(fl)[:200]}")
         version = f.get("updated_at")
 
@@ -338,7 +338,7 @@ def main():
         registrar(r.returncode == 1 and "'campos' tiene que ser una lista de 1 a 5" in r.stderr,
                   "armar.py rechaza más de 5 campos", r.stderr)
         r = armar_variante("tipo", lambda d: d["items"][0]["campos"][0].__setitem__("tipo", "color"), ("--html",))
-        registrar(r.returncode == 1 and "tiene que ser texto | numero | fecha | opcion" in r.stderr,
+        registrar(r.returncode == 1 and "tiene que ser texto | textarea | numero | fecha | opcion" in r.stderr,
                   "armar.py rechaza un tipo de campo desconocido", r.stderr)
         r = armar_variante("etiqueta", lambda d: d["items"][0]["campos"][0].__setitem__("etiqueta", "una etiqueta con muchas más de seis palabras"), ("--html",))
         registrar(r.returncode == 1 and "palabras (techo 6)" in r.stderr, "armar.py rechaza una etiqueta de más de 6 palabras", r.stderr)
@@ -376,7 +376,7 @@ def main():
         print("\nRetomar sin la sesión viva")
         st, res = rpc("bm_retomar", {"p_secret": secreto, "p_clave": clave_c})
         its = res.get("items") if isinstance(res, dict) else []
-        registrar(st == 200 and res.get("estado") == "decidida" and res.get("respuesta_texto") == respuesta_c and len(its) == 3
+        registrar(st == 200 and res.get("estado") == "decidida" and res.get("respuesta_texto") == respuesta_c and len(its) == 4
                   and "Cambiar la tarifa" in (its[0].get("aplicar") or {}).get("va", "") and "whatsapp" in (its[1].get("aplicar") or {}),
                   "bm_retomar trae la respuesta y el plan aplicar de cada ítem, sin cambiar el estado", f"{st} {str(res)[:200]}")
         st, res = rpc("bm_retomar", {"p_secret": secreto, "p_clave": "clave-que-no-existe"})
@@ -401,6 +401,10 @@ def main():
         registrar(r.returncode == 0 and f.get("estado") == "recibida", "retomar.py --tomar pasa la tanda de decidida a recibida", f"{r.stderr} {f.get('estado')}")
         r = py("retomar.py", "clave-que-no-existe")
         registrar(r.returncode == 1 and "no existe" in r.stderr, "retomar.py sobre una clave inexistente sale con 1", r.stdout + r.stderr)
+
+        st, res = rpc("bm_retomar", {"p_secret": secreto, "p_clave": clave_c})
+        tipos = [i.get("tipo") for i in (res.get("items") or [])] if isinstance(res, dict) else []
+        registrar(st == 200 and tipos == [None, None, None, "revision"], "bm_retomar devuelve el tipo de cada card (la revisión se reconoce)", f"{st} {tipos}")
 
         print("\nColgadas y fila «Con error»")
         r = py("colgadas.py")
@@ -507,6 +511,14 @@ def main():
             registrar(st >= 400 and "secret invalido" in mensaje(res), f"{nombre} no acepta el secret de bot", f"{st} {res}")
         st, res = rpc("bm_error_publicar", {"p_secret": bs, "p_tipo": "tarea", "p_origen_id": "x", "p_titulo": "x", "p_motivo": None, "p_ocurrio_at": ahora})
         registrar(st >= 400 and "rol bot: no publica errores" in mensaje(res), "el secret de bot no publica errores", f"{st} {res}")
+        for nombre, cuerpo in (("bm_obstaculo_publicar", {"p_titulo": "x", "p_por_que": "", "p_de": "", "p_frena": "", "p_link": "https://ejemplo.com", "p_comando": ""}),
+                               ("bm_obstaculos_resueltos", {}), ("bm_obstaculo_llevado", {"p_id": 1}),
+                               ("bm_vuelo_anotar", {"p_session_id": "bot-x", "p_titulo": "x", "p_que_hace": "x", "p_proximo": "x"}),
+                               ("bm_vuelo_cerrar", {"p_session_id": "bot-x"}), ("bm_trabadas", {"p_horas": 0})):
+            st, res = rpc(nombre, dict(cuerpo, p_secret=bs))
+            registrar(st >= 400 and "secret invalido" in mensaje(res), f"{nombre} no acepta el secret de bot (obstáculos, vuelos y trabadas son del dueño)", f"{st} {res}")
+        st, res = rpc("bm_reemplazar", {"p_secret": bs, "p_clave": clave, "p_n": 1, "p_por": f"{cb}#1"})
+        registrar(st >= 400 and "rol bot: solo claves bot-" in mensaje(res), "bm_reemplazar con el secret de bot no toca una clave ajena", f"{st} {res}")
         r = py("colgadas.py")
         registrar(r.returncode == 0 and cb not in r.stdout and "bot- salteadas" in r.stdout, "colgadas.py no lista las tandas bot-", r.stdout + r.stderr)
         r = py("colgadas.py", "--archivar", cb, "prueba")
@@ -550,7 +562,8 @@ def main():
         registrar(not (home_bot / ".cache" / "botonera" / "sesiones" / "bot-por-env").exists(),
                   "una sesión bot- no deja la marca que despierta al hook entregar.py", str(sesion_bot))
         r = py("armar.py", "--publicar", str(ruta_c), str(tmp / "campos2.html"), entorno=entorno_bot)
-        registrar("rol bot: solo claves bot-" in r.stderr, "armar.py como bot no publica una clave que no es suya (avisa y sigue)", r.stderr + r.stdout)
+        registrar(r.returncode == 1 and "solo publica claves que empiezan con bot-" in r.stderr,
+                  "armar.py como bot no publica una clave que no es suya: falla en la validación local", r.stderr + r.stdout)
         proc = subprocess.Popen([sys.executable, str(skill / "esperar.py"), cb2, "--cada", "1"], env=entorno_bot,
                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         time.sleep(2)
@@ -568,18 +581,281 @@ def main():
         st, res = rpc("bm_pendientes", {"p_secret": bs, "p_horas": 0})
         registrar(r.returncode == 0 and st >= 400 and "secret invalido" in mensaje(res), "borrar la fila da de baja al bot", f"{st} {res}")
 
+
+        # 6c. «Ya no aplica» (--reemplaza)
+        print("\nYa no aplica (--reemplaza)")
+        clave_ra, clave_rb = f"{clave}-ra", f"{clave}-rb"
+        for cl in (clave_ra, clave_rb):
+            d_r = copy.deepcopy(datos)
+            d_r["clave"] = cl
+            (tmp / f"{cl}.json").write_text(json.dumps(d_r, ensure_ascii=False), encoding="utf-8")
+        r = py("armar.py", "--publicar", str(tmp / f"{clave_ra}.json"), str(tmp / "ra.html"))
+        registrar(r.returncode == 0 and f"creada · {clave_ra}" in r.stdout, "se publica la tanda que después se reemplaza", r.stderr or r.stdout)
+        r = py("armar.py", "--publicar", "--reemplaza", f"{clave_ra}#2:1", str(tmp / f"{clave_rb}.json"), str(tmp / "rb.html"))
+        registrar(r.returncode == 0 and "ya no aplica" in r.stdout and clave_rb in r.stdout,
+                  "armar.py --publicar --reemplaza publica la nueva y marca la card vieja", r.stderr or r.stdout)
+        st, fl = rpc("bm_fila", {"p_token": token, "p_clave": clave_ra})
+        f = fl[0] if isinstance(fl, list) and fl else {}
+        its_ra = (f.get("datos") or {}).get("items", [])
+        st, lista_r = rpc("bm_lista", {"p_token": token})
+        n_act = next((x.get("n_items") for x in lista_r if x.get("clave") == clave_ra), None) if isinstance(lista_r, list) else None
+        registrar(len(its_ra) == 4 and its_ra[1].get("reemplazada_por") == f"{clave_rb}#1" and n_act == 3,
+                  "la card queda marcada reemplazada_por y n_items baja a las activas", f"items={len(its_ra)} marca={its_ra[1].get('reemplazada_por') if len(its_ra) > 1 else None} n_items={n_act}")
+        st, res = rpc("bm_reemplazar", {"p_secret": secreto, "p_clave": clave_ra, "p_n": 2, "p_por": f"{clave_rb}#1"})
+        registrar(st == 200 and res == "reemplazada:3", "marcar dos veces la misma card no cambia nada (idempotente)", f"{st} {res}")
+        st, res = rpc("bm_reemplazar", {"p_secret": secreto, "p_clave": clave_ra, "p_n": 99, "p_por": f"{clave_rb}#1"})
+        registrar(st == 200 and res == "sin_card", "una card que no existe devuelve sin_card", f"{st} {res}")
+        st, res = rpc("bm_reemplazar", {"p_secret": secreto, "p_clave": "clave-que-no-existe", "p_n": 1, "p_por": f"{clave_rb}#1"})
+        registrar(st == 200 and res == "no_existe", "una tanda que no existe devuelve no_existe", f"{st} {res}")
+        st, res = rpc("bm_reemplazar", {"p_secret": secreto, "p_clave": clave_ra, "p_n": 1, "p_por": f"{clave_ra}#1"})
+        registrar(st >= 400 and "no se reemplaza a sí misma" in mensaje(res), "una tanda no se reemplaza a sí misma", f"{st} {res}")
+        r = py("armar.py", "--reemplaza", f"{clave_ra}#1", str(tmp / f"{clave_rb}.json"), str(tmp / "rb.html"))
+        registrar(r.returncode != 0 and "solo va con --publicar" in (r.stderr + r.stdout), "--reemplaza sin --publicar se rechaza", r.stderr + r.stdout)
+        st, res = rpc("bm_decidir_pin", {"p_token": token, "p_clave": clave_rb, "p_respuesta": f"/decisiones respuesta · {clave_rb}\n1. va"})
+        registrar(st >= 400 and "respuesta invalida" in mensaje(res), "bm_decidir_pin rechaza el prefijo «/decisiones respuesta»", f"{st} {res}")
+        rpc("bm_decidir_pin", {"p_token": token, "p_clave": clave_ra, "p_respuesta": f"/botonera respuesta · {clave_ra}\n1. va"})
+        st, res = rpc("bm_reemplazar", {"p_secret": secreto, "p_clave": clave_ra, "p_n": 3, "p_por": f"{clave_rb}#1"})
+        registrar(st == 200 and str(res).startswith("ya_decidida:"), "una tanda ya decidida no se toca", f"{st} {res}")
+        # publicar contra un servidor que no responde sale ≠ 0
+        entorno_caido = dict(env, HOME=str(tmp / "home-caido"), SUPABASE_URL="http://127.0.0.1:9", SUPABASE_ANON_KEY=key, BM_SECRET=secreto)
+        (tmp / "home-caido").mkdir(exist_ok=True)
+        r = py("armar.py", "--publicar", str(tmp / f"{clave_rb}.json"), str(tmp / "caido.html"), entorno=entorno_caido)
+        registrar(r.returncode == 1 and "falló" in r.stderr, "armar.py --publicar con la red caída sale con 1", f"rc={r.returncode} {r.stderr[:200]}")
+        py("marcar.py", clave_ra, "archivada", "fin de la prueba")
+        py("marcar.py", clave_rb, "archivada", "fin de la prueba")
+
+        # 6d. validar: textarea, revisión, detalle, intro y fyi
+        print("\nTipos de card nuevos")
+        r = py("armar.py", "--html", str(json_path), str(tmp / "tipos.html"))
+        registrar(r.returncode == 0, "textarea, revisión, detalle, intro y fyi pasan validar (tests/ejemplo.json)", r.stderr or r.stdout)
+        r = armar_variante("rev-vacia", lambda d: d["items"][3].pop("link"), ("--html",))
+        registrar(r.returncode == 1 and "revisión sin nada para mirar" in r.stderr, "una revisión sin imagen ni link se rechaza", r.stderr)
+        r = armar_variante("rev-reco", lambda d: d["items"][3].__setitem__("reco", "va"), ("--html",))
+        registrar(r.returncode == 1 and "una revisión no lleva" in r.stderr, "una revisión con reco se rechaza", r.stderr)
+        r = armar_variante("rev-http", lambda d: d["items"][3].__setitem__("link", "http://ejemplo.com"), ("--html",))
+        registrar(r.returncode == 1 and "URL https" in r.stderr, "el link de una revisión tiene que ser https", r.stderr)
+        r = armar_variante("ta-larga", lambda d: d["items"][2]["campos"][0].__setitem__("valor", "x" * 3001), ("--html",))
+        registrar(r.returncode == 1 and "textarea" in r.stderr and "3000" in r.stderr, "un textarea de más de 3000 caracteres se rechaza", r.stderr)
+        r = armar_variante("ta-salto", lambda d: d["items"][2]["campos"][0].__setitem__("valor", "uno ⏎ dos"), ("--html",))
+        registrar(r.returncode == 1 and "⏎" in r.stderr, "un textarea con el marcador ⏎ se rechaza", r.stderr)
+        r = armar_variante("detalle-largo", lambda d: d["items"][1].__setitem__("detalle", " ".join(["palabra"] * 61)), ("--html",))
+        registrar(r.returncode == 1 and "'detalle' tiene 61 palabras" in r.stderr, "un detalle de más de 60 palabras se rechaza", r.stderr)
+        r = armar_variante("intro-texto", lambda d: d.__setitem__("intro", "un texto suelto"), ("--html",))
+        registrar(r.returncode == 1 and "'intro' tiene que ser una lista" in r.stderr, "una intro que no es lista se rechaza", r.stderr)
+        r = armar_variante("fyi-lista", lambda d: d.__setitem__("fyi", ["una línea"]), ("--html",))
+        registrar(r.returncode == 1 and "'fyi' tiene que ser un objeto" in r.stderr, "un fyi que no es objeto se rechaza", r.stderr)
+        html_tipos = (tmp / "tipos.html").read_text(encoding="utf-8")
+        registrar("El agente recomienda" in html_tipos and "Si no decidís" in html_tipos and "CLAUDE recomienda" not in html_tipos and "recomienda CLAUDE" not in html_tipos,
+                  "la plantilla usa los rótulos «El agente recomienda» y «Si no decidís»", "")
+        r = py("armar.py", "--inline", str(json_path), str(tmp / "tipos-inline.html"))
+        inline = (tmp / "tipos-inline.html").read_text(encoding="utf-8") if (tmp / "tipos-inline.html").exists() else ""
+        registrar(r.returncode == 0 and "REVISIÓN" in inline and "El agente recomienda" in inline, "el widget inline arma la card de revisión", r.stderr or r.stdout)
+
+        # 6e. vuelo: vuelo.py -> bm_seguimiento
+        print("\nVuelo y Sesiones")
+        env_vuelo = dict(env, BM_SESSION_ID="vuelo-prueba-1")
+        r = py("vuelo.py", "anotar", "Armo el reporte", "Revisar las cifras", "--titulo", "Reporte de prueba", entorno=env_vuelo)
+        registrar(r.returncode == 0 and "anotado" in r.stdout, "vuelo.py anotar escribe la fila de la sesión", r.stderr or r.stdout)
+        st, seg = rpc("bm_seguimiento", {"p_token": token})
+        fila_v = next((v for v in (seg.get("vuelo") or []) if v.get("session_id") == "vuelo-prueba-1"), {}) if isinstance(seg, dict) else {}
+        registrar(st == 200 and set(seg) == {"vuelo", "pedidos", "escucha_at", "activos"} and seg.get("pedidos") == []
+                  and seg.get("escucha_at") is None and seg.get("activos") == 0,
+                  "bm_seguimiento devuelve vuelo, pedidos, escucha_at y activos (la forma que lee la web)", f"{st} {str(seg)[:200]}")
+        registrar(set(fila_v) == {"session_id", "titulo", "que_hace", "proximo", "estado", "updated_at", "desde"}
+                  and fila_v.get("que_hace") == "Armo el reporte" and fila_v.get("proximo") == "Revisar las cifras"
+                  and fila_v.get("titulo") == "Reporte de prueba" and fila_v.get("estado") == "trabajando",
+                  "cada elemento de vuelo trae los siete campos de siempre", str(fila_v))
+        py("vuelo.py", "anotar", "Espero tu respuesta", "Seguir con la tanda", "--estado", "esperando", entorno=env_vuelo)
+        st, seg = rpc("bm_seguimiento", {"p_token": token})
+        fila_v = next((v for v in (seg.get("vuelo") or []) if v.get("session_id") == "vuelo-prueba-1"), {})
+        registrar(fila_v.get("estado") == "esperando" and fila_v.get("que_hace") == "Espero tu respuesta", "anotar de nuevo actualiza la misma fila", str(fila_v))
+        st, res = rpc("bm_seguimiento", {"p_token": "token-falso"})
+        registrar(st >= 400 and "token invalido" in mensaje(res), "bm_seguimiento con token falso se rechaza", f"{st} {res}")
+        st, res = rpc("bm_vuelo_anotar", {"p_secret": "secreto-falso", "p_session_id": "x", "p_titulo": "x", "p_que_hace": "x", "p_proximo": "x"})
+        registrar(st >= 400 and "secret invalido" in mensaje(res), "bm_vuelo_anotar con secreto equivocado se rechaza", f"{st} {res}")
+        r = py("vuelo.py", "cerrar", entorno=env_vuelo)
+        st, seg = rpc("bm_seguimiento", {"p_token": token})
+        registrar(r.returncode == 0 and not any(v.get("session_id") == "vuelo-prueba-1" for v in (seg.get("vuelo") or [])),
+                  "vuelo.py cerrar saca la sesión de En vuelo", r.stderr or r.stdout)
+        r = py("vuelo.py", "anotar", "x", "y", "--seco", entorno=env_vuelo)
+        registrar(r.returncode == 0 and "bm_vuelo_anotar" in r.stdout and "secret" not in r.stdout.lower(), "vuelo.py --seco no llama a la red ni imprime el secret", r.stdout)
+        st, res = rpc("bm_archivar_pin", {"p_token": token, "p_clave": clave_ra})
+        registrar(st == 200 and isinstance(res, dict) and res.get("cambiado") is False, "bm_archivar_pin sobre una tanda ya archivada no cambia nada", f"{st} {res}")
+        st, res = rpc("bm_archivar_pin", {"p_token": "token-falso", "p_clave": clave_ra})
+        registrar(st >= 400 and "token invalido" in mensaje(res), "bm_archivar_pin con token falso se rechaza", f"{st} {res}")
+        st, tr = rpc("bm_trabadas", {"p_secret": secreto, "p_horas": 0})
+        registrar(st == 200 and isinstance(tr, list), "bm_trabadas devuelve una lista", f"{st} {str(tr)[:120]}")
+
+        # 6f. obstáculos: obstaculo.py -> bm_acciones_lista -> bm_accion_hecha -> bm_obstaculos_resueltos -> bm_obstaculo_llevado
+        print("\nBloqueos: obstáculos")
+        sql("delete from public.bm_obstaculos;")
+        r = py("obstaculo.py", "--titulo", "Iniciá sesión en el panel de ejemplo", "--link", "https://ejemplo.com/panel",
+               "--frena", "el reporte semanal", "--por-que", "pide un login tuyo", "--retoma", "corro el reporte", "--de", "reportes")
+        m_ob = re.search(r"#(\d+)", r.stdout)
+        registrar(r.returncode == 0 and "publicado" in r.stdout and m_ob, "obstaculo.py publica un obstáculo", r.stderr or r.stdout)
+        id_ob = int(m_ob.group(1)) if m_ob else 0
+        r = py("obstaculo.py", "--titulo", "Iniciá sesión en el panel de ejemplo", "--link", "https://ejemplo.com/panel")
+        registrar(r.returncode == 0 and "ya había uno abierto" in r.stdout, "el mismo título abierto no se publica dos veces", r.stderr or r.stdout)
+        r = py("obstaculo.py", "--titulo", "Sin dónde")
+        registrar(r.returncode == 1 and "falta el dónde" in r.stderr, "sin link ni comando se rechaza", r.stderr)
+        r = py("obstaculo.py", "--titulo", "Link malo", "--link", "http://ejemplo.com")
+        registrar(r.returncode == 1 and "https" in r.stderr, "un link http se rechaza", r.stderr)
+        st, res = rpc("bm_obstaculo_publicar", {"p_secret": secreto, "p_titulo": "Link con espacios", "p_por_que": "", "p_de": "", "p_frena": "",
+                                                "p_link": "https://ejemplo.com/a b", "p_comando": ""})
+        registrar(st >= 400 and "link invalido" in mensaje(res), "el servidor rechaza un link con espacios", f"{st} {res}")
+        r = py("obstaculo.py", "--titulo", "Pegá este comando", "--comando", "echo hola", "--seco")
+        registrar(r.returncode == 0 and "bm_obstaculo_publicar" in r.stdout, "obstaculo.py --seco no publica nada", r.stdout)
+        st, lst = rpc("bm_acciones_lista", {"p_token": token})
+        its_o = lst.get("items") if isinstance(lst, dict) else []
+        it_o = next((x for x in its_o if x.get("ref") == str(id_ob)), {})
+        claves_o = {"origen", "ref", "titulo", "por_que", "de", "fecha", "frena", "link", "comando", "estado", "comentario"}
+        registrar(st == 200 and set(lst) == {"items"} and len(its_o) == 1 and set(it_o) == claves_o and it_o.get("origen") == "item"
+                  and it_o.get("estado") == "abierta" and it_o.get("frena") == "el reporte semanal" and it_o.get("de") == "reportes"
+                  and it_o.get("link") == "https://ejemplo.com/panel",
+                  "bm_acciones_lista devuelve {items:[…]} con los once campos de siempre", f"{st} {str(lst)[:300]}")
+        st, res = rpc("bm_acciones_lista", {"p_token": "token-falso"})
+        registrar(st >= 400 and "token invalido" in mensaje(res), "bm_acciones_lista con token falso se rechaza", f"{st} {res}")
+        st, res = rpc("bm_accion_marcar", {"p_token": token, "p_origen": "item", "p_ref": str(id_ob), "p_estado": "comentada", "p_comentario": ""})
+        registrar(st >= 400 and "falta comentario" in mensaje(res), "Comentar sin comentario se rechaza", f"{st} {res}")
+        st, res = rpc("bm_accion_marcar", {"p_token": token, "p_origen": "item", "p_ref": str(id_ob), "p_estado": "comentada", "p_comentario": "Lo hago a la tarde"})
+        registrar(st == 200 and res.get("estado") == "comentada" and res.get("comentario") == "Lo hago a la tarde" and res.get("ref") == str(id_ob),
+                  "Comentar deja la marca comentada", f"{st} {res}")
+        st, res = rpc("bm_accion_marcar", {"p_token": token, "p_origen": "item", "p_ref": str(id_ob), "p_estado": "no_puedo", "p_comentario": ""})
+        registrar(st == 200 and res.get("estado") == "no_puedo", "«No puedo» no exige comentario", f"{st} {res}")
+        st, res = rpc("bm_accion_marcar", {"p_token": token, "p_origen": "item", "p_ref": str(id_ob), "p_estado": "comentada", "p_comentario": "Sigo sin poder"})
+        registrar(st == 200 and res.get("estado") == "no_puedo" and res.get("comentario") == "Sigo sin poder", "Comentar no pisa un «No puedo»", f"{st} {res}")
+        st, rs = rpc("bm_obstaculos_resueltos", {"p_secret": secreto})
+        registrar(st == 200 and any(x.get("id") == id_ob and x.get("estado") == "no_puedo" and x.get("retoma") == "corro el reporte" for x in rs),
+                  "bm_obstaculos_resueltos lista el «No puedo» con la pista de retomar", f"{st} {str(rs)[:200]}")
+        st, res = rpc("bm_accion_marcar", {"p_token": token, "p_origen": "inbox", "p_ref": str(id_ob), "p_estado": "no_puedo", "p_comentario": ""})
+        registrar(st >= 400 and "origen invalido" in mensaje(res), "un origen que no es «item» se rechaza", f"{st} {res}")
+        st, res = rpc("bm_accion_hecha", {"p_token": token, "p_origen": "item", "p_ref": str(id_ob), "p_comentario": "Ya inicié sesión"})
+        registrar(st == 200 and res == {"resultado": "en_cola"}, "bm_accion_hecha (Listo) anota el obstáculo como resuelto", f"{st} {res}")
+        st, lst = rpc("bm_acciones_lista", {"p_token": token})
+        registrar(st == 200 and lst.get("items") == [], "un obstáculo con Listo sale de la lista", f"{st} {str(lst)[:200]}")
+        st, res = rpc("bm_accion_hecha", {"p_token": token, "p_origen": "item", "p_ref": str(id_ob), "p_comentario": ""})
+        registrar(st == 200 and res == {"resultado": "ya no esta trabado"}, "Listo dos veces devuelve «ya no esta trabado»", f"{st} {res}")
+        st, res = rpc("bm_accion_marcar", {"p_token": token, "p_origen": "item", "p_ref": str(id_ob), "p_estado": "no_puedo", "p_comentario": ""})
+        registrar(st >= 400 and "ya no esta trabado" in mensaje(res), "marcar un obstáculo ya resuelto se rechaza", f"{st} {res}")
+        st, rs = rpc("bm_obstaculos_resueltos", {"p_secret": secreto})
+        ob_r = next((x for x in rs if x.get("id") == id_ob), {}) if isinstance(rs, list) else {}
+        registrar(st == 200 and ob_r.get("estado") == "hecho" and "Ya inicié sesión" in ob_r.get("comentario", ""),
+                  "bm_obstaculos_resueltos trae el obstáculo hecho con su comentario", f"{st} {str(rs)[:200]}")
+        r = py("pendientes.py", "--horas", "0")
+        registrar(r.returncode == 0 and "obstáculos resueltos" in r.stdout and "Iniciá sesión en el panel de ejemplo" in r.stdout and f"#{id_ob}" in r.stdout,
+                  "pendientes.py suma la línea de obstáculos resueltos", r.stdout + r.stderr)
+        r = py("obstaculo.py", "--llevado", str(id_ob))
+        registrar(r.returncode == 0 and "recogido" in r.stdout, "obstaculo.py --llevado recoge el obstáculo", r.stdout + r.stderr)
+        st, rs = rpc("bm_obstaculos_resueltos", {"p_secret": secreto})
+        registrar(st == 200 and rs == [], "un obstáculo recogido no vuelve a salir en resueltos", f"{st} {rs}")
+        st, res = rpc("bm_obstaculo_llevado", {"p_secret": secreto, "p_id": id_ob})
+        registrar(st == 200 and res.get("llevado") is False, "recoger dos veces devuelve llevado=false", f"{st} {res}")
+        for nombre, cuerpo in (("bm_obstaculos_resueltos", {}), ("bm_obstaculo_llevado", {"p_id": 1})):
+            st, res = rpc(nombre, dict(cuerpo, p_secret="secreto-falso"))
+            registrar(st >= 400 and "secret invalido" in mensaje(res), f"{nombre} con secreto equivocado se rechaza", f"{st} {res}")
+        st, res = http("GET", f"{url}/rest/v1/bm_obstaculos?select=titulo", key)
+        registrar((st in (401, 403)) or (st == 200 and res == []), "la clave pública sola no puede leer la tabla bm_obstaculos", f"{st} {str(res)[:120]}")
+        sql("delete from public.bm_obstaculos;")
+
+        # 6g. avisos: un solo push por ráfaga (bm_avisos_tick con p_solo_prueba)
+        print("\nAvisos por ráfaga")
+        puso_vapid = sql("select count(*) from public.bm_config where k = 'vapid_publica';").stdout.strip() == "0"
+        if puso_vapid:
+            sql("insert into public.bm_config (k, v) values ('vapid_publica', 'prueba') on conflict (k) do nothing;")
+        sql("insert into public.bm_push (endpoint, p256dh, auth) values ('https://prueba.invalid/avisos', 'x', 'x') on conflict (endpoint) do nothing;")
+        sql("delete from public.bm_config where k = 'aviso_intento'; delete from public.botoneras where clave like 'prueba-avisos-%';")
+        # las 12 del mediodía de hoy en la zona de la base: así la franja de silencio no depende de la hora en que corra la prueba
+        BASE = "((date_trunc('day', now() at time zone public.bm_zona()) + interval '12 hours') at time zone public.bm_zona())"
+
+        def tick(intervalo):
+            return sql(f"select public.bm_avisos_tick({BASE} + interval '{intervalo}', true);").stdout.strip()
+
+        def tanda_aviso(sufijo, minutos):
+            cl = f"prueba-avisos-{sufijo}"
+            rpc("bm_publicar", {"p_secret": secreto, "p_clave": cl, "p_session_id": None, "p_sesion_titulo": None, "p_skill": "botonera",
+                                "p_proyecto": None, "p_titulo": f"Aviso de prueba {sufijo}", "p_n_items": 1,
+                                "p_datos": {"items": []}, "p_html": "<html></html>"})
+            sql(f"update public.botoneras set created_at = {BASE} + interval '{minutos} minutes' where clave = '{cl}';")
+
+        tanda_aviso("a", 0)
+        tanda_aviso("b", 1)
+        res_t = tick("1 minute 30 seconds")
+        registrar(res_t == "esperando 2", "la ráfaga sigue (la última entró hace menos de 2 minutos): se espera", res_t)
+        res_t = tick("3 minutes")
+        registrar(res_t == "avisado 2", "la ráfaga terminó (2 minutos sin entradas): un solo aviso por las dos tandas", res_t)
+        res_t = tick("4 minutes")
+        registrar(res_t == "reintento_espera 2", "las mismas tandas no se vuelven a mandar antes de 5 minutos", res_t)
+        res_t = tick("9 minutes")
+        registrar(res_t == "avisado 2", "pasados los 5 minutos del reintento, se vuelve a mandar", res_t)
+        sql("delete from public.bm_config where k = 'aviso_intento'; delete from public.botoneras where clave like 'prueba-avisos-%';")
+        tanda_aviso("c", 0)
+        tanda_aviso("d", 9)
+        res_t = tick("10 minutes")
+        registrar(res_t == "avisado 2", "tope: un goteo que ya espera 10 minutos avisa igual", res_t)
+        res_t = tick("11 hours")
+        registrar(res_t == "silencio", "a las 23 hay silencio (la franja usa la zona de la base)", res_t)
+        cron = sql("select schedule from cron.job where jobname = 'bm-avisos-nuevas';").stdout.strip()
+        registrar(cron == "* * * * *", "el cron de avisos corre cada minuto", cron)
+        sql("delete from public.bm_config where k = 'aviso_intento'; delete from public.botoneras where clave like 'prueba-avisos-%';"
+            " delete from public.bm_push where endpoint = 'https://prueba.invalid/avisos';")
+        if puso_vapid:
+            sql("delete from public.bm_config where k = 'vapid_publica';")
+
         # 7. el PIN se bloquea tras 10 fallos y pin.py desbloquear lo abre
-        print("\nBloqueo del PIN")
-        for _ in range(10):
-            res = rpc("bm_entrar", {"p_pin": "0000"})[1]
-        registrar(isinstance(res, dict) and res.get("motivo") == "bloqueado", "10 PIN malos seguidos bloquean la entrada", str(res))
+        print("\nBloqueo del PIN (temporal y creciente)")
+        sql("update public.bm_config set v = '0' where k in ('pin_fallos', 'pin_escalon'); update public.bm_config set v = 'false' where k = 'pin_bloqueado';"
+            " update public.bm_config set v = '' where k = 'pin_bloqueo_hasta';")
+
+        def fallar_diez():
+            ultimo = None
+            for _ in range(10):
+                ultimo = rpc("bm_entrar", {"p_pin": "0000" if PIN != "0000" else "9999"})[1]
+            return ultimo
+
+        def vencer_bloqueo():
+            sql("update public.bm_config set v = (now() - interval '1 minute')::text where k = 'pin_bloqueo_hasta';")
+
+        res = fallar_diez()
+        registrar(isinstance(res, dict) and res.get("motivo") == "bloqueado" and res.get("ok") is False, "10 PIN malos seguidos bloquean la entrada", str(res))
+        registrar(isinstance(res, dict) and 880 <= (res.get("espera_seg") or 0) <= 900 and res.get("hasta"),
+                  "el primer bloqueo dura 15 minutos y la respuesta trae hasta y espera_seg", str(res))
         res = rpc("bm_entrar", {"p_pin": PIN})[1]
-        registrar(isinstance(res, dict) and res.get("ok") is False and res.get("motivo") == "bloqueado", "bloqueada, ni el PIN correcto entra", str(res))
+        registrar(isinstance(res, dict) and res.get("ok") is False and res.get("motivo") == "bloqueado" and "token" not in res,
+                  "bloqueada, ni el PIN correcto entra", str(res))
+        e = rpc("bm_estado_pin", {"p_secret": secreto})[1]
+        registrar(isinstance(e, dict) and e.get("bloqueado") is True and e.get("bloqueado_hasta") and e.get("escalon") == 1
+                  and {"puesto", "fallos", "bloqueado", "sesiones"} <= set(e),
+                  "bm_estado_pin dice bloqueado, hasta cuándo y el escalón, y conserva sus campos de siempre", str(e))
+        r = py("pin.py", "estado")
+        registrar(r.returncode == 0 and "bloqueado=sí" in r.stdout, "pin.py estado sigue leyendo bm_estado_pin", r.stdout + r.stderr)
+        vencer_bloqueo()
+        e = rpc("bm_estado_pin", {"p_secret": secreto})[1]
+        registrar(isinstance(e, dict) and e.get("bloqueado") is False, "con el reloj adelantado el bloqueo vencido ya no figura como bloqueado", str(e))
+        res = rpc("bm_entrar", {"p_pin": PIN})[1]
+        registrar(isinstance(res, dict) and res.get("ok") is True, "vencido el bloqueo, el PIN correcto entra", str(res))
+        e = rpc("bm_estado_pin", {"p_secret": secreto})[1]
+        registrar(isinstance(e, dict) and e.get("escalon") == 0 and e.get("fallos") == 0 and e.get("bloqueado") is False,
+                  "un ingreso correcto pone el contador y el escalón en cero", str(e))
+        # segunda tanda sin ingreso correcto de por medio: la espera se duplica
+        fallar_diez()
+        vencer_bloqueo()
+        res = fallar_diez()
+        registrar(isinstance(res, dict) and res.get("motivo") == "bloqueado" and 1780 <= (res.get("espera_seg") or 0) <= 1800,
+                  "la segunda tanda de 10 fallos bloquea el doble (30 minutos)", str(res))
+        vencer_bloqueo()
+        res = fallar_diez()
+        registrar(isinstance(res, dict) and 3580 <= (res.get("espera_seg") or 0) <= 3600, "la tercera tanda bloquea 60 minutos", str(res))
+        sql("update public.bm_config set v = '20' where k = 'pin_escalon';")
+        vencer_bloqueo()
+        res = fallar_diez()
+        registrar(isinstance(res, dict) and res.get("espera_seg") == 86400, "la espera tiene tope de 24 horas", str(res))
         r = py("pin.py", "desbloquear")
-        registrar(r.returncode == 0 and "desbloqueado" in r.stdout, "pin.py desbloquear", r.stdout + r.stderr)
+        registrar(r.returncode == 0 and "desbloqueado" in r.stdout, "pin.py desbloquear levanta el bloqueo en el acto", r.stdout + r.stderr)
+        e = rpc("bm_estado_pin", {"p_secret": secreto})[1]
+        registrar(isinstance(e, dict) and e.get("bloqueado") is False and e.get("escalon") == 0, "desbloquear pone el escalón en cero", str(e))
         res = rpc("bm_entrar", {"p_pin": PIN})[1]
         registrar(isinstance(res, dict) and res.get("ok") is True, "después de desbloquear el PIN correcto entra", str(res))
-        r = py("pin.py", "poner", "4321")
+        r = py("pin.py", "poner", entorno={**env, "BM_PIN_PRUEBA": "4321"})
         st, res = rpc("bm_lista", {"p_token": token})
         registrar(r.returncode == 0 and st >= 400 and "token invalido" in mensaje(res), "poner un PIN nuevo cierra las sesiones viejas", f"{st} {res}")
 

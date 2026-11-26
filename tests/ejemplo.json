@@ -35,9 +35,28 @@
       },
       "vence": "2026-11-15",
       "campos": [
-        { "id": "precio", "etiqueta": "Nuevo precio del envío (ARS)", "valor": 3500, "tipo": "numero" },
-        { "id": "desde", "etiqueta": "Desde", "valor": "2026-11-15", "tipo": "fecha" },
-        { "id": "alcance", "etiqueta": "A quiénes", "valor": "Pedidos chicos", "tipo": "opcion", "opciones": ["Pedidos chicos", "Todos los pedidos"] }
+        {
+          "id": "precio",
+          "etiqueta": "Nuevo precio del envío (ARS)",
+          "valor": 3500,
+          "tipo": "numero"
+        },
+        {
+          "id": "desde",
+          "etiqueta": "Desde",
+          "valor": "2026-11-15",
+          "tipo": "fecha"
+        },
+        {
+          "id": "alcance",
+          "etiqueta": "A quiénes",
+          "valor": "Pedidos chicos",
+          "tipo": "opcion",
+          "opciones": [
+            "Pedidos chicos",
+            "Todos los pedidos"
+          ]
+        }
       ],
       "aplicar": {
         "va": "Cambiar la tarifa de envíos en la tienda al precio y la fecha de campos. Avisar en el blog.",
@@ -51,9 +70,18 @@
       "reco": "mail",
       "reco_motivo": "Es gratis y ya tenemos todas las direcciones.",
       "opciones": [
-        { "id": "mail", "etiqueta": "Mail" },
-        { "id": "whatsapp", "etiqueta": "Mensaje de WhatsApp" },
-        { "id": "sms", "etiqueta": "SMS" }
+        {
+          "id": "mail",
+          "etiqueta": "Mail"
+        },
+        {
+          "id": "whatsapp",
+          "etiqueta": "Mensaje de WhatsApp"
+        },
+        {
+          "id": "sms",
+          "etiqueta": "SMS"
+        }
       ],
       "icono": "mail",
       "impacto": {
@@ -64,7 +92,8 @@
         "mail": "Armar la plantilla de aviso por mail y activarla.",
         "whatsapp": "Pedir el alta del número de WhatsApp.",
         "sms": "Contratar el servicio de SMS."
-      }
+      },
+      "detalle": "El mail llega a todos los clientes y deja registro; el chat solo a quienes tienen la app abierta. Con mail no hace falta que el cliente instale nada."
     },
     {
       "n": 3,
@@ -83,7 +112,40 @@
       "aplicar": {
         "va": "Mover los pedidos cerrados de hace más de un año a la hoja de archivo.",
         "no_va": "Nada."
+      },
+      "campos": [
+        {
+          "id": "mensaje",
+          "etiqueta": "Aviso a los clientes",
+          "tipo": "textarea",
+          "valor": "Hola,\nvamos a archivar los pedidos con más de un año sin movimiento.\nSi necesitás alguno, respondé este mail antes del viernes.\nGracias."
+        }
+      ]
+    },
+    {
+      "n": 4,
+      "tipo": "revision",
+      "titulo": "Revisión de la tabla de tarifas",
+      "hice": "Cargué las tarifas nuevas del correo en la hoja de envíos.",
+      "verifique": "Comparé tres precios a mano contra la web del correo.",
+      "mirar": "Que el redondeo de los pesos te cierre.",
+      "link": "https://ejemplo.com/tarifas",
+      "aplicar": {
+        "comun": "Si hay un cambio pedido, corregir la hoja de tarifas."
       }
     }
-  ]
+  ],
+  "fyi": {
+    "titulo": "Para tu info",
+    "lead": "Dos cosas que no son decisiones.",
+    "grupos": [
+      {
+        "titulo": "Ya resuelto",
+        "items": [
+          "Se renovó el dominio de la tienda de ejemplo.",
+          "Se archivó la lista de espera vieja."
+        ]
+      }
+    ]
+  }
 }
