@@ -4,12 +4,22 @@
 #
 # Uso:
 #   ./install.sh --url https://xxxx.supabase.co --key <publishable/anon key>
-#   ./install.sh --hook          # solo imprime el bloque para ~/.claude/settings.json
+#   ./install.sh --agente codex --url ... --key ...
+#   ./install.sh --facil --agente claude          # versión fácil: sin Supabase, sin URL ni clave (página privada de Claude)
+#   ./install.sh --solo-skill --agente claude     # solo copia el skill (para otra máquina o un bot)
+#   ./install.sh --hook                           # solo imprime el bloque de hooks de Claude Code
 #
 # Opciones:
-#   --url <SUPABASE_URL>      URL del proyecto de Supabase (si falta, la pide)
-#   --key <key>               key publishable/anon del proyecto (si falta, la pide)
-#   --skill-dir <dir>         dónde instalar el skill (default ~/.claude/skills/botonera)
+#   --url <SUPABASE_URL>      URL del proyecto de Supabase, con https:// (si falta, la pide)
+#   --key <key>               clave pública (publishable/anon) del proyecto (si falta, la pide)
+#   --agente <a>              claude (default) | cursor | codex | otro. Elige dónde instalar el skill:
+#                             claude y cursor -> ~/.claude/skills/botonera, codex -> ~/.agents/skills/botonera.
+#                             otro exige --skill-dir.
+#   --skill-dir <dir>         dónde instalar el skill (gana sobre --agente)
+#   --facil                   versión fácil: copia el skill (con skill/facil/pagina.html) y listo. No pide URL ni clave,
+#                             no genera secreto, no escribe config.js ni SQL. Combinable con --agente y --skill-dir
+#   --solo-skill              copia el skill y listo: no genera secreto, ni config.js, ni SQL
+#   --sin-probar              no prueba la conexión con la URL y la clave (para trabajar sin red)
 #   --zona <zona IANA>        zona horaria del aviso push (default: la del sistema, o UTC)
 #   --avisar-url <url>        función de push (default <SUPABASE_URL>/functions/v1/bm-avisar)
 #   --contacto <url|mailto:>  contacto de la firma VAPID de los avisos (default <SUPABASE_URL>)
@@ -25,7 +35,12 @@ shopt -u nullglob
 
 URL=""
 KEY=""
-SKILL_DIR="$HOME/.claude/skills/botonera"
+SKILL_DIR=""
+AGENTE=""
+SOLO_SKILL=0
+FACIL=0
+SIN_PROBAR=0
+RUTA_CLAUDE="~/.claude/skills/botonera"   # como aparece escrita en SKILL.md y rot.md
 ZONA=""
 AVISAR_URL=""
 CONTACTO=""
@@ -35,12 +50,17 @@ SOLO_HOOK=0
 die() { echo "error: $*" >&2; exit 1; }
 info() { echo "· $*"; }
 
-ayuda() { sed -n '2,18p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; }
+ayuda() { awk 'NR>1 && /^#/ {print; next} NR>1 {exit}' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; }
+aviso() { echo "aviso: $*" >&2; }
 
 while [ $# -gt 0 ]; do
   case "$1" in
     --url)        [ $# -ge 2 ] || die "--url necesita un valor"; URL="$2"; shift 2 ;;
     --key)        [ $# -ge 2 ] || die "--key necesita un valor"; KEY="$2"; shift 2 ;;
+    --agente)     [ $# -ge 2 ] || die "--agente necesita un valor"; AGENTE="$2"; shift 2 ;;
+    --facil)      FACIL=1; shift ;;
+    --solo-skill) SOLO_SKILL=1; shift ;;
+    --sin-probar) SIN_PROBAR=1; shift ;;
     --skill-dir)  [ $# -ge 2 ] || die "--skill-dir necesita un valor"; SKILL_DIR="$2"; shift 2 ;;
     --zona)       [ $# -ge 2 ] || die "--zona necesita un valor"; ZONA="$2"; shift 2 ;;
     --avisar-url) [ $# -ge 2 ] || die "--avisar-url necesita un valor"; AVISAR_URL="$2"; shift 2 ;;
@@ -51,6 +71,21 @@ while [ $# -gt 0 ]; do
     *)            die "opción desconocida: $1 (probá --help)" ;;
   esac
 done
+
+case "$AGENTE" in
+  ""|claude|cursor|codex|otro) ;;
+  *) die "--agente '$AGENTE' no existe (opciones: claude, cursor, codex, otro)" ;;
+esac
+[ "$FACIL" -eq 0 ] || [ "$SOLO_SKILL" -eq 0 ] || die "--facil y --solo-skill no se combinan: la versión fácil ya copia solo el skill"
+[ "$SOLO_SKILL" -eq 0 ] || [ -n "$AGENTE" ] || [ -n "$SKILL_DIR" ] \
+  || die "--solo-skill necesita --agente o --skill-dir (así sé dónde copiarlo)"
+if [ -z "$SKILL_DIR" ]; then
+  case "$AGENTE" in
+    ""|claude|cursor) SKILL_DIR="$HOME/.claude/skills/botonera" ;;
+    codex)            SKILL_DIR="$HOME/.agents/skills/botonera" ;;
+    otro)             die "con --agente otro tenés que decir dónde va el skill: --skill-dir <carpeta donde tu agente lea sus instrucciones>" ;;
+  esac
+fi
 
 # ~ al principio de --skill-dir (si llegó sin expandir)
 case "$SKILL_DIR" in
@@ -63,7 +98,7 @@ SKILL_DIR="${SKILL_DIR%/}"
 # --- --hook: solo el bloque, sin tocar nada ---------------------------------------------------
 if [ "$SOLO_HOOK" -eq 1 ]; then
   cat <<HOOK
-Sumá esto a ~/.claude/settings.json (si ya tenés "hooks", mezclalo con lo que hay; este instalador no edita ese archivo):
+Sumá esto al archivo de ajustes de Claude Code, ~/.claude/settings.json (si ya tenés "hooks", mezclalo con lo que hay; este instalador no edita ese archivo):
 
 {
   "hooks": {
@@ -87,7 +122,107 @@ python3 -c 'import sys; sys.exit(0 if sys.version_info >= (3, 9) else 1)' \
   || die "hace falta python3 3.9 o más nuevo (tenés $(python3 -c 'import sys; print("%d.%d" % sys.version_info[:2])'))"
 
 [ -f "$AQUI/skill/armar.py" ] || die "no encuentro $AQUI/skill/armar.py: corré el instalador desde el repo clonado"
+
+# ruta como se muestra: ~/... si está bajo $HOME y no tiene espacios
+mostrar_ruta() {
+  case "$1" in
+    "$HOME"/*) local r="~/${1#"$HOME"/}"; case "$r" in *" "*) printf '%s' "$1" ;; *) printf '%s' "$r" ;; esac ;;
+    *) printf '%s' "$1" ;;
+  esac
+}
+SKILL_MOSTRAR="$(mostrar_ruta "$SKILL_DIR")"
+
+# --- copiar el skill (y reescribir la ruta del skill en SKILL.md y rot.md) -------------------------
+instalar_skill() {
+  local copiar=1 r=""
+  if [ -e "$SKILL_DIR" ]; then
+    if [ "$SI" -eq 1 ]; then
+      info "ya existe $SKILL_DIR: lo piso (--yes)"
+    elif [ -t 0 ]; then
+      read -r -p "Ya existe $SKILL_DIR. ¿Lo piso? [s/N]: " r
+      case "$r" in s|S|si|SI|sí|Sí|y|Y|yes) ;; *) copiar=0 ;; esac
+    else
+      die "ya existe $SKILL_DIR y no hay terminal para preguntar (usá --yes para pisarlo)"
+    fi
+  fi
+  if [ "$copiar" -eq 1 ]; then
+    mkdir -p "$SKILL_DIR"
+    cp -R "$AQUI/skill/." "$SKILL_DIR/"
+    find "$SKILL_DIR" -name '__pycache__' -type d -prune -exec rm -rf {} + 2>/dev/null || true
+    if [ "$SKILL_MOSTRAR" != "$RUTA_CLAUDE" ]; then
+      python3 - "$SKILL_DIR" "$RUTA_CLAUDE" "$SKILL_MOSTRAR" <<'PY'
+import pathlib, sys
+carpeta, viejo, nuevo = pathlib.Path(sys.argv[1]), sys.argv[2], sys.argv[3]
+for nombre in ("SKILL.md", "rot.md", "facil/LEEME-agente.md"):
+    f = carpeta / nombre
+    if f.is_file():
+        f.write_text(f.read_text(encoding="utf-8").replace(viejo, nuevo), encoding="utf-8")
+PY
+    fi
+    info "skill instalado en $SKILL_DIR"
+  else
+    info "dejo el skill como está en $SKILL_DIR"
+  fi
+}
+
+# --- --solo-skill: copiar y salir, sin secreto ni config ni SQL -------------------------------
+if [ "$SOLO_SKILL" -eq 1 ]; then
+  instalar_skill
+  cat <<RECETA
+
+No generé secreto, ni config.js, ni SQL. Para que un bot en un servidor publique y reciba respuestas:
+  1. En tu máquina, con la instalación completa hecha: python3 $SKILL_MOSTRAR/secret-bot.py (escribe env-bot e imprime un SQL con su hash; corré ese SQL en Supabase).
+  2. Llevá env-bot al servidor, a un archivo con permisos 600 que lea solo el usuario del bot, y fuera de cualquier repo.
+  3. En el bot: export BM_ENV_FILE=<ruta de ese archivo> (o las tres variables SUPABASE_URL, SUPABASE_ANON_KEY y BM_SECRET).
+  4. Cada sesión del bot: export BM_SESSION_ID=bot-<nombre>. Sus claves empiezan con bot-.
+  5. Opcional, para achicar imágenes: pip install pillow.
+  6. Que el bot siga $SKILL_MOSTRAR/SKILL.md: publica con armar.py --publicar y lee la respuesta con esperar.py <clave> --una-vez.
+RECETA
+  exit 0
+fi
+
+# --- --facil: la versión fácil. Copia el skill y listo: sin URL, clave, secreto, config.js ni SQL ----------------
+if [ "$FACIL" -eq 1 ]; then
+  [ -f "$AQUI/skill/facil/pagina.html" ] || die "no encuentro $AQUI/skill/facil/pagina.html: el repo está incompleto"
+  { [ -z "$URL" ] && [ -z "$KEY" ]; } || aviso "la versión fácil no usa --url ni --key: los ignoro"
+  case "$AGENTE" in
+    ""|claude) ;;
+    *) aviso "la versión fácil necesita la página privada de Claude: con $AGENTE no la vas a poder usar. Para ese agente, instalá la completa (sin --facil)." ;;
+  esac
+  instalar_skill
+  case "$AGENTE" in
+    codex) INVOCAR_F='En Codex, escribí $botonera.' ;;
+    otro)  INVOCAR_F="Con tu agente, pedile que siga $SKILL_MOSTRAR/SKILL.md." ;;
+    *)     INVOCAR_F='En Claude, escribí /botonera.' ;;
+  esac
+  cat <<FACIL_PASOS
+
+Listo. La versión fácil no necesita Supabase, ni claves, ni nada más que instalar:
+
+  1. $INVOCAR_F
+  2. Pedile a Claude que publique tu página. Es privada: la ves solo vos, con tu cuenta de Claude
+     (hace falta un plan de Claude que permita publicar páginas).
+  3. Abrí el link que te da, en el celular o en la compu, y guardalo en favoritos.
+     Cada vez que Claude tenga algo para que decidas, aparece ahí como tarjetas.
+
+Esta versión no manda avisos al celular y no tiene PIN: entra quien tenga tu cuenta de Claude.
+Si más adelante la querés con avisos, PIN y otros agentes, instalá la completa: ./install.sh --url ... --key ...
+FACIL_PASOS
+  exit 0
+fi
+
+# --- python3 >= 3.9 ---------------------------------------------------------------------------
+command -v python3 >/dev/null 2>&1 || die "no encuentro python3 (hace falta la versión 3.9 o más nueva)"
+python3 -c 'import sys; sys.exit(0 if sys.version_info >= (3, 9) else 1)' \
+  || die "hace falta python3 3.9 o más nuevo (tenés $(python3 -c 'import sys; print("%d.%d" % sys.version_info[:2])'))"
+
 [ "${#MIGRACIONES[@]}" -gt 0 ] || die "faltan las migraciones en $AQUI/supabase/migrations (el repo está incompleto)"
+
+# Herramientas de los pasos siguientes: solo avisan, no cortan.
+command -v supabase >/dev/null 2>&1 \
+  || aviso "no encuentro el CLI de Supabase (lo necesitás para desplegar los avisos). Instalación: brew install supabase/tap/supabase, o https://supabase.com/docs/guides/cli"
+command -v vercel >/dev/null 2>&1 \
+  || aviso "no encuentro el CLI de Vercel (lo necesitás para subir la web con Vercel). Instalación: npm i -g vercel. Cualquier hosting estático también sirve."
 
 # --- datos de Supabase ------------------------------------------------------------------------
 preguntar() {  # preguntar <variable> <texto>
@@ -100,11 +235,37 @@ preguntar() {  # preguntar <variable> <texto>
 }
 
 [ -n "$URL" ] || preguntar URL "URL de Supabase (https://<ref>.supabase.co)"
-[ -n "$KEY" ] || preguntar KEY "Key publishable/anon de Supabase"
+[ -n "$KEY" ] || preguntar KEY "Clave pública (publishable/anon) de Supabase"
 URL="${URL%/}"
-case "$URL" in http://*|https://*) ;; *) die "la URL tiene que empezar con http:// o https:// (recibí: $URL)" ;; esac
-case "$URL$KEY" in *[[:space:]]*|*\"*|*\'*|*\\*) die "la URL y la key no pueden tener espacios, comillas ni barras" ;; esac
-[ -n "$KEY" ] || die "la key está vacía"
+case "$URL" in
+  https://*) ;;
+  http://localhost|http://localhost:*|http://localhost/*|http://127.0.0.1|http://127.0.0.1:*|http://127.0.0.1/*) ;;
+  http://*)  die "la URL tiene que empezar con https:// (http:// solo vale para localhost; recibí: $URL)" ;;
+  *)         die "la URL tiene que empezar con https:// (recibí: $URL)" ;;
+esac
+case "$URL$KEY" in *[[:space:]]*|*\"*|*\'*|*\\*) die "la URL y la clave no pueden tener espacios, comillas ni barras" ;; esac
+[ -n "$KEY" ] || die "la clave está vacía"
+
+# --- prueba de conexión -----------------------------------------------------------------------
+probar_conexion() {
+  command -v curl >/dev/null 2>&1 || { aviso "no tengo curl: me salteo la prueba de conexión"; return 0; }
+  local codigo ruta
+  for ruta in /rest/v1/ /auth/v1/settings; do
+    if [ "${KEY#sb_}" != "$KEY" ]; then
+      codigo="$(curl -sS -m 8 -o /dev/null -w '%{http_code}' -H "apikey: $KEY" "$URL$ruta" 2>/dev/null || true)"
+    else
+      codigo="$(curl -sS -m 8 -o /dev/null -w '%{http_code}' -H "apikey: $KEY" -H "Authorization: Bearer $KEY" "$URL$ruta" 2>/dev/null || true)"
+    fi
+    case "$codigo" in 2??) return 0 ;; esac
+  done
+  die "Esa URL o clave no responden: copialas de Project Settings → API en Supabase (o corré con --sin-probar si no tenés red ahora)"
+}
+if [ "$SIN_PROBAR" -eq 1 ]; then
+  info "no pruebo la conexión (--sin-probar)"
+else
+  probar_conexion
+  info "la URL y la clave responden"
+fi
 
 # --- zona horaria -----------------------------------------------------------------------------
 zona_valida() { printf '%s' "$1" | grep -Eq '^[A-Za-z][A-Za-z0-9_+-]*(/[A-Za-z0-9_+-]+)*$'; }
@@ -133,25 +294,7 @@ zona_valida "$ZONA" || die "la zona '$ZONA' no parece una zona IANA (ej. Europe/
 case "$AVISAR_URL" in *[[:space:]]*|*\'*) die "--avisar-url no puede tener espacios ni comillas simples" ;; esac
 
 # --- skill ------------------------------------------------------------------------------------
-copiar_skill=1
-if [ -e "$SKILL_DIR" ]; then
-  if [ "$SI" -eq 1 ]; then
-    info "ya existe $SKILL_DIR: lo piso (--yes)"
-  elif [ -t 0 ]; then
-    read -r -p "Ya existe $SKILL_DIR. ¿Lo piso? [s/N]: " r
-    case "$r" in s|S|si|SI|sí|Sí|y|Y|yes) ;; *) copiar_skill=0 ;; esac
-  else
-    die "ya existe $SKILL_DIR y no hay terminal para preguntar (usá --yes para pisarlo)"
-  fi
-fi
-if [ "$copiar_skill" -eq 1 ]; then
-  mkdir -p "$SKILL_DIR"
-  cp -R "$AQUI/skill/." "$SKILL_DIR/"
-  find "$SKILL_DIR" -name '__pycache__' -type d -prune -exec rm -rf {} + 2>/dev/null || true
-  info "skill instalado en $SKILL_DIR"
-else
-  info "dejo el skill como está en $SKILL_DIR"
-fi
+instalar_skill
 
 # --- config local (~/.config/botonera/env) ----------------------------------------------------
 CONF_DIR="$HOME/.config/botonera"
@@ -179,7 +322,7 @@ fi
 chmod 600 "$ENV_FILE"
 info "config escrita en $ENV_FILE (permisos 600)"
 
-# --- web/config.js (la key es pública/publishable: puede viajar al navegador) -----------------
+# --- web/config.js (la clave pública puede viajar al navegador) --------------------------------
 if [ -d "$AQUI/web" ]; then
   python3 - "$URL" "$KEY" > "$AQUI/web/config.js" <<'PY'
 import json, sys
@@ -187,7 +330,7 @@ print("window.BOTONERA_CONFIG = { supabaseUrl: %s, supabaseKey: %s };" % (json.d
 PY
   info "web/config.js escrito"
 else
-  echo "aviso: no existe $AQUI/web, no escribí config.js" >&2
+  aviso "no existe $AQUI/web, no escribí config.js"
 fi
 
 # --- SQL: instalar.sql (migración + bm_instalar) y bootstrap.sql (solo bm_instalar) -----------
@@ -214,33 +357,47 @@ case "$URL" in
 esac
 [ -n "$REF" ] || REF="<project-ref>"
 
+if command -v pbcopy >/dev/null 2>&1; then COPIAR="pbcopy < \"$CONF_DIR/instalar.sql\""
+elif command -v wl-copy >/dev/null 2>&1; then COPIAR="wl-copy < \"$CONF_DIR/instalar.sql\""
+elif command -v xclip >/dev/null 2>&1; then COPIAR="xclip -selection clipboard < \"$CONF_DIR/instalar.sql\""
+else COPIAR="cat \"$CONF_DIR/instalar.sql\""; fi
+
+case "$AGENTE" in
+  codex) INVOCAR='En Codex, escribí $botonera.' ;;
+  otro)  INVOCAR="Con tu agente, pedile que siga $SKILL_MOSTRAR/SKILL.md." ;;
+  *)     INVOCAR='En Claude Code o Cursor, escribí /botonera.' ;;
+esac
+
 cat <<PASOS
 
 Listo. Faltan estos pasos, en este orden:
 
-  1. Pegá el contenido de $CONF_DIR/instalar.sql en el SQL editor de Supabase y ejecutalo.
+  1. Pegá el SQL en el SQL editor de Supabase y ejecutalo. El archivo está en:
+       $CONF_DIR/instalar.sql
+     Para copiarlo al portapapeles:
+       $COPIAR
      (Si las migraciones ya están aplicadas, por ejemplo con "supabase start", pegá solo
      $CONF_DIR/bootstrap.sql. Si venís de una versión anterior, volvé a correr este
      instalador y pegá el instalar.sql nuevo: las migraciones se pueden repetir.)
 
-  2. Desplegá la función de avisos push, desde la raíz del repo:
+  2. Desplegá la función de avisos push, desde la carpeta del repo:
        supabase functions deploy bm-avisar --project-ref $REF --no-verify-jwt
 
   3. Desplegá la web:
        cd web && vercel deploy --prod
 
-  4. Poné el PIN de 4 dígitos:
-       python3 $SKILL_DIR/pin.py poner
+  4. Poné el PIN de 4 dígitos (te lo pide con el teclado oculto):
+       python3 $SKILL_MOSTRAR/pin.py poner
 
   5. Abrí la web en el celular, instalala como app y prendé los avisos.
 
-  6. En Claude Code, decí /botonera.
+  6. $INVOCAR
 
-Opcional: para que las respuestas lleguen aunque se cierre la sesión, corré
+Opcional: para que las respuestas lleguen aunque se cierre la sesión de Claude Code, corré
   ./install.sh --hook
 y sumá lo que imprime a ~/.claude/settings.json.
 
-Opcional: para que un bot publique sin tu secret completo, corré
-  python3 $SKILL_DIR/secret-bot.py
+Opcional: para que un bot publique sin tu secreto completo, corré
+  python3 $SKILL_MOSTRAR/secret-bot.py
 y ejecutá el SQL que imprime.
 PASOS

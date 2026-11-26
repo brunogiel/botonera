@@ -65,6 +65,9 @@
           border-left: 4px solid var(--line); transition: border-color .15s; }
   .card.go { border-left-color: var(--go); }
   .card.vc { border-left-color: var(--brand); }
+  .card.rv { border-left-color: var(--go); }
+  .card.revision .rev p { margin: 2px 0; font-size: 15px; } .card.revision .rev span { font-weight: 650; color: var(--ink); }
+  .card.revision .kind { font: 650 11px var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--go); }
   .card.no { border-left-color: var(--no); background: var(--surface-2); }
   .card.warning .pic { background: var(--warn-bg); }
   .card.danger .pic { background: var(--no-bg); }
@@ -133,6 +136,7 @@
   .campos .f { display: grid; gap: 4px; }
   .campos label { font: 650 13px var(--sans); }
   .campos .in { font: 15px var(--sans); color: var(--ink); background: var(--surface); border: 2px solid var(--line-strong, var(--line)); border-radius: 10px; padding: 9px 12px; min-height: 44px; }
+  .campos .in.ta { min-height: 150px; line-height: 1.45; resize: vertical; white-space: pre-wrap; }
   .campos .f.cambio .in { border-color: var(--brand); background: var(--brand-bg, var(--surface-2)); font-weight: 700; }
   .campos .tag-cambio, .campos .antes { display: none; font-size: 13px; color: var(--muted); }
   .campos .f.cambio .tag-cambio { display: inline; margin-left: 6px; font-size: 11px; font-weight: 700; color: var(--brand); }
@@ -226,7 +230,7 @@
     <p class="lead" id="lead"></p>
     <p class="origen" id="origen" hidden></p>
     <div class="bulk">
-      <button type="button" id="bulk-reco">Marcar todo como te recomiendo</button>
+      <button type="button" id="bulk-reco">Marcar todo como recomienda el agente</button>
       <button type="button" id="bulk-clear">Borrar marcas</button>
     </div>
   </header>
@@ -273,23 +277,33 @@ function imagenHTML(it) {
 }
 const recoGo = it => /^va$/i.test((it.reco || '').trim());
 const state = {};   // n -> {m: "go"|"no"|"vc"|"", c: "", f: {id: valor nuevo}}  (vc = Editar: va con cambios)
-// `campos` del ítem (máx. 5): {id, etiqueta, valor, tipo: texto|numero|fecha|opcion, opciones?}. Misma forma que valida armar.py.
+// `campos` del ítem (máx. 5): {id, etiqueta, valor, tipo: texto|textarea|numero|fecha|opcion, opciones?}. Misma forma que valida armar.py.
 const camposDe = it => (Array.isArray(it.campos) ? it.campos : []).filter(c => c && /^[a-z0-9_-]{1,30}$/.test(String(c.id || '')) && c.etiqueta &&
-  ['texto', 'numero', 'fecha', 'opcion'].includes(c.tipo) && (c.tipo !== 'opcion' || (Array.isArray(c.opciones) && c.opciones.length >= 2)))
+  ['texto', 'textarea', 'numero', 'fecha', 'opcion'].includes(c.tipo) && (c.tipo !== 'opcion' || (Array.isArray(c.opciones) && c.opciones.length >= 2)))
   .slice(0, 5).map(c => ({ id: String(c.id), etiqueta: String(c.etiqueta), tipo: c.tipo, valor: c.valor == null ? '' : String(c.valor), opciones: (c.opciones || []).map(String) }));
-const mismo = (tipo, a, b) => { a = String(a == null ? '' : a).trim(); b = String(b == null ? '' : b).trim();
+const mismo = (tipo, a, b) => { a = String(a == null ? '' : a).replace(/\r\n?/g, '\n').trim(); b = String(b == null ? '' : b).replace(/\r\n?/g, '\n').trim();
   return tipo === 'numero' && a !== '' && b !== '' && isFinite(+a) && isFinite(+b) ? +a === +b : a === b; };
 // «id=nuevo (antes viejo); …» de los campos que cambiaron, en el orden del ítem
 const camposN = (it, f) => !f ? 0 : camposDe(it).filter(c => f[c.id] != null && !mismo(c.tipo, f[c.id], c.valor)).length;
 const camposTxt = (it, f) => !f ? '' : camposDe(it).filter(c => f[c.id] != null && !mismo(c.tipo, f[c.id], c.valor))
-  .map(c => c.id + '=' + String(f[c.id]).replace(/\s+/g, ' ').trim() + ' (antes ' + c.valor.replace(/\s+/g, ' ').trim() + ')').join('; ');
+  .map(c => c.tipo === 'textarea'   // texto largo: una línea, cada salto de línea vuelve como ⏎ y el original no se repite
+    ? c.id + '=' + String(f[c.id]).replace(/\r\n?/g, '\n').trim().split('\n').map(l => l.replace(/[ \t]+/g, ' ').trim()).join('⏎') + ' (antes: borrador de ' + c.valor.length + ' caracteres)'
+    : c.id + '=' + String(f[c.id]).replace(/\s+/g, ' ').trim() + ' (antes ' + c.valor.replace(/\s+/g, ' ').trim() + ')').join('; ');
 function campoHTML(c, val, i, n) {
   const id = 'f-' + n + '-' + i, cam = !mismo(c.tipo, val, c.valor);
   const inp = c.tipo === 'opcion'
     ? `<select id="${id}" class="in" data-f="${esc(c.id)}">${c.opciones.map(o => `<option value="${esc(o)}"${o === val ? ' selected' : ''}>${esc(o)}</option>`).join('')}</select>`
+    : c.tipo === 'textarea' ? `<textarea id="${id}" class="in ta" data-f="${esc(c.id)}" rows="${Math.min(14, Math.max(6, String(val).split('\n').length + 1))}" autocomplete="off">${esc(val)}</textarea>`
     : `<input id="${id}" class="in" data-f="${esc(c.id)}" type="${c.tipo === 'numero' ? 'number' : c.tipo === 'fecha' ? 'date' : 'text'}"${c.tipo === 'numero' ? ' step="any"' : ''} value="${esc(val)}" autocomplete="off">`;
   return `<div class="f${cam ? ' cambio' : ''}" data-tipo="${esc(c.tipo)}" data-orig="${esc(c.valor)}"><label for="${id}">${esc(c.etiqueta)}<span class="tag-cambio">Cambiado</span></label>${inp}` +
-    `<div class="antes"><span>Antes: <s>${esc(c.valor)}</s></span><button type="button" class="fre">Volver al original</button></div></div>`;
+    `<div class="antes"><span>Antes: <s>${esc(c.tipo === 'textarea' ? (c.valor.replace(/\s+/g, ' ').trim().length > 90 ? c.valor.replace(/\s+/g, ' ').trim().slice(0, 90) + '…' : c.valor.replace(/\s+/g, ' ').trim()) : c.valor)}</s></span><button type="button" class="fre">Volver al original</button></div></div>`;
+}
+// Card de revisión: qué hizo el agente, qué verificó, qué te queda mirar, y la imagen o el link.
+function revisionHTML(it) {
+  const lk = /^https:\/\/[^\s"'<>]+$/.test((it.imagen || {}).link || it.link || '') ? ((it.imagen || {}).link || it.link) : '';
+  return `<div class="rev"><p class="kind">Revisión</p>` +
+    `<p><span>Qué hice:</span> ${esc(it.hice)}</p><p><span>Qué verifiqué:</span> ${esc(it.verifique)}</p><p><span>Qué te queda mirar:</span> ${esc(it.mirar)}</p>` +
+    (lk && !it.imagen ? `<p><a href="${esc(lk)}" target="_blank" rel="noopener noreferrer">${esc(lk.replace(/^https:\/\//, ''))} ↗</a></p>` : '') + `</div>`;
 }
 const EMBEBIDO = window.self !== window.top;   // va en el iframe de la página de la web (ver el contrato más abajo)
 
@@ -316,7 +330,7 @@ function aplicarMarcas(mk) {
   const items = mk.items && typeof mk.items === 'object' ? mk.items : {};
   DATA.items.forEach(it => {
     const v = items[it.n];
-    if (v && typeof v === 'object') state[it.n] = { m: v.m === 'go' || v.m === 'no' || v.m === 'vc' ? v.m : '', c: typeof v.c === 'string' ? v.c : '',
+    if (v && typeof v === 'object') state[it.n] = { m: v.m === 'go' || v.m === 'no' || v.m === 'vc' || (v.m === 'rv' && it.tipo === 'revision') ? v.m : '', c: typeof v.c === 'string' ? v.c : '',
       f: v.f && typeof v.f === 'object' && !Array.isArray(v.f) ? v.f : {} };
   });
   if (typeof mk.notas === 'string') document.getElementById('notas').value = mk.notas;
@@ -363,7 +377,7 @@ function render() {
     const card = document.createElement('article');
     card.id = 'd-' + it.n;
     const conPic = !it.dibujo && (it.svg || it.icono);
-    card.className = 'card' + (conPic ? '' : ' uno') + (it.accent ? ' ' + it.accent : '') + (st.m ? ' ' + st.m : '');
+    card.className = 'card' + (conPic ? '' : ' uno') + (it.accent ? ' ' + it.accent : '') + (it.tipo === 'revision' ? ' revision' : '') + (st.m ? ' ' + st.m : '');
     const tag = it.accent === 'danger' ? '<span class="tag danger">ojo</span>' : it.accent === 'warning' ? '<span class="tag warning">sensible</span>' : '';
     const imp = it.impacto && (it.impacto.positivo || it.impacto.negativo)
       ? `<div class="imp"><div class="pos"><b>Impacto positivo</b>${esc(it.impacto.positivo || 'nada relevante')}</div>` +
@@ -380,17 +394,18 @@ function render() {
       `<div><span class="num">${it.n}</span>${tag}${chipVence(it.vence)}<h2>${esc(it.titulo)}</h2></div>` +
       (it.dibujo ? `<div class="dib"><svg viewBox="${esc(it.dibujo.viewBox || '0 0 240 100')}" role="img" aria-label="${esc(it.dibujo.alt || '')}">${it.dibujo.svg}</svg></div>` : '') +
       imagenHTML(it) +
-      `<p class="ctx">${lnk(it.contexto)}</p>` +
-      bloqueAntecedentes(it) +
-      `<p class="reco">Te recomiendo <b class="${recoGo(it) ? 'r-go' : 'r-no'}">${esc(recoGo(it) ? (it.accion_va || 'Va') : (it.accion_no_va || 'No va'))}</b><span>${esc(it.reco_motivo)}</span></p>` +
+      (it.tipo === 'revision' ? revisionHTML(it) : `<p class="ctx">${lnk(it.contexto)}</p>`) +
+      (it.tipo === 'revision' ? '' : bloqueAntecedentes(it)) +
+      (it.tipo === 'revision' ? '' : `<p class="reco">El agente recomienda <b class="${recoGo(it) ? 'r-go' : 'r-no'}">${esc(recoGo(it) ? (it.accion_va || 'Va') : (it.accion_no_va || 'No va'))}</b><span>${esc(it.reco_motivo)}</span></p>`) +
       panel +
       (st.m !== 'vc' && st.m !== 'no' && camposN(it, st.f) ? `<p class="pend" role="status">${camposN(it, st.f)} ${camposN(it, st.f) === 1 ? 'cambio pendiente' : 'cambios pendientes'} · Va los manda con el cambio</p>` : '') +
-      `<div class="actions">` +
+      (it.tipo === 'revision' ? `<div class="actions"><button type="button" class="btn go on-rv${st.m === 'rv' ? ' on' : ''}" data-m="rv">Revisado</button>` +
+        `<textarea class="comment" rows="1" placeholder="Comentar sirve para pedir un cambio">${esc(st.c)}</textarea></div>` : `<div class="actions">` +
         `<button type="button" class="btn no${recoGo(it) ? '' : ' rec'}${st.m === 'no' ? ' on' : ''}" data-m="no">${esc(it.accion_no_va || 'No va')}</button>` +
         `<button type="button" class="btn vc${st.m === 'vc' ? ' on' : ''}" data-m="vc">Editar</button>` +
         `<button type="button" class="btn go${recoGo(it) ? ' rec' : ''}${st.m === 'go' ? ' on' : ''}" data-m="go">${esc(it.accion_va || 'Va')}</button>` +
         `<textarea class="comment" rows="1" placeholder="Comentario (opcional)">${esc(st.c)}</textarea>` +
-      `</div>` +
+      `</div>`) +
       (det ? `<details><summary>Ver el detalle</summary><div class="d">${det}</div></details>` : '');
     card.querySelectorAll('.btn').forEach(b => b.addEventListener('click', () => {
       st.m = st.m === b.dataset.m ? '' : b.dataset.m; save(); render();
@@ -452,7 +467,7 @@ function indice() {
 function tally() {
   indice();
   const v = Object.values(state);
-  const go = v.filter(s => s.m === 'go' || s.m === 'vc').length, no = v.filter(s => s.m === 'no').length;
+  const go = v.filter(s => s.m === 'go' || s.m === 'vc' || s.m === 'rv').length, no = v.filter(s => s.m === 'no').length;
   document.getElementById('t-go').textContent = go + ' va';
   document.getElementById('t-no').textContent = no + ' no va';
   document.getElementById('t-un').textContent = (DATA.items.length - go - no) + ' sin marcar';
@@ -462,6 +477,11 @@ function respuesta() {
   const L = ['/botonera respuesta · ' + DATA.clave];
   DATA.items.forEach(it => {
     const st = state[it.n] || {};
+    if (it.tipo === 'revision') {   // Revisado = «revisado»; comentar solo = pedir un cambio (nunca cuenta como revisado)
+      const c = st.c && st.c.trim();
+      L.push(it.n + '. ' + (st.m === 'rv' ? 'revisado' : c ? 'comentario' : 'sin marcar') + ' · ' + it.titulo + (c ? ' · comentario: ' + c : ''));
+      return;
+    }
     // un Va con cambios escritos en Editar sin confirmar sale como «va con cambios»; Editar sin campos ni comentario es un va liso
     const cf = st.m === 'go' || st.m === 'vc' ? camposTxt(it, st.f) : '';
     let mk = st.m;
@@ -477,7 +497,7 @@ function respuesta() {
 }
 
 document.getElementById('bulk-reco').addEventListener('click', () => {
-  DATA.items.forEach(it => { state[it.n].m = recoGo(it) ? 'go' : 'no'; }); save(); render();
+  DATA.items.forEach(it => { state[it.n].m = it.tipo === 'revision' ? 'rv' : recoGo(it) ? 'go' : 'no'; }); save(); render();
 });
 document.getElementById('bulk-clear').addEventListener('click', () => {
   DATA.items.forEach(it => { state[it.n].m = ''; }); save(); render();

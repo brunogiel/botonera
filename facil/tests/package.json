@@ -1,0 +1,10 @@
+{
+  "name": "botonera-facil-tests",
+  "private": true,
+  "description": "Pruebas de la version facil (pagina privada de Claude). Playwright viene de ../../tests (cd tests && npm install). Correr de a un archivo por vez.",
+  "scripts": {
+    "e2e": "node e2e.js",
+    "mismo-diseno": "node mismo-diseno.js",
+    "todo": "node e2e.js && node mismo-diseno.js"
+  }
+}

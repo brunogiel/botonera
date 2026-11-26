@@ -130,7 +130,7 @@
   .paso.hecho{background:var(--go-bg);border-color:transparent;color:var(--go)}
   .paso.hecho .h{color:var(--ink)}
   .nota-estado{margin-top:10px;font-size:13px;color:var(--warn);background:var(--warn-bg);border-radius:var(--r-s);padding:8px 10px}
-  /* Claude trabajando: puntito que late (CSS puro). Sin animacion si la persona pidio menos movimiento */
+  /* Agente trabajando: puntito que late (CSS puro). Sin animacion si la persona pidio menos movimiento */
   .trab{display:inline-flex;align-items:center;gap:6px;color:var(--brand);font-weight:500}
   .trab.largo{color:var(--warn)}
   .pulso{display:inline-block;width:8px;height:8px;border-radius:50%;background:currentColor;flex:none;animation:latido 1.4s ease-in-out infinite}
@@ -241,10 +241,12 @@
   }
   .marco.orig iframe{height:75vh;height:75dvh;min-height:420px}
   .volver{display:none;margin-bottom:10px}
+  /* el link claude:// abre la app de Claude Code de la compu. En un dispositivo táctil se saca, salvo que esa app lo acepte (LINK_CELU, o ?linkcelu=1 para probarlo). Se decide por dispositivo táctil, no por ancho: en la compu, con una ventana angosta, se conserva */
+  @media (hover:none) and (pointer:coarse){
+    html:not(.link-celu) .lnk-ses,html:not(.link-celu) .espw .lnk-ses{display:none}
+  }
   @media (max-width:859px){
     .volver{display:inline-block}
-    /* el link claude:// solo abre en la Mac con la app: en el celu no sirve */
-    .lnk-ses,.espw .lnk-ses{display:none}
     .espw .item{padding-bottom:10px}
     /* en el celu se ve la lista o la botonera, nunca las dos apiladas */
     .app.detalle .lista{display:none}
@@ -298,6 +300,40 @@
   .sw-img{flex:none}
   .sw-img img{display:block;width:100%;max-height:220px;object-fit:contain;background:#fff;border-radius:8px;border:1px solid #E6E1D8}
   .sw-img.grande img{max-height:none}
+  .sw-img,.p-img{position:relative}
+  /* la pieza a pantalla completa: el ícono de agrandar en la esquina; en la card es solo una pista (el toque lo toma el mazo) */
+  .amp{position:absolute;right:8px;bottom:8px;width:32px;height:32px;border-radius:8px;border:1.5px solid #1C1B1B;background:#fff;color:#1C1B1B;
+    font:700 16px/1 system-ui,sans-serif;display:grid;place-items:center;padding:0;cursor:pointer}
+  span.amp{pointer-events:none}
+  .img-full{position:fixed;inset:0;z-index:100;background:#111;color:#fff;display:flex;flex-direction:column;padding:14px;padding-bottom:max(14px,env(safe-area-inset-bottom));gap:10px;
+    touch-action:none;user-select:none;-webkit-user-select:none}
+  .img-full .if-top{display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:14px;font-weight:700}
+  .img-full .if-t{overflow-wrap:anywhere}
+  .img-full .if-x{flex:none;background:none;border:2px solid #fff;border-radius:10px;color:#fff;font:inherit;padding:8px 12px;cursor:pointer}
+  .img-full .if-box{flex:1;min-height:0;background:#fff;border-radius:12px;overflow:hidden;display:grid;place-items:center;touch-action:none}
+  .img-full .if-box img{max-width:100%;max-height:100%;object-fit:contain;transform-origin:center;will-change:transform;-webkit-user-drag:none}
+  .img-full .if-pie{font-size:12px;opacity:.8}
+  /* detalle de la card: plegado */
+  .sw-det{font-size:14px;color:#3a3837;border:1.5px solid #E6E1D8;border-radius:8px;padding:8px 10px;flex:none}
+  .sw-det summary{cursor:pointer;font-weight:700;color:#1C1B1B}
+  .sw-det p{margin:6px 0 0;overflow-wrap:anywhere}
+  /* «Esto es regla» */
+  .sw-regla{display:flex;align-items:center;gap:8px;align-self:flex-start;font-size:13px;font-weight:700;padding:6px 10px;border:2px solid #1C1B1B;border-radius:10px;background:#F5F0E8;cursor:pointer;color:#1C1B1B}
+  .sw-regla:has(input:checked){background:#D6ECEA}
+  .sw-regla input{width:18px;height:18px;margin:0;accent-color:#1C1B1B}
+  /* /rot con sub-botones */
+  .sw-rot{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:4px 0 14px}
+  .sw-rot-op{display:flex;flex-direction:column;gap:2px;text-align:left;padding:10px;border:2px solid #1C1B1B;border-radius:14px;background:#fff;color:#1C1B1B;font:inherit;cursor:pointer}
+  .sw-rot-op[data-id="mas-contexto"]{grid-column:1/-1}
+  .sw-rot-op b{font-size:15px}
+  .sw-rot-op span{font-size:12px;color:#5f584e}
+  .sw-rot-op[aria-pressed=true]{background:#D6ECEA}
+  /* «Ya no aplica»: la card vieja, gris, con el link a la nueva */
+  .dec-fila.vieja{opacity:.6;background:rgba(127,127,127,.12)}
+  .dec-fila.vieja .vieja-ref{margin-top:4px;font-size:12.5px;color:var(--muted)}
+  .sw-vieja{font-size:14px;color:#6b6866;background:#EDE9E1;border-radius:10px;padding:10px 12px}
+  .sw-vieja b{color:#1C1B1B}
+  .sw-lscroll .dec-fila.vieja{color:#3a3837;margin:0 0 14px;border:2px solid #1C1B1B;border-radius:12px;padding:10px 12px}
   .sw-reco{margin:0;font-size:14px;color:#3a3837;overflow-wrap:anywhere}
   .sw-reco b{font-weight:700}
   .sw-reco .r-go{color:#1F6F6B}
@@ -377,6 +413,8 @@
   .sw-f{display:flex;flex-direction:column;gap:6px}
   .sw-f label{font-size:13px;font-weight:700;display:flex;align-items:center;gap:6px}
   .sw-in{width:100%;min-height:48px;padding:10px 12px;border:2px solid #1C1B1B;border-radius:10px;background:#fff;color:#1C1B1B;font:16px/1.3 Manrope,-apple-system,system-ui,sans-serif}
+  .sw-f.cambio .sw-ta{font-weight:500}
+  .sw-ta{min-height:150px;line-height:1.45;resize:vertical;white-space:pre-wrap}   /* campo textarea (un mail): cargado con el borrador */
   .sw-in:focus{outline:3px solid #8ECAC8;outline-offset:1px}
   .sw-f.cambio .sw-in{border-color:#1F6F6B;background:#EAF6F5;box-shadow:inset 0 0 0 2px #8ECAC8;font-weight:700}
   .sw-tag{display:none;font-size:11px;font-weight:700;padding:1px 8px;border-radius:99px;background:#8ECAC8;border:1.5px solid #1C1B1B}
@@ -416,7 +454,7 @@
   .sw-b.sw-undo{display:flex;align-items:center;justify-content:center;width:44px;padding:0}
   .sw-b.sw-undo[disabled]{opacity:.35}
 
-  /* ---------- home del swipe (maqueta B): paleta propia, igual en claro y en oscuro ---------- */
+  /* ---------- home del swipe: paleta propia, igual en claro y en oscuro ---------- */
   .h-tit{margin:2px 2px 8px;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
   .home{
     margin-bottom:16px;padding:14px;background:#F5F0E8;border:2px solid #1C1B1B;border-radius:22px;color:#1C1B1B;
@@ -428,30 +466,12 @@
   .home-k{font-size:12px;font-weight:700;opacity:.7;text-transform:uppercase;letter-spacing:.06em}
   .home-t{margin:6px 0 4px;font:400 30px/1.1 "Noto Serif",Georgia,"Times New Roman",serif}
   .home-s{max-width:62%;font-size:13px;opacity:.75}
-  .home-stack{position:absolute;right:-6px;bottom:-14px;width:120px;height:150px;pointer-events:none}
-  .home-stack div{position:absolute;inset:0;border:2px solid #F5F0E8;border-radius:14px;background:#2d2c2b}
-  .home-stack div:nth-child(1){transform:rotate(14deg) translate(18px,6px);background:#3a3938}
-  .home-stack div:nth-child(2){transform:rotate(6deg) translate(8px,2px)}
-  .home-stack div:nth-child(3){background:#fff;border-color:#fff}
-  .home-stack div:nth-child(3)::after{content:"";position:absolute;left:14px;right:30px;top:20px;height:10px;border-radius:5px;background:#1C1B1B;box-shadow:0 18px 0 -2px #d4d4d4,0 34px 0 -2px #d4d4d4}
   .home-l{margin-top:6px;font-size:13px;font-weight:700;color:#8ECAC8}
   .home-acts{position:relative;z-index:1;margin-top:auto;display:flex;flex-wrap:wrap;gap:8px;max-width:66%}
   .home-env{padding:10px 16px;border:2px solid #fff;border-radius:14px;background:transparent;color:#fff;font-size:15px;font-weight:800}
   .home-env[disabled]{opacity:.6;cursor:default}
   .home-frase{max-width:92%;margin:8px 0 0;font:italic 400 16px/1.4 "Noto Serif",Georgia,"Times New Roman",serif;opacity:.92}
   .home-autor{margin-top:8px;font-size:12px;opacity:.65}
-  .confeti{position:fixed;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:60}
-  .home-avisos{margin-top:12px;display:flex;flex-direction:column;gap:8px;align-items:flex-start;font-size:13px;color:var(--muted)}
-  .home-avisos button{font:inherit;font-weight:600;padding:9px 14px;border-radius:99px;border:1.5px solid var(--line-strong);background:var(--surface);color:var(--ink);cursor:pointer}
-  .home-res{margin-top:10px;font-size:12.5px;font-weight:600}
-  .home-res .ok{color:#1F6F6B}
-  .home-res .mal{color:#8a3b2a}
-  .home-cta{
-    position:relative;z-index:1;display:flex;align-items:center;gap:8px;padding:12px 18px;border:0;border-radius:14px;
-    background:#8ECAC8;color:#1C1B1B;font-size:15px;font-weight:800;
-  }
-  .home-cta svg{width:18px;height:18px;flex:none;fill:none;stroke:#1C1B1B;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
-  .home-err{margin-top:10px;font-size:12.5px;font-weight:600;color:#8a3b2a}
   /* fila «Con error»: arriba del home, solo si hay errores sin ver. Mismo rojo apagado que .home-err, sobre un fondo crema rosado */
   .herr{margin-bottom:14px;padding:12px 14px 12px;border:2px solid #8a3b2a;border-radius:16px;background:#F8E1DA;color:#1C1B1B}
   .herr-k{font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#8a3b2a}
@@ -463,6 +483,13 @@
   .herr-w{display:block;margin-top:3px;font-size:11.5px;color:#6B7280}
   .herr-v{flex:none;padding:7px 13px;border:2px solid #8a3b2a;border-radius:99px;background:#fff;color:#8a3b2a;font-size:13px;font-weight:800}
   .herr-mas{margin:10px 0 8px;font-size:12px;font-weight:600;color:#6B7280}
+  .confeti{position:fixed;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:60}
+  .home-avisos{margin-top:12px;display:flex;flex-direction:column;gap:8px;align-items:flex-start;font-size:13px;color:var(--muted)}
+  .home-avisos button{font:inherit;font-weight:600;padding:9px 14px;border-radius:99px;border:1.5px solid var(--line-strong);background:var(--surface);color:var(--ink);cursor:pointer}
+  .home-res{margin-top:10px;font-size:12.5px;font-weight:600}
+  .home-res .ok{color:#1F6F6B}
+  .home-res .mal{color:#8a3b2a}
+  .home-err{margin-top:10px;font-size:12.5px;font-weight:600;color:#8a3b2a}
   .hrows{margin-top:14px;display:flex;flex-direction:column;gap:10px}
   .hrow{
     display:flex;align-items:center;gap:12px;width:100%;padding:10px 12px;text-align:left;background:#fff;color:#1C1B1B;
@@ -495,16 +522,26 @@
   .hcat-top{display:flex;align-items:center;gap:10px;margin-bottom:12px}
   .hcat-vol{border:2px solid #1C1B1B;border-radius:10px;background:#fff;color:#1C1B1B;font-size:13px;font-weight:700;padding:6px 10px}
   .hcat-top b{font-size:15px;font-weight:800;color:#1C1B1B}
-  .htandas{display:flex;flex-direction:column;gap:10px}
+  .htandas{display:flex;flex-direction:column;gap:14px}
   .hcat-env{min-height:0;margin-bottom:12px}
   .hcat-env .home-l{margin-top:0}
   .hcat-env .home-acts{margin-top:10px;max-width:none}
-  .htanda{display:block;width:100%;padding:14px 16px;text-align:left;border:0;border-radius:18px;background:#1C1B1B;color:#fff}
-  .sw .htanda{color:#fff} /* adentro del mazo «.sw button» la pintaba de negro sobre negro: la card salia vacia */
-  .htanda .hk{display:block;font-size:11px;font-weight:700;opacity:.65;text-transform:uppercase;letter-spacing:.06em}
-  .htanda .ht{display:block;margin:4px 0 4px;font:400 20px/1.2 "Noto Serif",Georgia,"Times New Roman",serif;text-wrap:balance}
-  .htanda .hc{display:block;font-size:13px;line-height:1.35;opacity:.8;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-  .htanda .hn{display:inline-block;margin-top:10px;padding:5px 12px;border-radius:99px;background:#8ECAC8;color:#1C1B1B;font-size:13px;font-weight:800}
+  /* cada botonera de la categoria es un mazo chico: la misma carpeta de la portada (pestaña + hojas que asoman), en tamaño fila.
+     --Y deja lugar arriba para la pestaña y las hojas; --tinte y --cat salen del color de la categoria */
+  .htanda{position:relative;display:block;width:100%;margin-top:var(--Y,36px);padding:14px 16px;text-align:left;border:2px solid #1C1B1B;border-radius:12px;background:var(--tinte,#F5F0E8);color:#1C1B1B;box-shadow:0 3px 0 #1C1B1B}
+  .htanda:active{transform:translateY(2px);box-shadow:0 1px 0 #1C1B1B}
+  .htab{
+    position:absolute;z-index:6;left:12px;top:-34px;height:34px;max-width:calc(100% - 20px);display:flex;align-items:center;gap:6px;padding:0 12px 0 9px;
+    background:var(--cat,#E0DCD2);border:2px solid #1C1B1B;border-bottom:0;border-radius:10px 10px 0 0;font-size:12.5px;font-weight:800;color:#1C1B1B;white-space:nowrap
+  }
+  .htab img,.htab .cemo{flex:none;width:16px;height:16px;font-size:14px}
+  .htab .sw-tc b{font-size:17px}
+  .htanda .hk{display:block;font-size:11px;font-weight:700;color:#3a3837;text-transform:uppercase;letter-spacing:.06em}
+  .htanda .ht{display:block;margin:4px 0 4px;font:600 20px/1.2 "Noto Serif",Georgia,"Times New Roman",serif;text-wrap:balance}
+  .htanda .hc{display:block;font-size:13px;line-height:1.35;color:#3a3837;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .htanda .hf{display:flex;align-items:center;gap:10px;margin-top:12px}
+  .htanda .hn{display:inline-block;padding:6px 14px;border-radius:99px;background:#1C1B1B;color:#fff;font-size:13px;font-weight:800}
+  .htanda .hv{font-size:12.5px;font-weight:700;color:#A3341F}
   .sw-gt{margin:6px 0 4px;font-size:12px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#6b6866}
   .sw-bi{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 8px;padding:8px 10px;margin-bottom:6px;background:#fff;border:2px solid #1C1B1B;border-radius:12px}
   .sw-bn{flex:1 1 140px;min-width:0;overflow-wrap:anywhere;font-size:14px;font-weight:700}
@@ -594,12 +631,12 @@
   .sw-snz-hoja h3{margin:0 2px 2px;font:600 22px/1.25 "Noto Serif",Georgia,"Times New Roman",serif;color:#1C1B1B}
   .sw-snz-sub{margin:0 2px 12px;font-size:13px;color:#3A3837}
   .sw-snz-ops{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
-  .sw-snz-op{
+  .sw-snz-op,.sw-snz-ahora{
     display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;min-height:54px;border:2px solid #1C1B1B;border-radius:12px;
     background:#fff;color:#1C1B1B;padding:8px 14px;text-align:left;line-height:1.25;
   }
-  .sw-snz-op[disabled]{opacity:.55;cursor:default}
-  .sw-snz-op .op-l{display:flex;flex-direction:column;align-items:flex-start;gap:3px;min-width:0;font-size:15px;font-weight:700}
+  .sw-snz-op[disabled],.sw-snz-ahora[disabled]{opacity:.55;cursor:default}
+  .sw-snz-op .op-l,.sw-snz-ahora .op-l{display:flex;flex-direction:column;align-items:flex-start;gap:3px;min-width:0;font-size:15px;font-weight:700}
   .sw-snz-op .op-w{flex:none;font-size:14px;font-weight:700;color:#3A3837;font-variant-numeric:tabular-nums;white-space:nowrap}
   .sw-snz-op .op-w b{font-weight:800;color:#1C1B1B}
   .tag-warn{display:inline-block;font-size:11.5px;font-weight:800;line-height:1.4;border-radius:99px;padding:0 9px;border:1.5px solid currentColor;color:#8A5A10;background:#F6E2BF}
@@ -636,13 +673,139 @@
   .hsnz-i .hs svg{width:13px;height:13px;flex:none;fill:none;stroke:#3A3837;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
   .hsnz-i .hs.mal{color:#8a3b2a}
   .hsnz-i .sw-b{flex:none;color:#1C1B1B;cursor:pointer}
+
+     /* el ▶ de cada item: el mismo circulo negro de las filas de arriba */
+
+  .sw-snz-ahora{margin-bottom:10px;border-style:dashed}
+  .sw-snz-ahora .op-s{font-size:12.5px;font-weight:600;color:#3A3837;text-align:left}
+
+  .home > .hrows:first-child{margin-top:0}
+  .home-carga{margin-top:12px;font-size:13px;font-weight:600;color:#6B6862}
+
+  /* ---------- Seguimiento: la fila del final del home, con sus grupos apilados ---------- */
+  .hseg{margin-top:10px;background:#fff;border:2px solid #1C1B1B;border-radius:16px;overflow:hidden}
+
+  .hseg-a{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-top:9px}
+  .hseg-a .lnk-ses{margin-right:auto}
+  
+  .hseg-b{min-height:36px;padding:6px 13px;border:2px solid #1C1B1B;border-radius:99px;background:#fff;font:inherit;font-size:12.5px;font-weight:800;color:#1C1B1B;cursor:pointer}
+  .hseg-b.neg{background:#1C1B1B;color:#fff}
+  .hseg-mas{display:block;width:100%;padding:10px 12px;border:0;border-top:2px dashed #E5E5E5;background:none;font:inherit;font-size:12.5px;font-weight:800;text-align:left;color:#1C1B1B;cursor:pointer}
+  /* card de revisión: borde verde a la izquierda, tres líneas, link o imagen y un solo botón Revisado */
+  .sw-card.rev{border-left:8px solid #2E7D4F}
+  .sw-rev-k{font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#1F6F4B}
+  .sw-rev-l{margin:0;font-size:14.5px;line-height:1.4;color:#3a3837;overflow-wrap:anywhere}
+  .sw-rev-l b{font-weight:800;color:#1C1B1B}
+  .sw-rev-lnk{align-self:flex-start;font-size:14px;font-weight:700;color:inherit;text-decoration:underline;overflow-wrap:anywhere}   /* el link de las otras cards: hereda el color y va subrayado */
+  .sw .sw-act.rv{background:#1C1B1B;color:#fff}
+  .sw .sw-act.cm{background:#fff;color:#1C1B1B}
+  .sw-acc.rev{grid-template-columns:1fr 1fr}
+  .sw-rev-ley{margin:0;text-align:center;font-size:12.5px;color:#3a3837}
+  
+  body.con-barra{padding-bottom:calc(66px + env(safe-area-inset-bottom,0px))}
+  html.sw-lock body.con-barra{padding-bottom:0}
+  .tabs{position:fixed;left:0;right:0;bottom:0;z-index:40;background:#fff;border-top:2px solid #1C1B1B;padding-bottom:env(safe-area-inset-bottom,0px);font-family:Manrope,-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif}
+  html.sw-lock .tabs{display:none}
+
+  .tabs-in{display:grid;grid-template-columns:repeat(4,1fr);max-width:560px;margin:0 auto;align-items:end}   
+  .tab{position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 0 11px;min-height:58px;background:none;border:0;font:inherit;font-size:11.5px;font-weight:800;color:#6B6862;cursor:pointer}
+  .tab svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+  .tab.on{color:#1C1B1B}
+  .tab.on::before{content:"";position:absolute;top:-2px;left:22%;right:22%;height:4px;border-radius:0 0 4px 4px;background:#1C1B1B}
+  /* el botón redondo del medio (Decidir), sin número; sobresale de la barra. El punto rojo (.dot) avisa sin contar */
+  .tab-dec{padding:0;min-height:58px;overflow:visible}
+  .dec-btn{position:relative;display:grid;place-items:center;width:64px;height:64px;margin-top:-26px;border-radius:50%;background:#1C1B1B;border:4px solid #fff;box-shadow:0 0 0 2px #1C1B1B}
+  .dec-btn svg{width:28px;height:28px;fill:none;stroke:#fff;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+  .tab-dec.on::before{display:none}
+  .tab-dec.on .dec-btn{box-shadow:0 0 0 2px #1C1B1B,0 0 0 6px #8ECAC8}
+  .bdg.dot{min-width:0;width:12px;height:12px;padding:0;border:2px solid #fff;top:-3px;left:auto;right:-3px}
+  .tab > .bdg.dot{top:8px;left:calc(50% + 6px);right:auto}
+  .tab-dec .bdg.dot{top:-2px;right:-2px}
+  .hseg.reg{margin-top:14px}
+  /* «Te esperan a vos» es un bloque propio; lo demás va plegado en «Lo que corre · N» */
+  /* listas planas de una línea, fila abierta, link al archivo */
+  .grp.gs{margin-top:16px}
+  .hseg.fino{margin-top:8px}
+  .hfin{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;min-height:42px;padding:9px 12px;border:0;border-top:2px dashed #E5E5E5;background:none;font:inherit;text-align:left;color:#1C1B1B;cursor:pointer}
+  .hfin:first-child{border-top:0}
+  .hfin b{min-width:0;font-size:13.5px;font-weight:700;color:#1C1B1B;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .hfin .he{flex:none;display:flex;align-items:center;gap:6px;font-size:12px;font-weight:800;color:#2f5d8a}
+  .hfin .he i{width:8px;height:8px;border-radius:50%;background:currentColor}
+  .hfin .he.w{color:#8A5A10}
+  .hfin .he.ok{color:#1F6F6B}
+  .hfin .he.mudo{color:#6B6862}
+  .hfin-ab{border-top:2px dashed #E5E5E5;background:#F3FAF4}
+  .hseg.fino > .hfin-ab:first-child{border-top:0}
+  .hfin-ab .hfin{border-top:0}
+  .hfin-ab .res{margin:0 12px 6px;font-size:13px;line-height:1.4;color:#3A3837;overflow-wrap:anywhere}
+  .bl-h{margin-top:2px}
+  .bl-sub{margin:2px 2px 0;font-size:12.5px;font-weight:600;color:#3A3837}
+  .bl-vacio{margin-top:18px;font-size:15px;font-weight:800;color:#1F6F6B}
+  .hfin-ab .res.mudo{font-size:12px;font-weight:700;color:#6B6862}
+  .hfin-ab .hseg-a{margin:0 12px 12px}
+  .arch-l{display:block;margin:14px auto 12px;background:none;border:0;font:inherit;font-size:13px;font-weight:800;color:#6B6862;cursor:pointer}
+  .hac .bts button.p{white-space:nowrap}
+
+  .bdg{position:absolute;top:5px;left:calc(50% + 8px);min-width:18px;height:18px;padding:0 5px;border-radius:99px;background:#1C1B1B;color:#fff;font-size:10.5px;font-weight:800;display:grid;place-items:center;font-variant-numeric:tabular-nums}
+  .bdg[hidden]{display:none}
+  .bdg.am{background:#8A5A10}
+  .bdg.rj{background:#8a3b2a;color:#fff}
+  .bdg.li{background:#B79CED;color:#1C1B1B}
+  body.con-barra .snz-toast:not(.en-mazo){bottom:calc(66px + env(safe-area-inset-bottom,0px) + 10px)}
+  
+  .h2{margin:2px 2px 0;font-size:20px;font-weight:800}
+  .grp{margin:2px 2px 0;font-size:11.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#6B6862}
+  
+  .hl-lista{margin-top:8px;display:flex;flex-direction:column;gap:10px}
+  .hl-vacio{margin:10px 2px 0;font-size:14px;font-weight:600;color:#6B6862}
+  .hl-err{margin:10px 2px 0;font-size:12.5px;font-weight:600;color:#8a3b2a}
+
+  .selec{display:flex;gap:4px;padding:4px;margin-bottom:12px;background:#fff;border:2px solid #1C1B1B;border-radius:14px}
+  .selec button{flex:1;min-height:38px;padding:6px 4px;font:inherit;font-size:13.5px;font-weight:800;color:#6B6862;background:none;border:0;border-radius:10px;cursor:pointer}
+  .selec button.on{background:#1C1B1B;color:#fff}
+
+  .hcat-top .ch{display:inline-block;font-size:17px;vertical-align:-2px;margin-right:2px}
+
+  .parte{display:flex;gap:11px;align-items:flex-start;width:100%;padding:10px 0;text-align:left;font:inherit;color:inherit;background:none;border:0;border-top:2px dashed #E5E5E5;cursor:pointer}
+  .parte:disabled{cursor:default;opacity:.7}
+  .cas{flex:none;display:grid;place-items:center;width:24px;height:24px;margin-top:1px;border:2px solid #1C1B1B;border-radius:7px;background:#fff}
+  .parte.on .cas{background:#1C1B1B}
+  .cas svg{width:16px;height:16px;fill:none;stroke:#fff;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+  .pt{font-size:14px;line-height:1.4;color:#3A3837;overflow-wrap:anywhere}
+  .pt b{display:inline;font-weight:800;color:#1C1B1B}
+  .parte + .bts{margin-top:12px}
+  
+  .lac{background:#fff;border:2px solid #1C1B1B;border-radius:16px;padding:10px 12px}
+  .lac b{display:block;font-size:14px;line-height:1.3;overflow-wrap:anywhere}
+
+  .lac-ta{display:block;width:100%;margin-top:8px;padding:8px 10px;font:inherit;font-size:16px;line-height:1.35;border:2px solid #1C1B1B;border-radius:12px;background:#fff;color:#1C1B1B;resize:vertical}
+  .hac-err{display:block;margin-top:4px;font-size:12.5px;font-weight:700;color:#8a3b2a}
+  .hac-err:empty{display:none}
+  .bts{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+  .bts button{flex:1 1 0;min-width:70px;min-height:40px;padding:7px 4px;font:inherit;font-size:13px;font-weight:800;text-align:center;border:2px solid #1C1B1B;border-radius:12px;background:#fff;color:#1C1B1B;cursor:pointer}
+  .bts button.p{background:#1C1B1B;color:#fff}
+  .bts button[disabled]{opacity:.55;cursor:default}
+  .hac{background:#fff;border:2px solid #1C1B1B;border-left:8px solid #8A5A10;border-radius:16px;padding:11px 13px}
+  .hac b{display:block;font-size:14.5px;line-height:1.3;overflow-wrap:anywhere}
+  .hac-por{display:block;margin-top:4px;font-size:12.5px;line-height:1.38;color:#3A3837;overflow-wrap:anywhere}
+  .hac-de{display:block;margin-top:6px;font-size:11.5px;font-weight:800;color:#6B6862}
+  .hac-m{display:block;margin-top:6px;font-size:12.5px;font-weight:700;color:#8A5A10;overflow-wrap:anywhere}
+  .hac-l{display:block;margin-top:8px;font-size:12px;font-weight:800;color:#6B6862}
+  .hac-frena{display:inline-block;margin-top:7px;padding:3px 10px;border-radius:99px;background:#F4E3C3;font-size:12.5px;font-weight:800;color:#8A5A10;overflow-wrap:anywhere}
+  .hac-link{display:inline-block;margin-top:8px;font-size:13px;font-weight:800;color:#1F6F6B;text-decoration:underline;overflow-wrap:anywhere}
+  .hac-cmd{display:flex;align-items:center;gap:8px;margin-top:8px}
+  .hac-cmd code{flex:1;min-width:0;padding:6px 9px;font-size:12.5px;line-height:1.35;background:#F5F0E8;border-radius:8px;overflow-wrap:anywhere}
+  .hac-cp{flex:none;min-height:32px;padding:4px 10px;font:inherit;font-size:12.5px;font-weight:800;border:2px solid #1C1B1B;border-radius:10px;background:#fff;color:#1C1B1B;cursor:pointer}
+  .hac-com{display:block;margin:8px 0 0 auto;padding:4px 2px;border:0;background:none;font:inherit;font-size:12.5px;font-weight:800;color:#6B6862;text-decoration:underline;cursor:pointer}
+  .hac-com[disabled]{opacity:.55;cursor:default}
+
 </style>
 </head>
 <body>
 <div class="wrap" id="raiz"></div>
 <div class="snz-live" id="snz-live" role="status" aria-live="polite" aria-atomic="true"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="/vendor/supabase.min.js"></script>
 <script src="/config.js"></script>
 <script>
 (function(){
@@ -662,6 +825,8 @@ var CLAVE_TOKEN = 'bm-token';
 var MAX_FALLOS = 10;
 var POLL_MS = 15000;
 
+// cuantas veces cargo la pagina en esta pestaña del navegador (las pruebas lo comparan antes y despues de un toque)
+try{ window.__cargas = (Number(sessionStorage.getItem('bm-cargas')) || 0) + 1; sessionStorage.setItem('bm-cargas', String(window.__cargas)); }catch(e){ window.__cargas = 1; }
 var raiz = document.getElementById('raiz');
 var sb = null;
 var estado = {
@@ -684,7 +849,9 @@ var estado = {
   sw: null,           // el mazo montado: {el, tema, cola, salt, hist, ...}
   hd: {},             // home: clave abierta -> {clave, k, d, items, secs, cat, tanda, listo, error, enVuelo}
   listaCargada: false, // llego al menos una bm_lista
-  errores: [],        // fila «Con error» del home: lo que trajo bm_errores_lista (solo los no vistos)
+  tab: 'decisiones',  // la pestaña de la barra de abajo: sesiones | decisiones | bloqueos (al recargar vuelve a decisiones)
+  acc: null,          // Bloqueos: {d: bm_acciones_lista, err, t, busy, vuelo, tomT, ed, activoHasta}
+  errores: [],        // «Con error» (Bloqueos): lo que trajo bm_errores_lista (solo los no vistos)
   homeVisto: false    // el home ya completo una primera pasada (despues no vuelve a «Cargando…»)
 };
 var CLAVE_MARCAS = 'bm-marcas';
@@ -731,16 +898,93 @@ function lnk(s){
     return '<a class="lnk" href="' + url + '" target="_blank" rel="noopener noreferrer">' + url + '</a>' + tail;
   });
 }
-// imagen de lo que se aprueba (un mapa, una maqueta): solo data: URI; si trae link https, abre afuera
+// imagen de lo que se aprueba (un mapa, una
 // sinLink: en la card del swipe el toque abre el detalle y el arrastre decide; un link ahí se dispararía sin querer
 function imagenHTML(it, cls, sinLink){
   var im = it && it.imagen;
   if(!im || typeof im !== 'object' || !/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+\/=]+$/.test(String(im.src || ''))) return '';
   var link = !sinLink && /^https:\/\/[^\s"'<>]+$/.test(String(im.link || '')) ? String(im.link) : '';
   var img = '<img src="' + im.src + '" alt="' + esc(im.alt || '') + '" loading="lazy">';
-  return '<div class="' + cls + '">' + (link ? '<a href="' + esc(link) + '" target="_blank" rel="noopener noreferrer">' + img + '</a>' +
-    '<a class="afuera" href="' + esc(link) + '" target="_blank" rel="noopener noreferrer">Abrir afuera ↗</a>' : img) + '</div>';
+  // la imagen se abre a pantalla completa con un toque. En la card (sinLink) el toque lo toma el mazo (swUp) y el ícono es solo una pista;
+  // en el detalle, la lista y las filas es un botón (imgFullClick, un solo oyente en el documento)
+  var amp = sinLink ? '<span class="amp" aria-hidden="true">⤢</span>' : '<button type="button" class="amp" data-imgfull="1" aria-label="Ver a pantalla completa">⤢</button>';
+  return '<div class="' + cls + '">' + (link ? '<a href="' + esc(link) + '" target="_blank" rel="noopener noreferrer">' + img + '</a>' + amp +
+    '<a class="afuera" href="' + esc(link) + '" target="_blank" rel="noopener noreferrer">Abrir afuera ↗</a>' : img + amp) + '</div>';
 }
+/* ---------- la pieza a pantalla completa: zoom con dos dedos, doble toque, deslizar hacia abajo para cerrar ---------- */
+var imgFull = null;
+function imgFullAbrir(src, alt, vuelve){
+  if(imgFull || !/^data:image\/(png|jpeg|webp);base64,/.test(String(src || ''))) return;
+  var ov = document.createElement('div');
+  ov.className = 'img-full'; ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'true'); ov.setAttribute('aria-label', alt || 'Imagen a pantalla completa');
+  ov.innerHTML = '<div class="if-top"><span class="if-t"></span><button type="button" class="if-x">✕ Cerrar</button></div><div class="if-box"><img alt=""></div>' +
+    '<div class="if-pie">Pellizcá para acercar · deslizá hacia abajo para volver a la card</div>';
+  ov.querySelector('.if-t').textContent = alt || '';
+  var img = ov.querySelector('img'), box = ov.querySelector('.if-box'), x = ov.querySelector('.if-x');
+  img.src = src; img.alt = alt || '';
+  var T = {s: 1, x: 0, y: 0}, P = {}, G = null, tapT = 0, dy = 0;
+  function pintar(){ img.style.transform = 'translate3d(' + T.x + 'px,' + T.y + 'px,0) scale(' + T.s + ')'; }
+  function acotar(){
+    var mx = Math.max(0, (img.clientWidth * T.s - box.clientWidth) / 2), my = Math.max(0, (img.clientHeight * T.s - box.clientHeight) / 2);
+    T.x = Math.max(-mx, Math.min(mx, T.x)); T.y = Math.max(-my, Math.min(my, T.y));
+    if(T.s <= 1){ T.s = 1; T.x = 0; T.y = 0; }
+  }
+  function dist(){ var k = Object.keys(P); return k.length < 2 ? 0 : Math.hypot(P[k[0]].x - P[k[1]].x, P[k[0]].y - P[k[1]].y); }
+  function cerrar(){
+    if(!imgFull) return;
+    document.removeEventListener('keydown', tecla, true);
+    ov.remove(); imgFull = null;
+    try{ if(vuelve && vuelve.isConnected) vuelve.focus(); }catch(_){}
+  }
+  function tecla(e){ if(e.key === 'Escape'){ e.preventDefault(); e.stopPropagation(); cerrar(); } }
+  function zoom(s){ T.s = Math.max(1, Math.min(6, s)); acotar(); pintar(); ov.setAttribute('data-zoom', String(Math.round(T.s * 100) / 100)); }
+  box.addEventListener('pointerdown', function(e){
+    P[e.pointerId] = {x: e.clientX, y: e.clientY};
+    try{ box.setPointerCapture(e.pointerId); }catch(_){}
+    var n = Object.keys(P).length;
+    if(n === 2) G = {t: 'pinch', d0: dist() || 1, s0: T.s};
+    else if(n === 1) G = {t: 'uno', x0: e.clientX, y0: e.clientY, ox: T.x, oy: T.y, mov: false, t0: e.timeStamp};
+  });
+  box.addEventListener('pointermove', function(e){
+    if(!P[e.pointerId] || !G) return;
+    P[e.pointerId] = {x: e.clientX, y: e.clientY};
+    if(G.t === 'pinch'){ zoom(G.s0 * dist() / G.d0); return; }
+    var ddx = e.clientX - G.x0, ddy = e.clientY - G.y0;
+    if(Math.hypot(ddx, ddy) > 8) G.mov = true;
+    if(T.s > 1){ T.x = G.ox + ddx; T.y = G.oy + ddy; acotar(); pintar(); }
+    else if(G.mov && G.t === 'uno'){
+      dy = ddy > 0 && ddy > Math.abs(ddx) ? ddy : 0;   // solo cuenta lo que baja y es más vertical que horizontal
+      ov.style.transform = dy ? 'translateY(' + dy + 'px)' : ''; ov.style.opacity = dy ? String(Math.max(.35, 1 - dy / 420)) : '';
+    }
+  });
+  function suelta(e){
+    if(!P[e.pointerId]) return;
+    delete P[e.pointerId];
+    try{ box.releasePointerCapture(e.pointerId); }catch(_){}
+    var g = G; if(Object.keys(P).length === 0) G = null; else if(g && g.t === 'pinch'){ var k = Object.keys(P)[0]; G = {t: 'uno', x0: P[k].x, y0: P[k].y, ox: T.x, oy: T.y, mov: true, t0: e.timeStamp}; }
+    if(!g || g.t !== 'uno' || Object.keys(P).length) return;
+    if(T.s <= 1 && dy > 90){ cerrar(); return; }
+    if(dy){ dy = 0; ov.style.transform = ''; ov.style.opacity = ''; }
+    if(!g.mov){   // doble toque: acerca o vuelve
+      if(e.timeStamp - tapT < 320){ zoom(T.s > 1 ? 1 : 2.5); tapT = 0; } else tapT = e.timeStamp;
+    }
+  }
+  box.addEventListener('pointerup', suelta); box.addEventListener('pointercancel', function(e){ dy = 0; ov.style.transform = ''; ov.style.opacity = ''; suelta(e); });
+  box.addEventListener('wheel', function(e){ e.preventDefault(); if(e.deltaY) zoom(T.s * Math.exp(-e.deltaY * (e.ctrlKey ? 0.01 : 0.002))); }, {passive: false});
+  x.addEventListener('click', cerrar);
+  document.addEventListener('keydown', tecla, true);
+  document.body.appendChild(ov); imgFull = ov;
+  try{ x.focus(); }catch(_){}
+}
+// un solo oyente para todo lo que no es la card del mazo (detalle, lista, filas): el botón ⤢ o la imagen misma (si no es un link)
+document.addEventListener('click', function(e){
+  var t = e.target; if(!t || !t.closest || imgFull) return;
+  var b = t.closest('[data-imgfull]'), w = b ? b.closest('.sw-img,.p-img') : null, im = null;
+  if(w) im = w.querySelector('img');
+  else if(t.tagName === 'IMG' && !t.closest('a') && !t.closest('.sw-card') && t.closest('.sw-img,.p-img')) im = t;
+  if(!im) return;
+  e.preventDefault(); imgFullAbrir(im.getAttribute('src'), im.getAttribute('alt'), b || im);
+});
 function impactoHTML(it, cls){
   var im = it && it.impacto;
   if(!im || typeof im !== 'object' || !(im.positivo || im.negativo)) return '';
@@ -775,7 +1019,11 @@ function hora(t){
   if(d.toDateString() === hoy.toDateString()) return 'hoy ' + hm;
   return d.toLocaleDateString('es-AR', {day:'2-digit', month:'2-digit'}) + ' ' + hm;
 }
-// abre la sesion en la app de escritorio de Claude (solo anda en la Mac con la app instalada)
+// ¿la app de Claude Code del celu abre este link? false = en un dispositivo táctil el link se saca y queda en la compu (el CSS lo esconde con hover:none y pointer:coarse).
+// Con ?linkcelu=1 se muestra igual en el celu, para probar si lo abre. Se pasa a true solo con esa prueba hecha en tu celu.
+var LINK_CELU = false;
+try{ if(LINK_CELU || /[?&]linkcelu=1(&|$)/.test(location.search)) document.documentElement.classList.add('link-celu'); }catch(e){}
+// abre la sesion en la app de escritorio de Claude (solo anda en la compu con la app instalada)
 // los bots publican con session_id «bot-<nombre>»: no es una sesion de Claude, no hay link
 function urlSesion(id){
   var s = String(id || '');
@@ -905,13 +1153,23 @@ function tokenMalo(err){ return !!(err && /token inv[aá]lido/i.test(String(err.
 function sesionVencida(){
   detenerVivo();
   borrarToken();
-  estado.token = null; estado.snzLocal = {}; estado.listaApl = 0; estado.filas = []; estado.sel = null; estado.vivo = null; estado.orig = null; estado.panelKey = null; estado.decidido = null; estado.pend = null;
+  estado.token = null; estado.snzLocal = {}; estado.listaApl = 0; estado.filas = []; estado.sel = null; estado.vivo = null; estado.orig = null; estado.panelKey = null; estado.decidido = null; estado.pend = null; estado.errores = []; pestanasReset();   // Bloqueos y sus errores son de la sesion que se cierra
+  segReset();   // Seguimiento: archivados pendientes, pedidos y En vuelo tambien son de esa sesion
   vistaEntrada();
 }
 
 /* ---------- pantalla del PIN ---------- */
+// el bloqueo por intentos es temporal: la base puede traer `espera_seg` (segundos) o `hasta` (fecha); sin ninguno, solo el aviso general
+function bloqueoTxt(d){
+  var s = Number(d && d.espera_seg);
+  if(!(s > 0) && d && d.hasta){ var t = ms(d.hasta); s = t ? Math.ceil((t - Date.now()) / 1000) : 0; }
+  var m = s > 0 ? Math.ceil(s / 60) : 0;
+  var cuando = m > 0 ? (m < 60 ? 'en ' + m + (m === 1 ? ' minuto' : ' minutos') : 'en ' + Math.ceil(m / 60) + (Math.ceil(m / 60) === 1 ? ' hora' : ' horas')) : 'más tarde';
+  return 'Demasiados intentos. Probá de nuevo ' + cuando + '. Se puede levantar antes con pin.py desbloquear desde la compu.';
+}
 function vistaEntrada(msg, esErr){
   swipeDesmontar(); estado.swd = null; estado.hd = {}; estado.listaCargada = false; estado.homeVisto = false; estado.homeEnvs = {}; estado.homeEnviando = false; estado.festejo = null;
+  document.body.classList.remove('con-barra');
   raiz.innerHTML =
     '<div class="entrada">' +
       '<h1>Botonera</h1>' +
@@ -948,7 +1206,7 @@ function vistaEntrada(msg, esErr){
         var n = Math.max(0, MAX_FALLOS - (Number(d.fallos) || 0));
         di('PIN incorrecto. ' + (n === 1 ? 'Te queda 1 intento.' : 'Te quedan ' + n + ' intentos.'), 'err');
       } else if(d.motivo === 'bloqueado'){
-        di('Bloqueado por demasiados intentos. Desbloquealo desde la Mac: pin.py desbloquear', 'err');
+        di(bloqueoTxt(d), 'err');
       } else if(d.motivo === 'sin_pin'){
         di('Todavía no hay PIN puesto.', 'err');
       } else {
@@ -971,7 +1229,8 @@ function salir(){
   detenerVivo();
   // se borra local primero: aunque bm_salir falle, la pantalla vuelve al PIN
   borrarToken();
-  estado.token = null; estado.snzLocal = {}; estado.listaApl = 0; estado.filas = []; estado.sel = null; estado.vivo = null; estado.orig = null; estado.panelKey = null; estado.decidido = null; estado.pend = null;
+  estado.token = null; estado.snzLocal = {}; estado.listaApl = 0; estado.filas = []; estado.sel = null; estado.vivo = null; estado.orig = null; estado.panelKey = null; estado.decidido = null; estado.pend = null; estado.errores = []; pestanasReset();   // Bloqueos y sus errores son de la sesion que se cierra
+  segReset();
   vistaEntrada();
   if(t) sb.rpc('bm_salir', {p_token: t}).then(function(){}, function(){});
 }
@@ -986,7 +1245,12 @@ function vistaApp(){
     '<div class="app">' +
       '<div class="lista" id="lista"><div class="home" id="home"></div></div>' +
       '<div class="panel" id="panel"></div>' +
-    '</div>';
+    '</div>' + tabsHTML();
+  document.body.classList.add('con-barra');
+  estado.tab = 'decisiones'; estado.homeSig = null;
+  document.getElementById('tabs').addEventListener('click', function(e){ var b = e.target.closest ? e.target.closest('[data-tab]') : null; if(b) tabIr(b.getAttribute('data-tab')); });
+  document.getElementById('home').addEventListener('click', alClickPt);
+  document.getElementById('home').addEventListener('input', alInputPt);
   document.getElementById('b-salir').onclick = salir;
   avisosAlEntrar();
   // solo cards: «?c=<clave>» ya no abre el panel de la tanda; abre su mazo si le quedan cards, si no queda el home
@@ -1004,6 +1268,7 @@ function vistaApp(){
 function cargarLista(){
   var token = estado.token;
   if(!token) return Promise.resolve();
+  segCargar();          // Sesiones: «En vuelo», en cada poll
   var seq = estado.listaSeq = (estado.listaSeq || 0) + 1;   // numero de pedido: una respuesta pedida antes de un snooze/despertar no lo pisa (snzLocal)
   return sb.rpc('bm_lista', {p_token: token})
     .then(function(r){
@@ -1021,7 +1286,7 @@ function cargarLista(){
       snzSacarDormidas();   // una que paso a dormida desde otro dispositivo sale del mazo abierto
       pintarLista();
       homeCargar();
-      cargarErrores();
+      accionesCargar(false); erroresCargar();   // Bloqueos se pide con la lista, con su tope de tiempo
       homePintar();
       pintarPanel(false);
     }, function(err){ console.warn('lista', err); });
@@ -1054,13 +1319,13 @@ function itemHTML(f, conSesion){
   return '<div class="espw' + (f.clave === estado.sel ? ' sel' : '') + '">' + btn +
     (url ? '<a class="lnk-ses" href="' + esc(url) + '">Abrir la conversación ↗</a>' : '') + '</div>';
 }
-// «Claude trabajando · hace N min»; con mas de 30 min en recibida pasa a «Trabajando hace N min» en tono warning
+// «El agente está trabajando · hace N min»; con mas de 30 min en recibida pasa a «Trabajando hace N min» en tono warning
 var TREINTA_MIN = 30 * 60000;
 function trabajoLargo(f){ return !!f.trab_recibida && (Date.now() - ms(f.trab_desde)) > TREINTA_MIN; }
 function trabajandoHTML(f){
   var largo = trabajoLargo(f), hc = haceCuanto(f.trab_desde || f.decided_at);
   return '<span class="trab' + (largo ? ' largo' : '') + '"><i class="pulso" aria-hidden="true"></i>' +
-    esc(largo ? 'Trabajando ' + hc : 'Claude trabajando' + (hc ? ' · ' + hc : '')) + '</span>';
+    esc(largo ? 'Trabajando ' + hc : 'El agente está trabajando' + (hc ? ' · ' + hc : '')) + '</span>';
 }
 
 function pintarLista(){
@@ -1100,7 +1365,7 @@ function pintarLista(){
   el.innerHTML = h;
   Array.prototype.forEach.call(el.querySelectorAll('details'), function(d){
     var k = d.getAttribute('data-k');
-    // «En curso» abre solo: es donde se ve que Claude esta trabajando
+    // «En curso» abre solo: es donde se ve que el agente esta trabajando
     d.open = (k in estado.abiertos) ? estado.abiertos[k] : (k === 'encurso' || contiene(listas[k] || []));
   });
   Array.prototype.forEach.call(el.querySelectorAll('.item'), function(b){
@@ -1143,7 +1408,7 @@ function paso(nombre, t, saltado){
   return '<div class="paso' + (t ? ' hecho' : '') + '"><div class="n">' + esc(nombre) + '</div><div class="h">' + h + '</div></div>';
 }
 // un paso sin fecha con uno posterior hecho no esta «pendiente»: se salteo o no se registro
-// modo: 'trab' (Claude trabajando) o 'espera' (la pelota la tiene el usuario): cambian solo el paso «Aplicado»
+// modo: 'trab' (el agente trabajando) o 'espera' (la pelota la tiene el usuario): cambian solo el paso «Aplicado»
 function pasosHTML(f, modo, largo){
   var ps = [['Decidido', f.decided_at], ['Llegó a la sesión', f.received_at], ['Aplicado', f.applied_at]];
   return ps.map(function(p, i){
@@ -1191,9 +1456,9 @@ function cabeceraHTML(t){
 /* ---------- «Lo que decidiste»: la respuesta guardada, en lectura ---------- */
 // respuesta_texto: una linea por item «N. marca · titulo → accion [· comentario: …]» + una linea «Notas: …» opcional
 // una marca que no se liste aca se pega como comentario del item anterior
-var RE_LINEA = /^(\d+)\.\s*(no va|va con cambios|va|sin marcar|comentario|después|no entiendo|ya está hecho|eligió [^·]*?)\s*·\s*(.*)$/i;
-function marcaVa(m){ return m === 'va' || m === 'va con cambios' || /^eligió /.test(m); }
-function marcaAbierta(m){ return m === 'sin marcar' || m === 'comentario'; } // comentar no decide: la card sigue abierta
+var RE_LINEA = /^(\d+)\.\s*(no va|va con cambios|va|sin marcar|comentario|revisado|rot|después|no entiendo|ya está hecho|eligió [^·]*?)\s*·\s*(.*)$/i;
+function marcaVa(m){ return m === 'va' || m === 'va con cambios' || m === 'revisado' || /^eligió /.test(m); }
+function marcaAbierta(m){ return m === 'sin marcar' || m === 'comentario' || m === 'rot'; } // comentar o pedir /rot no decide: la card sigue abierta
 function parsearRespuesta(txt){
   var items = [], notas = [], ultimo = null, enNota = false;
   String(txt).split(/\r?\n/).forEach(function(raw){
@@ -1203,11 +1468,12 @@ function parsearRespuesta(txt){
       var resto = m[3], coment = '', campos = '';
       var k = resto.search(/\s*·\s*comentario:\s*/i);
       if(k >= 0){ coment = resto.slice(k).replace(/^\s*·\s*comentario:\s*/i, ''); resto = resto.slice(0, k); }
+      var esRegla = /\s*·\s*regla\s*$/i.test(resto); if(esRegla) resto = resto.replace(/\s*·\s*regla\s*$/i, '');   // «Esto es regla», pegado antes del comentario
       var kc = resto.search(/\s*·\s*campos:\s*/i);   // Editar: «· campos: id=nuevo (antes viejo); …», entre la acción y el comentario
       if(kc >= 0){ campos = resto.slice(kc).replace(/^\s*·\s*campos:\s*/i, ''); resto = resto.slice(0, kc); }
       var j = resto.indexOf(' → ');
       ultimo = {n: m[1], marca: m[2].toLowerCase(), titulo: (j >= 0 ? resto.slice(0, j) : resto).trim(),
-                accion: j >= 0 ? resto.slice(j + 3).trim() : '', campos: campos.trim(), comentario: coment.trim()};
+                accion: j >= 0 ? resto.slice(j + 3).trim() : '', campos: campos.trim(), comentario: coment.trim(), regla: esRegla};
       items.push(ultimo); enNota = false; return;
     }
     var n = /^Notas:\s*(.*)$/i.exec(l);
@@ -1237,22 +1503,40 @@ function introVueltaHTML(d){
       (Array.isArray(b.items) ? '<ul>' + b.items.map(function(x){ return '<li>' + lnk(x) + '</li>'; }).join('') + '</ul>' : '') + '</div>';
   }).join('');
 }
-function itemsDeVuelta(d){
+function itemsTodosDeVuelta(d){
   var dat = d && d.datos;
   if(typeof dat === 'string'){ try{ dat = JSON.parse(dat); }catch(e){ dat = null; } }
   var its = dat && Array.isArray(dat.items) ? dat.items : [];
   return its.filter(function(it){ return it && typeof it === 'object' && it.titulo != null; })
     .map(function(it, i){ if(it.n == null || it.n === '') it.n = i + 1; return it; });
 }
+// «Ya no aplica»: `armar.py --reemplaza <clave>#<n>` deja `reemplazada_por: "<clave nueva>#<n>"` en la card vieja (bm_reemplazar).
+// Esa card no se contesta: sale del mazo, no entra en la respuesta y se ve gris con el link a la nueva
+function refReemplazo(it){ var r = it && it.reemplazada_por; return typeof r === 'string' && /^[A-Za-z0-9._-]{1,120}#\d{1,4}$/.test(r) ? r : ''; }
+function itemsDeVuelta(d){ return itemsTodosDeVuelta(d).filter(function(it){ return !refReemplazo(it); }); }
+function reemplazadasDeVuelta(d){ return itemsTodosDeVuelta(d).filter(function(it){ return !!refReemplazo(it); }); }
+function viejaHTML(it){
+  var ref = refReemplazo(it).split('#');
+  return '<div class="dec-fila pend vieja"><span class="dec-n">' + esc(it.n) + '</span><div class="dec-x"><div>' + esc(it.titulo) + '</div>' +
+    '<div class="vieja-ref"><b>Ya no aplica.</b> La reemplaza la card ' + esc(ref[1]) + ' de <a class="lnk" href="?c=' + encodeURIComponent(ref[0]) + '" data-ir-tanda="' + esc(ref[0]) + '">otra botonera ↗</a></div></div></div>';
+}
+document.addEventListener('click', function(e){
+  var a = e.target && e.target.closest && e.target.closest('[data-ir-tanda]'); if(!a) return;
+  e.preventDefault();
+  var cl = a.getAttribute('data-ir-tanda');
+  // con el mazo del home montado, `elegir` cambiaba la URL por debajo del mazo y lo dejaba roto: se sale del mazo y se abre el de esa botonera (si está abierta)
+  if(estado.sw){ swipeSalirMulti(); homeSwipear(null, cl); } else elegir(cl);
+});
 function recoVa(it){ return /^va$/i.test(String(it.reco || '').trim()); }
 // marcas en curso de la vuelta: {items:{n:{m:'go'|'no'|'', c}}, notas}, en memoria + localStorage por clave de la vuelta
-// go/no de siempre; vc (va con cambios), de (después) y op (eligió, con o = ids). ne/yh (no entiendo, ya está hecho) quedan de las maquetas
-var MARCAS = {go: 1, no: 1, vc: 1, ne: 1, yh: 1, de: 1, op: 1, co: 1};
+// go/no de siempre; vc (va con cambios), de (después) y op (eligió, con o = ids). ne/yh (no entiendo, ya está hecho) quedan de las
+var MARCAS = {go: 1, no: 1, vc: 1, ne: 1, yh: 1, de: 1, op: 1, co: 1, ro: 1, rv: 1};   // ro = /rot: pide que la sesión vuelva a explicar la card
 function marcaDe(clave, n){
   var mk = estado.marcas[clave], v = mk && mk.items && mk.items[n];
   var r = {m: v && MARCAS[v.m] ? v.m : '', c: v && typeof v.c === 'string' ? v.c : ''};
   if(v && Array.isArray(v.o)) r.o = v.o.filter(function(x){ return typeof x === 'string'; });
   if(v && v.f && typeof v.f === 'object' && !Array.isArray(v.f)) r.f = v.f;   // Editar: {id del campo: valor nuevo}, solo los que cambiaron
+  if(v && v.r === true) r.r = true;   // «Esto es regla»: la sesión escribe la decisión en el Log del proyecto
   return r;
 }
 function setMarca(clave, n, campo, valor){
@@ -1271,12 +1555,16 @@ function respuestaVuelta(p){
     var cf = st.m === 'go' || st.m === 'vc' || st.m === 'op' ? mqCamposTxt(it, st.f) : '';
     if(st.m === 'go' && cf) st.m = 'vc';
     var m = st.m === 'go' ? 'va' : st.m === 'no' ? 'no va' : st.m === 'vc' ? 'va con cambios' : st.m === 'ne' ? 'no entiendo' :
-      st.m === 'yh' ? 'ya está hecho' : st.m === 'de' ? 'después' : st.m === 'co' ? 'comentario' : st.m === 'op' ? 'eligió ' + ids.join(', ') : 'sin marcar';
-    var acc = st.m === 'go' || st.m === 'vc' ? it.accion_va : st.m === 'no' ? it.accion_no_va : st.m === 'op' ? ids.map(function(id){ return mqEtiqueta(it, id); }).join(', ') : '';
-    L.push(it.n + '. ' + m + ' · ' + it.titulo + (acc ? ' → ' + acc : '') + (cf ? ' · campos: ' + cf : '') + (st.c && st.c.trim() ? ' · comentario: ' + st.c.trim() : ''));
+      st.m === 'yh' ? 'ya está hecho' : st.m === 'de' ? 'después' : st.m === 'rv' ? 'revisado' : st.m === 'co' ? 'comentario' : st.m === 'ro' ? 'rot' : st.m === 'op' ? 'eligió ' + ids.join(', ') : 'sin marcar';
+    var acc = st.m === 'go' || st.m === 'vc' ? it.accion_va : st.m === 'no' ? it.accion_no_va : st.m === 'op' ? ids.map(function(id){ return mqEtiqueta(it, id); }).join(', ') :
+      st.m === 'ro' ? rotEtiquetas(st.o) : '';   // /rot: «N. rot · título → Dibujo corto + Otro ejemplo»
+    // «Esto es regla» solo cuenta con una decisión de verdad (va, no va, con cambios, eligió): va justo antes del comentario
+    var regla = st.r && (st.m === 'go' || st.m === 'no' || st.m === 'vc' || st.m === 'op') ? ' · regla' : '';
+    L.push(it.n + '. ' + m + ' · ' + it.titulo + (acc ? ' → ' + acc : '') + (cf ? ' · campos: ' + cf : '') + regla + (st.c && st.c.trim() ? ' · comentario: ' + st.c.trim() : ''));
   });
   return L.join('\n');
 }
+window.__respuestaParse = {parsear: parsearRespuesta, abierta: marcaAbierta};   // solo para pruebas locales: cómo se lee una línea «N. rot · …» al volver
 window.__respuestaVuelta = function(){ // solo para pruebas locales: la vuelta abierta en el bloque o, con el swipe prendido, la fila abierta del swipe
   var p = estado.pend, s = estado.swd;
   if(p && p.d) return respuestaVuelta(p);
@@ -1285,6 +1573,7 @@ window.__respuestaVuelta = function(){ // solo para pruebas locales: la vuelta a
 
 // fila pendiente ACTIVA: el mismo layout que una decidida, con contexto, antecedentes, recomendacion, 2 botones y comentario
 function pendActivaHTML(it, nShow, clave, bloq){
+  if(esRev(it)) return pendRevHTML(it, nShow, clave, bloq);   // la revisión no se decide con Va / No va
   var st = marcaDe(clave, it.n), tieneReco = !!String(it.reco || '').trim(), va = recoVa(it);
   var accVa = it.accion_va || 'Va', accNo = it.accion_no_va || 'No va';
   var sel = st.m === 'go' ? accVa : st.m === 'no' ? accNo : '';
@@ -1300,7 +1589,7 @@ function pendActivaHTML(it, nShow, clave, bloq){
       (it.si_no_decidis ? '<div class="snd"><b>Si no decidís:</b> ' + esc(it.si_no_decidis) + '</div>' : '') + '</div>';
   }
   if(tieneReco){
-    h += '<div class="p-reco">Te recomiendo: <b class="' + (va ? 'r-go' : 'r-no') + '">' + esc(va ? accVa : accNo) + '</b>' +
+    h += '<div class="p-reco">El agente recomienda: <b class="' + (va ? 'r-go' : 'r-no') + '">' + esc(va ? accVa : accNo) + '</b>' +
       (it.reco_motivo ? ' · ' + esc(it.reco_motivo) : '') + '</div>';
   }
   // No va a la izquierda y Va a la derecha, como en el swipe: la recomendada (Va) queda siempre a la derecha
@@ -1310,10 +1599,20 @@ function pendActivaHTML(it, nShow, clave, bloq){
     '<input type="text" class="pcom" data-pn="' + n + '" placeholder="Comentario" aria-label="Comentario" autocomplete="off" value="' + esc(st.c) + '"' + dis + '>';
   // jerarquía: primero de qué va (título, contexto, imagen, recomendación); el detalle, si lo busca
   function fila(rot, v){ return v ? '<p class="p-fte"><span>' + rot + ':</span> ' + lnk(v) + '</p>' : ''; }
-  var det = impactoHTML(it, 'p-imp') + fila('Por qué', it.porque) + fila('Si va', it.si_va) + fila('Si no va', it.si_no_va) + fuenteHTML(it, 'p-fte');
+  var det = (it.detalle ? '<p class="p-fte">' + lnk(String(it.detalle)) + '</p>' : '') + impactoHTML(it, 'p-imp') + fila('Por qué', it.porque) + fila('Si va', it.si_va) + fila('Si no va', it.si_no_va) + fuenteHTML(it, 'p-fte');
   var kd = clave + '|' + it.n;
   if(det) h += '<details class="p-det" data-det="' + esc(kd) + '"' + (estado.detAbierto[kd] ? ' open' : '') + '><summary>Ver el detalle</summary>' + det + '</details>';
   return h + '</div></div>';
+}
+// card de revisión en el camino viejo (sin swipe): lo que hizo, lo que verificó, lo que queda mirar, el link y un solo botón, Revisado
+function pendRevHTML(it, nShow, clave, bloq){
+  var st = marcaDe(clave, it.n), n = esc(it.n), url = revLink(it.link) || revLink(it.imagen && it.imagen.link);
+  function fila(r, v){ return v ? '<p class="p-fte"><span>' + r + ':</span> ' + esc(v) + '</p>' : ''; }
+  return '<div class="dec-fila pend"><span class="dec-n">' + esc(nShow) + '</span><div class="dec-x"><div class="p-tags"><span>REVISIÓN</span></div><div>' + esc(it.titulo) + '</div>' +
+    fila('Qué hice', it.hice) + fila('Qué verifiqué', it.verifique) + fila('Qué te queda mirar', it.mirar) + imagenHTML(it, 'p-img') +
+    (url ? '<p class="p-fte"><a class="lnk" href="' + esc(url) + '" target="_blank" rel="noopener noreferrer">' + esc(url.replace(/^https:\/\//, '').replace(/\/$/, '')) + ' ↗</a></p>' : '') +
+    '<div class="p-acc"><button type="button" class="pb go' + (st.m === 'rv' ? ' on' : '') + '" data-pm="rv" data-pn="' + n + '"' + (bloq ? ' disabled' : '') + '>Revisado</button></div>' +
+    '<input type="text" class="pcom" data-pn="' + n + '" placeholder="Comentario" aria-label="Comentario" autocomplete="off" value="' + esc(st.c) + '"' + (bloq ? ' disabled' : '') + '></div></div>';
 }
 // fila pendiente SIN vuelta abierta: en lectura, sin botones
 function pendLecturaHTML(it){
@@ -1407,6 +1706,7 @@ function decididoHTML(t, datos, pend){
       if(!marcaDe(pend.clave, it.n).m) sinMarcar++;
       h += pendActivaHTML(it, nShow, pend.clave, bloq);
     });
+    reemplazadasDeVuelta(pend.d).forEach(function(it){ h += viejaHTML(it); });   // las que ya no aplican, grises y sin botones
     h += barraPendHTML(pend, sinMarcar);
   } else if(j.faltan.length){
     j.faltan.forEach(function(it){ h += pendLecturaHTML(it); });
@@ -1425,7 +1725,7 @@ function decididoHTML(t, datos, pend){
     decididos.forEach(function(it){
       var cls = marcaVa(it.marca) ? 'go' : it.marca === 'no va' ? 'no' : 'mudo';
       h += '<div class="dec-fila"><span class="dec-n">' + esc(it.n) + '</span>' +
-        '<span class="pill ' + cls + '">' + esc(/^eligió /.test(it.marca) ? 'eligió' : it.marca === 'después' ? 'al inbox' : it.marca) + '</span>' +
+        '<span class="pill ' + cls + '">' + esc(/^eligió /.test(it.marca) ? 'eligió' : it.marca === 'después' ? 'después' : it.marca) + '</span>' +
         '<div class="dec-x"><div>' + esc(it.titulo) + '</div>' +
         (it.accion ? '<div class="a">→ ' + esc(it.accion) + '</div>' : '') +
         (it.campos ? '<div class="c"><b>Cambios:</b> ' + esc(it.campos) + '</div>' : '') +
@@ -1803,8 +2103,8 @@ var SW_ICO_UP = '<svg viewBox="0 0 24 24" fill="none" stroke="#1C1B1B" stroke-wi
 
 /* ----- tipos de card -----
    El agente elige el tipo al armar: sí/no (No va · Editar · Va), una opción (`opciones`: lista) o varias (`varias: true`: casillas).
-   Las listas suman «Editar» (elegir o no una + escribir qué cambia); lo que dice «comentá» abre el comentario antes de marcar; la card sale volando con cada marca.
-   La fila chica trae Al final, Al inbox (marca interna «después»: la sesión la anota en el inbox y cierra la tanda) y +info. */
+   Las listas suman «Editar» (desde el 5-nov reemplaza al «Otra cosa…» de la página: elegir o no una + escribir qué cambia); lo que dice «comentá» abre el comentario antes de marcar; la card sale volando con cada marca.
+   La fila chica trae Al final, Después (marca interna «después»: la sesión la anota donde guardás tus pendientes y cierra la tanda) y /rot (antes +info): pide que la sesión explique esa card de nuevo con más dibujo y menos texto. */
 var MQ_OTRA = {id: 'otra', etiqueta: 'Otra cosa', abierta: true};
 function mqLista(it){
   var o = Array.isArray(it && it.opciones) ? it.opciones.filter(function(x){ return x && /^[a-z0-9_-]{1,30}$/.test(String(x.id || '')) && x.etiqueta; }) : [];
@@ -1825,22 +2125,23 @@ function mqEtiqueta(it, id){
 function mqAbierta(x){ return !!(x && (x.abierta || /coment/i.test(String(x.etiqueta || '')))); }
 function mqPideCom(t){ return /coment/i.test(String(t || '')); }
 function mqFrente(sw){ var e = sw && sw.por[primeraActiva(sw)]; return e && swipeVista(sw) === 'card' ? e : null; }
-function mqCardOp(sw){ var e = mqFrente(sw); return !!(e && mqOpciones(e.it)); }
+function mqCardOp(sw){ var e = mqFrente(sw); return !!(e && (mqOpciones(e.it) || esRev(e.it))); }   // opciones y revisión: solo se decide con los botones (el swipe horizontal no hace nada)
 // marca la card del frente haciéndola volar; o = ids elegidos (op)
 function mqMarcar(sw, cid, m, o){
   var e = sw.por[cid]; if(!e) return;
   if(sw.d && primeraActiva(sw) === cid){
-    swSalir(m === 'no' ? 'left' : m === 'de' || m === 'co' ? 'up' : 'right', function(){ if(o) setMarca(e.clave, e.n, 'o', o); swipeMarcar(sw, cid, m); });
+    swSalir(m === 'no' ? 'left' : m === 'de' || m === 'co' || m === 'ro' ? 'up' : 'right', function(){ if(o) setMarca(e.clave, e.n, 'o', o); swipeMarcar(sw, cid, m); });
     return;
   }
   if(o) setMarca(e.clave, e.n, 'o', o);
   swipeMarcar(sw, cid, m);
 }
-/* ----- Editar: `campos` del ítem (lista de {id, etiqueta, valor, tipo: texto|numero|fecha|opcion, opciones?}, hasta 5) -----
+/* ----- Editar: `campos` del ítem (lista de {id, etiqueta, valor, tipo: texto|textarea|numero|fecha|opcion, opciones?}, hasta 5) -----
+   `textarea` = texto largo en varias líneas (un mail): se abre cargado con el borrador y vuelve entero, con ⏎ por cada salto de línea.
    Los valores que propuso el agente salen cargados en campos. El que el usuario cambia queda marcado, con «Antes: X» y «Volver al original».
    La respuesta vuelve «N. va con cambios · título → acción · campos: id=nuevo (antes viejo); … · comentario: …».
-   El comentario libre queda siempre visible debajo de los campos: a veces sirve decir algo que no entra en ninguno. */
-var MQ_TIPOS = {texto: 1, numero: 1, fecha: 1, opcion: 1};
+   El comentario libre queda siempre visible debajo de los campos (a veces el campo libre sirve: se deja siempre). */
+var MQ_TIPOS = {texto: 1, textarea: 1, numero: 1, fecha: 1, opcion: 1};
 var MQ_LAPIZ = '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#1C1B1B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9a2.1 2.1 0 0 0-3-3L5 17z"/><path d="M14 7l3 3"/></svg>';
 function mqCampos(it){
   var out = [];
@@ -1853,12 +2154,13 @@ function mqCampos(it){
   return out.slice(0, 5);
 }
 function mqIgual(tipo, a, b){
-  a = String(a == null ? '' : a).trim(); b = String(b == null ? '' : b).trim();
+  a = String(a == null ? '' : a).replace(/\r\n?/g, '\n').trim(); b = String(b == null ? '' : b).replace(/\r\n?/g, '\n').trim();
   if(tipo === 'numero' && a !== '' && b !== '' && isFinite(Number(a)) && isFinite(Number(b))) return Number(a) === Number(b);
   return a === b;
 }
 // una fecha ISO se muestra como «lun 9 nov»; el resto, tal cual
 function mqVer(c, v){
+  if(c.tipo === 'textarea'){ v = String(v).replace(/\s+/g, ' ').trim(); return v.length > 90 ? v.slice(0, 90) + '…' : v; }
   if(c.tipo === 'fecha' && /^\d{4}-\d{2}-\d{2}$/.test(v)){
     try{ return new Date(v + 'T12:00:00').toLocaleDateString('es-AR', {weekday: 'short', day: 'numeric', month: 'short'}); }catch(e){}
   }
@@ -1868,6 +2170,10 @@ function mqVer(c, v){
 function mqCamposTxt(it, f){
   if(!f) return '';
   return mqCampos(it).filter(function(c){ return f[c.id] != null && !mqIgual(c.tipo, f[c.id], c.valor); }).map(function(c){
+    if(c.tipo === 'textarea'){   // la respuesta es una línea: cada salto de línea vuelve como ⏎, el texto va entero y el original no se repite
+      var nuevo = String(f[c.id]).replace(/\r\n?/g, '\n').trim().split('\n').map(function(l){ return l.replace(/[ \t]+/g, ' ').trim(); }).join('⏎');
+      return c.id + '=' + nuevo + ' (antes: borrador de ' + c.valor.length + ' caracteres)';
+    }
     return c.id + '=' + String(f[c.id]).replace(/\s+/g, ' ').trim() + ' (antes ' + c.valor.replace(/\s+/g, ' ').trim() + ')';
   }).join('; ');
 }
@@ -1886,6 +2192,7 @@ function mqCampoHTML(c, val, i){
   var id = 'sw-f' + i, cam = !mqIgual(c.tipo, val, c.valor), inp;
   if(c.tipo === 'opcion') inp = '<select id="' + id + '" class="sw-in" data-f="' + esc(c.id) + '">' + c.opciones.map(function(o){
     return '<option value="' + esc(o) + '"' + (o === val ? ' selected' : '') + '>' + esc(o) + '</option>'; }).join('') + '</select>';
+  else if(c.tipo === 'textarea') inp = '<textarea id="' + id + '" class="sw-in sw-ta" data-f="' + esc(c.id) + '" rows="' + Math.min(14, Math.max(6, String(val).split('\n').length + 1)) + '" autocomplete="off">' + esc(val) + '</textarea>';
   else inp = '<input id="' + id + '" class="sw-in" data-f="' + esc(c.id) + '" type="' + (c.tipo === 'numero' ? 'number' : c.tipo === 'fecha' ? 'date' : 'text') + '"' +
     (c.tipo === 'numero' ? ' inputmode="decimal" step="any"' : '') + ' value="' + esc(val) + '" autocomplete="off">';
   return '<div class="sw-f' + (cam ? ' cambio' : '') + '" data-fid="' + esc(c.id) + '" data-tipo="' + esc(c.tipo) + '" data-orig="' + esc(c.valor) + '">' +
@@ -1917,8 +2224,9 @@ function mqEdSync(root){
 var MQ_ED_OP = '<button type="button" class="sw-op ed" data-a="editar">' + MQ_LAPIZ + '<span>Editar …</span></button>';
 // la barra de la card: opciones, casillas, o No va · Editar · Va
 function mqBarraHTML(it, a){
+  if(esRev(it)) return revBarraHTML();   // la card de revisión: un solo botón, Revisado, y Comentar
   var op = mqOpciones(it), rec = String(it.reco || '').trim();
-  function rt(id){ return id === rec ? '<span class="rt">Te recomiendo esta</span>' : ''; }
+  function rt(id){ return id === rec ? '<span class="rt">El agente recomienda esta</span>' : ''; }
   if(op && !op.varias){
     return '<div class="sw-ops">' + op.lista.filter(function(x){ return x !== MQ_OTRA; }).map(function(x){
       return '<button type="button" class="sw-op' + (String(x.id) === rec ? ' rec' : '') + '" data-a="op" data-id="' + esc(x.id) + '">' + rt(String(x.id)) + esc(x.etiqueta) + (mqAbierta(x) ? ' …' : '') + '</button>';
@@ -1928,7 +2236,7 @@ function mqBarraHTML(it, a){
     var recs = rec.split(',').map(function(s){ return s.trim(); });
     return '<div class="sw-ops">' + op.lista.filter(function(x){ return x !== MQ_OTRA; }).map(function(x){
       var r = recs.indexOf(String(x.id)) >= 0;
-      return '<label class="sw-chk' + (r ? ' rec' : '') + '"><input type="checkbox" data-chk="' + esc(x.id) + '"><span>' + (r ? '<span class="rt">Te recomiendo esta</span>' : '') + esc(x.etiqueta) + (mqAbierta(x) ? ' …' : '') + '</span></label>';
+      return '<label class="sw-chk' + (r ? ' rec' : '') + '"><input type="checkbox" data-chk="' + esc(x.id) + '"><span>' + (r ? '<span class="rt">El agente recomienda esta</span>' : '') + esc(x.etiqueta) + (mqAbierta(x) ? ' …' : '') + '</span></label>';
     }).join('') + MQ_ED_OP + '<button type="button" class="sw-big" data-a="op-listo">Listo</button></div>';
   }
   // lo que dice «comentá» abre el comentario antes de marcar (data-a com-no / com-go)
@@ -1938,24 +2246,24 @@ function mqBarraHTML(it, a){
     '<button type="button" class="sw-act go" data-a="' + dgo + '"><span>' + esc(a.va) + '</span></button></div>';
 }
 // botones chicos de abajo, al lado de la flechita de deshacer
-function mqSecHTML(){
-  return '<button type="button" class="sw-b" data-a="salt">Al final</button><button type="button" class="sw-b" data-a="despues">Al inbox</button><button type="button" class="sw-b" data-a="masinfo">+info</button>';
+function mqSecHTML(rev){   // rev: la card de revisión no suma «Al final» ni «Después»: un solo Revisado y Comentar; /rot queda aparte
+  return (rev ? '' : '<button type="button" class="sw-b" data-a="salt">Al final</button><button type="button" class="sw-b" data-a="despues">Después</button>') + '<button type="button" class="sw-b" data-a="masinfo">+info</button>';
 }
 function swSecHTML(sw, bloq, conMq, conSnz){
   return '<div class="sw-sec"><button type="button" class="sw-b sw-undo" data-a="deshacer" aria-label="Deshacer" title="Deshacer"' + (sw.hist.length && !bloq ? '' : ' disabled') + '>' + SW_ICO_UNDO + '</button>' +
-    (conMq ? mqSecHTML() : '') + (conSnz ? '<button type="button" class="sw-b sw-snz-b" data-a="snooze">' + SW_ICO_SNZ + 'Snooze</button>' : '') + '</div>';
+    (conMq ? mqSecHTML(conMq === 'rev') : '') + (conSnz ? '<button type="button" class="sw-b sw-snz-b" data-a="snooze">' + SW_ICO_SNZ + 'Snooze</button>' : '') + '</div>';
 }
 // la misma barra de abajo que la card, para el Detalle: tocar uno cierra la hoja y actúa sobre la card de atrás (ver swClick)
-function swBarraCardHTML(sw, it, a){
+function swBarraCardHTML(sw, it, a, e){
   var env = sw.envio || {}, bloq = env.st === 'enviando' || env.st === 'ok' || sw.enviadoAlgo;
-  return '<div class="sw-bar">' + mqBarraHTML(it, a) + swSecHTML(sw, bloq, true) + '</div>';
+  return '<div class="sw-bar">' + (esRev(it) ? '' : reglaHTML(e)) + mqBarraHTML(it, a) + swSecHTML(sw, bloq, esRev(it) ? 'rev' : true) + '</div>';
 }
-var SW_BARRA = {no: 1, go: 1, editar: 1, 'com-go': 1, 'com-no': 1, op: 1, 'op-listo': 1, salt: 1, despues: 1, masinfo: 1, deshacer: 1};
+var SW_BARRA = {'rev-ok': 1, 'rev-com': 1, no: 1, go: 1, editar: 1, 'com-go': 1, 'com-no': 1, op: 1, 'op-listo': 1, salt: 1, despues: 1, masinfo: 1, deshacer: 1};
 function mqHoja(sw, titulo, cuerpo, barra){
   sw.sheet = 'mq';
   sw.sheetEl.innerHTML = '<div class="sw-sheet-in"><div class="sw-top"><button type="button" class="sw-b" data-a="cerrar">‹ Volver</button><span class="sw-st">' + esc(titulo) + '</span><span style="width:78px"></span></div>' +
     '<div class="sw-dscroll"><div class="sw-dcard">' + cuerpo + '</div></div>' + (barra || '') + '</div>';
-  var t = sw.sheetEl.querySelector('textarea'); if(t && !reducido() && !sw.sheetEl.querySelector('.sw-f')) try{ t.focus(); }catch(_){}   // con campos no: el teclado taparia lo que hay que editar
+  var t = sw.sheetEl.querySelector('textarea'); if(t && !reducido() && !sw.sheetEl.querySelector('.sw-f,.sw-rot')) try{ t.focus(); }catch(_){}   // con campos (o las opciones del /rot) no: el teclado taparia lo que hay que editar
 }
 function mqComHTML(cid, c, ph){
   return '<label class="sw-lbl" for="sw-com">Comentario</label><textarea id="sw-com" class="sw-com" data-com="1" data-cid="' + esc(cid) + '" rows="3" placeholder="' + esc(ph || 'Opcional') + '" autocomplete="off">' + esc(c || '') + '</textarea>';
@@ -2002,7 +2310,9 @@ function mqHojaOpEd(sw, cid){
   var e = sw.por[cid]; if(!e || sw.sheet) return;
   var op = mqOpciones(e.it); if(!op){ mqHojaEd(sw, cid); return; }
   var st = marcaDe(e.clave, e.n), f = st.f || {}, cs = mqCampos(e.it), ch = Array.isArray(e.it.condiciones) ? e.it.condiciones.slice(0, 3) : [];
-  var sel = st.o && st.o.length ? st.o : String(e.it.reco || '').split(',').map(function(x){ return x.trim(); }).filter(Boolean);
+  var idsOp = op.lista.map(function(x){ return String(x.id); });
+  var selSt = (st.o || []).filter(function(id){ return idsOp.indexOf(id) >= 0; });   // `o` también guarda las opciones del /rot: solo valen los ids de esta card
+  var sel = selSt.length ? selSt : String(e.it.reco || '').split(',').map(function(x){ return x.trim(); }).filter(Boolean);
 
   mqHoja(sw, 'Editar', '<div class="sw-ed" data-cid="' + esc(cid) + '"><h2>' + esc(e.it.titulo) + '</h2>' +
     '<p class="sw-ed-lead">' + (op.varias ? 'Marcá las que van' : 'Marcá cuál va') + ' y escribí qué le cambiás. Sin ninguna marcada, va lo que escribas.</p>' +
@@ -2014,11 +2324,26 @@ function mqHojaOpEd(sw, cid){
     '<div style="margin-top:14px">' + mqComHTML(cid, st.c, '¿Qué le cambiás?') + '</div></div>',
     '<div class="sw-dbar uno"><button type="button" class="sw-act go" data-a="op-ed-listo" data-cid="' + esc(cid) + '"><span>Listo</span></button></div>');
 }
-// +info: la card pasa sin Va ni No va. Vuelve como «N. comentario · …» y la sesión la contesta
-function mqHojaCo(sw, cid){
+// /rot: la card pasa sin Va ni No va. Cinco maneras de volver a contarla + el comentario libre de siempre.
+// Vuelve «N. rot · título → Dibujo corto + Otro ejemplo [· comentario: …]» y la sesión la vuelve a explicar así. Sin opción ni comentario, manda igual (como antes).
+var ROT_OPS = [
+  {id: 'mas-contexto', t: 'Más contexto', s: 'Desde más afuera: de qué se trata, dónde estamos y por qué'},
+  {id: 'dibujo-corto', t: 'Dibujo corto', s: 'Un dibujito y una línea'},
+  {id: 'dibujo-largo', t: 'Dibujo largo', s: 'Antes y después, paso a paso'},
+  {id: 'distinto', t: 'Escribilo distinto', s: 'Otras palabras, sin jerga'},
+  {id: 'otro-ejemplo', t: 'Otro ejemplo', s: 'Un caso concreto tuyo'}
+];
+function rotEtiquetas(ids){
+  return (Array.isArray(ids) ? ids : []).map(function(id){ var o = ROT_OPS.filter(function(x){ return x.id === id; })[0]; return o ? o.t : ''; }).filter(Boolean).join(' + ');
+}
+function mqHojaRo(sw, cid){
   var e = sw.por[cid]; if(!e || sw.sheet || sw.anim) return;
-  mqHoja(sw, '+info', '<h2>' + esc(e.it.titulo) + '</h2>' + mqComHTML(cid, marcaDe(e.clave, e.n).c, 'Qué querés decir de esta card'),
-    '<div class="sw-dbar uno"><button type="button" class="sw-act go" data-a="co-listo" data-cid="' + esc(cid) + '"><span>Listo</span></button></div>');
+  var st = marcaDe(e.clave, e.n), sel = st.m === 'ro' && Array.isArray(st.o) ? st.o : [];
+  mqHoja(sw, '+info', '<h2>' + esc(e.it.titulo) + '</h2><p class="sw-s" id="sw-rot-q">¿Cómo querés que te lo vuelva a contar?</p>' +
+    '<div class="sw-rot" role="group" aria-labelledby="sw-rot-q">' + ROT_OPS.map(function(o){
+      return '<button type="button" class="sw-rot-op" data-a="rot-op" data-id="' + o.id + '" aria-pressed="' + (sel.indexOf(o.id) >= 0 ? 'true' : 'false') + '"><b>' + esc(o.t) + '</b><span>' + esc(o.s) + '</span></button>';
+    }).join('') + '</div>' + mqComHTML(cid, st.c, 'Qué no se entiende (opcional)'),
+    '<div class="sw-dbar uno"><button type="button" class="sw-act go" data-a="ro-listo" data-cid="' + esc(cid) + '"><span>Listo</span></button></div>');
 }
 // ‹ Volver del Detalle (o Escape) con texto nuevo y sin marca: eso ya es comentar, y si no el comentario queda sin poder enviarse
 function swVolverHoja(sw){
@@ -2054,12 +2379,20 @@ function mqClick(sw, a, b){
     swipeCerrarHoja();
     if(primeraActiva(sw) === c3) mqMarcar(sw, c3, m3);
   } else if(a === 'despues'){ if(e) mqMarcar(sw, cid, 'de'); }
-  else if(a === 'masinfo'){ if(e) mqHojaCo(sw, cid); }
-  else if(a === 'co-listo'){
-    var c4 = b.getAttribute('data-cid'), tc = sw.sheetEl.querySelector('textarea[data-com]');
-    if(!tc || !tc.value.trim()){ if(tc){ tc.value = ''; tc.placeholder = 'Escribí el comentario para seguir'; tc.focus(); } return true; }
+  else if(a === 'masinfo'){ if(e) mqHojaRo(sw, cid); }
+  else if(a === 'rot-op'){   // elegir cómo volver a contarla: se pueden sumar, salvo corto + largo
+    var rid = b.getAttribute('data-id'), on = b.getAttribute('aria-pressed') !== 'true';
+    if(on && (rid === 'dibujo-corto' || rid === 'dibujo-largo')){
+      var otro = b.parentNode.querySelector('[data-id="' + (rid === 'dibujo-corto' ? 'dibujo-largo' : 'dibujo-corto') + '"]'); if(otro) otro.setAttribute('aria-pressed', 'false');
+    }
+    b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    return true;
+  }
+  else if(a === 'ro-listo'){
+    var c4 = b.getAttribute('data-cid');
+    var rids = Array.prototype.map.call(sw.sheetEl.querySelectorAll('.sw-rot-op[aria-pressed="true"]'), function(x){ return x.getAttribute('data-id'); });
     swipeCerrarHoja();
-    if(primeraActiva(sw) === c4) mqMarcar(sw, c4, 'co'); else swipeRender();
+    if(primeraActiva(sw) === c4) mqMarcar(sw, c4, 'ro', rids); else swipeRender();
   }
   else if(a === 'editar'){ if(e){ if(mqOpciones(e.it)) mqHojaOpEd(sw, cid); else mqHojaEd(sw, cid); } }
   else if(a === 'op-ed-listo'){
@@ -2258,6 +2591,7 @@ function swLibre(){
   var sw = estado.sw;
   if(sw && sw.sacar && !swipeOcupado(sw)) snzSacarDormidas();
   if(sw && sw.rearmar && !swipeOcupado(sw)) swipeRearmar();
+  if(sw && sw.ahPend && !swipeOcupado(sw)){ var ip = sw.ahPend; sw.ahPend = null; ahListo(sw, ip.clave, ip.n); }   // «Ahora no» que llego en pleno gesto u hoja
 }
 function primeraActiva(sw){
   var q = sw.cola[sw.tema] || [];
@@ -2289,7 +2623,7 @@ function swipeVista(sw){
 function swConteo(ti){
   var sw = estado.sw, its = ti == null ? sw.todas : sw.temas[ti].items, c = {tot: its.length, va: 0, no: 0, hechas: 0, sin: 0};
   c.ot = 0;   // no entiendo / ya está hecho / después: marcadas, pero ni Va ni No va
-  its.forEach(function(e){ var m = marcaDe(e.clave, e.n).m; if(m === 'go' || m === 'vc' || m === 'op') c.va++; else if(m === 'no') c.no++; else if(m) c.ot++; });
+  its.forEach(function(e){ var m = marcaDe(e.clave, e.n).m; if(m === 'go' || m === 'vc' || m === 'op' || m === 'rv') c.va++; else if(m === 'no') c.no++; else if(m) c.ot++; });
   c.hechas = c.va + c.no + c.ot; c.sin = c.tot - c.hechas;
   return c;
 }
@@ -2324,6 +2658,17 @@ function swIcono(it, cls){
     encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><style>' + SW_CSS_DIB + '</style>' + svg + '</svg>') + '">';
 }
 // «Qué pasó hasta acá» + «Si no decidís» en la cara de la card (texto plano: un link ahi se dispararia sin querer)
+// `detalle` (≤60 palabras, lo decide quien arma la card): lo que quien decide no tiene cargado, plegado en «Ver el detalle»
+// conLinks: en la card del mazo un link se dispararía sin querer al arrastrar (igual que la imagen): ahí va como texto; en el Detalle y la lista, link
+function swDetalleHTML(it, conLinks){
+  var d = it && typeof it.detalle === 'string' ? it.detalle.trim() : '';
+  return d ? '<details class="sw-det"><summary>Ver el detalle</summary><p>' + (conLinks ? lnk(d) : esc(d)) + '</p></details>' : '';
+}
+// «Esto es regla»: una casilla en la card. Marcada, la decisión vuelve con «· regla» y la sesión la escribe en el Log de decisiones del proyecto
+function reglaHTML(e){
+  if(!e) return '';
+  return '<label class="sw-regla"><input type="checkbox" data-regla="1"' + (marcaDe(e.clave, e.n).r ? ' checked' : '') + '><span>Esto es regla</span></label>';
+}
 function swAntecHTML(it){
   var an = Array.isArray(it.antecedentes) ? it.antecedentes.slice(0, 3) : [];
   return (an.length ? '<div class="sw-ant"><b>Qué pasó hasta acá</b><ul>' + an.map(function(x){ return '<li>' + esc(x) + '</li>'; }).join('') + '</ul></div>' : '') +
@@ -2390,7 +2735,10 @@ function swCtxCuerpo(b){
   var h = '<div class="sw-cx-k">De qué va</div>' +
     '<h2>' + esc(b.titulo) + '</h2>' + (dat.contexto ? '<p class="sw-ctx">' + lnk(dat.contexto) + '</p>' : '') +
     (ses ? '<p class="sw-cx-ses">' + esc(ses) + '</p>' : '') +
-    '<p class="sw-cx-n">' + esc(b.nTemas > 1 ? 'Repartidas en ' + b.nTemas + ' temas' : pl(n, 'card', 'cards')) + '</p>';
+    '<p class="sw-cx-n">' + esc(b.nTemas > 1 ? 'Repartidas en ' + b.nTemas + ' temas' : pl(n, 'card', 'cards')) + '</p>' +
+    (b.d ? reemplazadasDeVuelta(b.d).map(function(it){
+      return '<p class="sw-vieja"><b>Ya no aplica:</b> ' + esc(it.titulo) + ' · la reemplaza la card ' + esc(refReemplazo(it).split('#')[1]) + ' de otra botonera</p>';
+    }).join('') : '');
   intro.forEach(function(bl){
     if(!bl || typeof bl !== 'object') return;
     h += '<div class="sw-blk">' + (bl.titulo ? '<b>' + esc(bl.titulo) + '</b>' : '') +
@@ -2409,9 +2757,9 @@ function swCtxCuerpo(b){
 function swAcc(it){ return {va: it.accion_va || 'Va', no: it.accion_no_va || 'No va'}; }
 function swRecoHTML(it){
   if(!String(it.reco || '').trim()) return '';
-  if(mqOpciones(it)) return '<p class="sw-reco">Te recomiendo: <b class="r-go">' + esc(String(it.reco).split(',').map(function(id){ return mqEtiqueta(it, id.trim()); }).join(', ')) + '</b>' + (it.reco_motivo ? ' · ' + esc(it.reco_motivo) : '') + '</p>';
+  if(mqOpciones(it)) return '<p class="sw-reco">El agente recomienda: <b class="r-go">' + esc(String(it.reco).split(',').map(function(id){ return mqEtiqueta(it, id.trim()); }).join(', ')) + '</b>' + (it.reco_motivo ? ' · ' + esc(it.reco_motivo) : '') + '</p>';
   var a = swAcc(it), va = recoVa(it);
-  return '<p class="sw-reco">Te recomiendo: <b class="' + (va ? 'r-go' : 'r-no') + '">' + esc(va ? a.va : a.no) + '</b>' +
+  return '<p class="sw-reco">El agente recomienda: <b class="' + (va ? 'r-go' : 'r-no') + '">' + esc(va ? a.va : a.no) + '</b>' +
     (it.reco_motivo ? ' · ' + esc(it.reco_motivo) : '') + '</p>';
 }
 
@@ -2470,14 +2818,14 @@ function swipeRender(){
     n = primeraActiva(sw); e = sw.por[n]; it = e.it; a = swAcc(it);
     h += '<div class="sw-stack" id="sw-stack">' +
       (activasN(sw, sw.tema) > 1 ? '<div class="sw-peek" aria-hidden="true"></div>' : '') +
-      '<div class="sw-hints' + (mqOpciones(it) ? ' solo-up' : '') + '" aria-hidden="true">' +
+      '<div class="sw-hints' + (mqOpciones(it) || esRev(it) ? ' solo-up' : '') + '" aria-hidden="true">' +
         '<div class="sw-h go"><i>' + SW_ICO_GO + esc(a.va) + '</i></div>' +
         '<div class="sw-h no"><i>' + SW_ICO_NO + esc(a.no) + '</i></div>' +
         '<div class="sw-h up"><i>' + SW_ICO_UP + 'Al final</i></div></div>' +
-      '<div class="sw-card" id="sw-card" tabindex="0" role="group" aria-label="Card ' + esc(pos) + ' de ' + esc(ct.tot) + '">' +
-        '<div class="sw-ct">' + swChipHTML(e) + swTagsHTML(it) + '<h2>' + esc(it.titulo) + '</h2>' +
+      '<div class="sw-card' + (esRev(it) ? ' rev' : '') + '" id="sw-card" tabindex="0" role="group" aria-label="Card ' + esc(pos) + ' de ' + esc(ct.tot) + '">' +
+        (esRev(it) ? '<div class="sw-ct">' + revCuerpoHTML(e, false) + '</div>' : '<div class="sw-ct">' + swChipHTML(e) + swTagsHTML(it) + '<h2>' + esc(it.titulo) + '</h2>' +
         (it.contexto ? '<p class="sw-ctx">' + esc(it.contexto) + '</p>' : '') +
-        swDibujo(it, 'sw-dib') + swIcono(it, 'sw-ico') + imagenHTML(it, 'sw-img', true) + swAntecHTML(it) + swRecoHTML(it) + swPendHTML(e) + '</div>' +
+        swDibujo(it, 'sw-dib') + swIcono(it, 'sw-ico') + imagenHTML(it, 'sw-img', true) + swAntecHTML(it) + swDetalleHTML(it) + swRecoHTML(it) + swPendHTML(e) + '</div>') +
         '<div class="sw-fade" aria-hidden="true">Tocá para ver más</div></div></div>';
   } else if(v === 'salt'){
     var ns = (sw.cola[sw.tema] || []).length, sg = siguienteTema(sw);
@@ -2510,10 +2858,10 @@ function swipeRender(){
     if(sw.todas.filter(function(x){ return x.clave === e.clave; }).length > 1) h += '<button type="button" class="sw-big alt" data-a="lista">Ver todas juntas</button>';
   }
   if(v === 'card'){
-    h += mqBarraHTML(it, a);
+    h += mqBarraHTML(it, a);   // «Esto es regla» ya no va en la cara de cada card (pedido 69, 21-nov): vive en el Detalle (Tocá para ver más)
   }
-  h += swSecHTML(sw, bloq, v === 'card', v === 'ctx') +
-    (v === 'card' ? '<div class="sw-keys">' + (mqOpciones(it) ? '↑ Al final · tocá una opción' : '← No va · ↑ Al final · → Va') + '</div>' : v === 'ctx' ? '<div class="sw-keys">← Snooze · ↑ → Empezar</div>' : '') + '</div>';
+  h += swSecHTML(sw, bloq, v === 'card' && (esRev(it) ? 'rev' : true), v === 'ctx') +
+    (v === 'card' ? '<div class="sw-keys">' + (esRev(it) ? '↑ Al final · tocá Revisado' : mqOpciones(it) ? '↑ Al final · tocá una opción' : '← No va · ↑ Al final · → Va') + '</div>' : v === 'ctx' ? '<div class="sw-keys">← Snooze · ↑ → Empezar</div>' : '') + '</div>';
   sw.main.innerHTML = h;
   // el contexto scrollea por dentro; solo si desborda deja el gesto vertical al navegador (si no, arriba lo pasa como cualquier swipe)
   swCtxOv();
@@ -2607,7 +2955,7 @@ function swSalir(dir, fn){
     if(estado.sw !== sw) return;
     sw.tw = null; sw.anim = false;
     if(sw.sheet || primeraActiva(sw) !== n0){ swipeRender(); return; } // la card que salio ya no es la del frente: no se marca nada
-    if(fn){ sw.aviso = ''; fn(); return; } // las maquetas marcan otra cosa que go/no/salt
+    if(fn){ sw.aviso = ''; fn(); return; } // las
     swipeAccion(dir === 'right' ? 'go' : dir === 'left' ? 'no' : 'salt');
   });
 }
@@ -2720,6 +3068,7 @@ function swipeContexto(){
 }
 // todo lo que dice una card: el Detalle y la vista «todas juntas» lo pintan igual
 function swDetCuerpoHTML(e){
+  if(esRev(e.it)) return revCuerpoHTML(e, true);
   var it = e.it, an = Array.isArray(it.antecedentes) ? it.antecedentes.slice(0, 3) : [];
   var imp = it.impacto && typeof it.impacto === 'object' && (it.impacto.positivo || it.impacto.negativo)
     ? '<div class="sw-imp"><div class="pos"><b>Impacto positivo</b>' + esc(it.impacto.positivo || 'nada relevante') + '</div>' +
@@ -2728,7 +3077,7 @@ function swDetCuerpoHTML(e){
   return swChipHTML(e, true) + swTagsHTML(it) + '<h2>' + esc(it.titulo) + '</h2>' +
     (it.contexto ? '<p class="sw-s">' + lnk(it.contexto) + '</p>' : '') + swDibujo(it, 'sw-dib') + swIcono(it, 'sw-ico') + imagenHTML(it, 'sw-img grande') +
     (an.length ? '<div class="sw-s"><b>Qué pasó hasta acá</b><ul>' + an.map(function(x){ return '<li>' + lnk(x) + '</li>'; }).join('') + '</ul></div>' : '') +
-    fila('Si no decidís', it.si_no_decidis) + swRecoHTML(it) + swPendHTML(e) + imp +
+    fila('Si no decidís', it.si_no_decidis) + swDetalleHTML(it, true) + swRecoHTML(it) + swPendHTML(e) + imp +
     fila('Por qué', it.porque) + fila('Si va', it.si_va) + fila('Si no va', it.si_no_va) +
     fuenteHTML(it, 'sw-s');
 }
@@ -2738,7 +3087,7 @@ function swTemaDe(sw, cid){
   for(var i = 0; i < sw.temas.length; i++) if(sw.temas[i].items.some(function(x){ return x.cid === cid; })) return i;
   return -1;
 }
-// la card tocada pasa a ser la del frente de su tema: así Editar, +info y las opciones corren igual que en el mazo
+// la card tocada pasa a ser la del frente de su tema: así Editar, /rot y las opciones corren igual que en el mazo
 function swListaFoco(sw, cid){
   var e = sw.por[cid], ti = swTemaDe(sw, cid); if(!e || ti < 0) return false;
   var q = sw.cola[ti], i = q.indexOf(cid); if(i < 0) return false;
@@ -2772,7 +3121,8 @@ function swMarcaTxt(e, st){
     return ((st.o || []).map(function(id){ return mqEtiqueta(e.it, id); }).join(' · ') || 'Elegida') + (cfo || (st.c && st.c.trim()) ? ' · con cambios' + (cfo ? ' · ' + cfo : '') : '');
   }
   if(st.m === 'vc' || st.m === 'go'){ var cf = mqCamposTxt(e.it, st.f); if(st.m === 'vc' || cf) return 'Va con cambios' + (cf ? ' · ' + cf : ''); }
-  return {go: a.va, no: a.no, de: 'Al inbox', co: 'Comentada', ne: 'No entiendo', yh: 'Ya está hecho'}[st.m] || st.m;
+  if(st.m === 'ro') return '+info' + (rotEtiquetas(st.o) ? ' · ' + rotEtiquetas(st.o) : '');
+  return {go: a.va, no: a.no, de: 'Después', co: 'Comentada', rv: 'Revisada', ro: '+info', ne: 'No entiendo', yh: 'Ya está hecho'}[st.m] || st.m;
 }
 function swListaRender(sw){
   var sc0 = sw.main.querySelector('.sw-lscroll'), top0 = sc0 ? sc0.scrollTop : 0;
@@ -2816,10 +3166,12 @@ function swListaRender(sw){
           (st.c ? '<p class="sw-lcom">' + esc(st.c) + '</p>' : '') + '</div></div>';
         return h2 + '<div><label class="sw-lbl" for="' + idc + '">Comentario</label>' +
           '<textarea id="' + idc + '" class="sw-com" data-com="1" data-cid="' + esc(e.cid) + '" rows="2" placeholder="Opcional" autocomplete="off">' + esc(st.c) + '</textarea></div>' +
-          // en la lista no van «Al final» (ya ves todo) ni «+info» (el comentario está en la card)
-          '<div class="sw-lbar">' + mqBarraHTML(it, swAcc(it)) + '<div class="sw-sec"><button type="button" class="sw-b" data-a="despues">Al inbox</button></div></div></div>';
+          // en la lista no van «Al final» (ya ves todo) ni «/rot» (el comentario está en la card)
+          '<div class="sw-lbar">' + mqBarraHTML(it, swAcc(it)) + (esRev(it) ? '' : '<div class="sw-sec"><button type="button" class="sw-b" data-a="despues">Después</button></div>') + '</div></div>';
       }).join('');
   }).join('') +
+    // las que ya no aplican, grises y sin botones, con el link a la card nueva
+    (function(){ var bi = swBotInfo(sw, sw.lista); return bi && bi.d ? reemplazadasDeVuelta(bi.d).map(viejaHTML).join('') : ''; })() +
     // el comentario final de la botonera, abajo de todo: viaja en su línea «notas:», igual que el de la pantalla de cierre
     (bloq ? '' : '<div class="sw-fin sw-lfin"><label class="sw-lbl" for="sw-lfin">Comentario final</label>' +
       '<textarea id="sw-lfin" class="sw-com" data-finc="' + esc(sw.lista) + '" rows="3" placeholder="Opcional · algo sobre toda la botonera" autocomplete="off">' + esc(notasDe(sw.lista)) + '</textarea></div>') +
@@ -2838,7 +3190,7 @@ function swipeDetalle(){
     '<div class="sw-dscroll"><div class="sw-dcard">' + swDetCuerpoHTML(e) + '</div>' +
     '<label class="sw-lbl" for="sw-com">Comentario</label>' +
     '<textarea id="sw-com" class="sw-com" data-com="1" data-cid="' + esc(n) + '" rows="3" placeholder="Opcional" autocomplete="off">' + esc(st.c) + '</textarea></div>' +
-    swBarraCardHTML(sw, it, a) + '</div>';
+    swBarraCardHTML(sw, it, a, e) + '</div>';
   var sc = sw.sheetEl.querySelector('.sw-dscroll'); if(sc) sc.scrollTop = 0;
 }
 
@@ -2849,7 +3201,7 @@ function swClick(e){
   // click fantasma: con el mouse (detail > 0) vale solo si la presion arranco en ese mismo boton, no en lo que haya quedado debajo del cursor
   if(e.detail > 0 && sw.pd && !b.contains(sw.pd)) return;
   var a = b.getAttribute('data-a');
-  if(sw.sheet === 'snz' && a !== 'snz-op' && a !== 'snz-cerrar') return;   // con «¿Cuándo vuelve?» abierto, nada del mazo de atrás reacciona
+  if(sw.sheet === 'snz' && a !== 'snz-op' && a !== 'snz-cerrar' && a !== 'snz-ahora') return;   // con «¿Cuándo vuelve?» abierto, nada del mazo de atrás reacciona
   if(sw.sheet === 'det' && SW_BARRA[a]){
     // las casillas marcadas en el Detalle pasan a las de la card antes de que «Listo» las lea
     var chk = Array.prototype.map.call(sw.sheetEl.querySelectorAll('input[data-chk]'), function(i){ return i.checked; });
@@ -2895,7 +3247,8 @@ function swClick(e){
   if(a === 'snooze'){ snzAbrir(); return; }
   if(a === 'snz-cerrar'){ snzCerrar(sw); return; }
   if(a === 'snz-op'){ snzElegir(b.getAttribute('data-id')); return; }
-  if(mqClick(sw, a, b)) return;
+  if(a === 'snz-ahora'){ ahMandar(); return; }
+  if(mqClick(sw, a, b) || revClick(sw, a, b)) return;
   if(a === 'salir'){ if(sw.multi) swipeSalirMulti(); else volverALista(); }
   else if(a === 'temas') swipeTemas();
   else if(a === 'cerrar') swVolverHoja(sw);
@@ -2921,6 +3274,14 @@ function swClick(e){
 // el comentario se guarda al escribir, aunque despues no marques
 function swInput(e){
   var i = e.target, sw = estado.sw;
+  if(i && i.getAttribute && sw && i.getAttribute('data-regla')){   // «Esto es regla»: se guarda al tildar y se espeja en las otras casillas de la misma card
+    var lc0 = i.closest('[data-lcid]'), er = sw.por[lc0 ? lc0.getAttribute('data-lcid') : primeraActiva(sw)];
+    if(er){
+      setMarca(er.clave, er.n, 'r', !!i.checked);
+      Array.prototype.forEach.call(sw.el.querySelectorAll('input[data-regla]'), function(o){ var l = o.closest('[data-lcid]'); if(!lc0 ? !l : l === lc0) o.checked = i.checked; });
+    }
+    return;
+  }
   if(i && i.getAttribute && i.getAttribute('data-edop') != null && i.checked){   // Editar de una opción: marcar una desmarca las otras (y se puede dejar ninguna)
     var gr = i.closest('[data-uno]');
     if(gr) Array.prototype.forEach.call(gr.querySelectorAll('input[data-edop]'), function(o){ if(o !== i) o.checked = false; });
@@ -2963,7 +3324,7 @@ function swDown(e){
     if(ent){ card.style.opacity = ''; swPos(0, 0); } // la entrada cortada no deja la card a medio aparecer
   }
   try{ card.setPointerCapture(e.pointerId); }catch(_){}
-  sw.g = {id: e.pointerId, x0: e.clientX, y0: e.clientY, ox: sw.px, oy: sw.py, mov: false, pts: [{t: e.timeStamp, x: e.clientX, y: e.clientY}]};
+  sw.g = {id: e.pointerId, x0: e.clientX, y0: e.clientY, ox: sw.px, oy: sw.py, mov: false, img: !!(e.target.closest && e.target.closest('.sw-img')), pts: [{t: e.timeStamp, x: e.clientX, y: e.clientY}]};
   sw.arr = true;
   card.classList.add('arr');
 }
@@ -2991,10 +3352,16 @@ function swFinGesto(sw, e){
   if(card){ card.classList.remove('arr'); try{ card.releasePointerCapture(e.pointerId); }catch(_){} }
   return g;
 }
+function card0(sw){ return sw && sw.d && sw.d.card; }
 function swUp(e){
   var sw = estado.sw, g = sw && sw.g; if(!g || e.pointerId !== g.id) return;
   g = swFinGesto(sw, e);
-  if(!g.mov){ sw.arr = false; swipeDetalle(); return; } // tap sin arrastre: abre el detalle
+  if(!g.mov){   // tap sin arrastre: abre el detalle, o la imagen a pantalla completa si el toque cayó en ella
+    sw.arr = false;
+    var imc = g.img && card0(sw) && card0(sw).querySelector('.sw-img img');
+    if(imc) imgFullAbrir(imc.getAttribute('src'), imc.getAttribute('alt'), card0(sw)); else swipeDetalle();
+    return;
+  }
   g.pts.push({t: e.timeStamp, x: e.clientX, y: e.clientY});
   var v = swVel(g.pts), x = sw.px, y = sw.py, T = SW_UMBRAL;
   var arriba = (y < -T && Math.abs(y) > Math.abs(x) + 8) || (y < -48 && v.y < -SW_FLICK && Math.abs(v.y) > Math.abs(v.x));
@@ -3015,7 +3382,8 @@ function swCancel(e){
 window.addEventListener('blur', function(){ var s2 = estado.sw; if(s2 && s2.g) swAbortar(s2); });
 document.addEventListener('keydown', function(e){
   var sw = estado.sw; if(!sw || !sw.el) return;
-  // Cmd/Ctrl+Enter en una hoja (Otra cosa, Editar, +info…) = tocar su Listo
+  if(imgFull) return;   // con la imagen a pantalla completa abierta, las flechas no deciden la card de atrás
+  // Cmd/Ctrl+Enter en una hoja (Otra cosa, Editar, /rot…) = tocar su Listo
   if(e.key === 'Enter' && (e.metaKey || e.ctrlKey) && sw.sheet === 'mq'){
     var bl = sw.sheetEl.querySelector('.sw-dbar .sw-act'); if(bl){ e.preventDefault(); bl.click(); } return;
   }
@@ -3117,7 +3485,7 @@ function snzAbrir(){
   sw.sheetEl.className = 'sw-sheet snz';
   sw.sheetEl.innerHTML = '<div class="sw-snz-scrim" data-a="snz-cerrar"></div><div class="sw-snz-pos"><div class="sw-snz-hoja" role="dialog" aria-modal="true" aria-labelledby="snz-tit" tabindex="-1">' +
     '<span class="sw-snz-asa" aria-hidden="true"></span><h3 id="snz-tit">¿Cuándo vuelve?</h3>' +
-    '<p class="sw-snz-sub">Se va de «Por decidir» y vuelve sola con tus marcas.</p><div class="sw-snz-ops">' + snzOpsHTML(ops) + '</div><div class="sw-snz-err" role="alert"></div>' +
+    '<p class="sw-snz-sub">Se va de «Por decidir» y vuelve sola con tus marcas.</p><div class="sw-snz-ops">' + snzOpsHTML(ops) + '</div>' + ahBotonHTML(e.clave, b) + '<div class="sw-snz-err" role="alert"></div>' +
     '<button type="button" class="sw-big alt" data-a="snz-cerrar">Cancelar</button></div></div>';
   snzInert(true);
   var dlg = sw.sheetEl.querySelector('.sw-snz-hoja'); if(dlg) try{ dlg.focus({preventScroll: true}); }catch(_){}   // el foco entra al sheet sin marcar ninguna opcion
@@ -3131,10 +3499,10 @@ function snzCerrar(sw){
   swipeCerrarHoja();
   var c = sw.main.querySelector('#sw-card'); if(c) try{ c.focus({preventScroll: true}); }catch(_){}
 }
-function snzError(sw, motivo){
+function snzError(sw, motivo, que){
   var er = sw.sheetEl.querySelector('.sw-snz-err');
-  if(er) er.textContent = 'No se pudo snoozear: ' + motivo + '. Probá de nuevo.';
-  Array.prototype.forEach.call(sw.sheetEl.querySelectorAll('.sw-snz-op'), function(x){ x.disabled = false; });
+  if(er) er.textContent = 'No se pudo ' + (que || 'snoozear') + ': ' + motivo + (/volvé a entrar$/.test(motivo) ? '.' : '. Probá de nuevo.');
+  Array.prototype.forEach.call(sw.sheetEl.querySelectorAll('.sw-snz-op,.sw-snz-ahora'), function(x){ x.disabled = false; });
 }
 // la opcion elegida ya paso (el sheet estuvo abierto un buen rato): se recalculan las opciones con la hora de ahora
 function snzHoraVieja(sw, c){
@@ -3151,7 +3519,7 @@ function snzElegir(id){
   var op = c.ops.filter(function(o){ return o.id === id; })[0], token = estado.token; if(!op || !token) return;
   var hasta = new Date(op.hasta).toISOString();
   sw.snzBusy = true;
-  Array.prototype.forEach.call(sw.sheetEl.querySelectorAll('.sw-snz-op'), function(x){ x.disabled = true; });
+  Array.prototype.forEach.call(sw.sheetEl.querySelectorAll('.sw-snz-op,.sw-snz-ahora'), function(x){ x.disabled = true; });
   var er = sw.sheetEl.querySelector('.sw-snz-err'); if(er) er.textContent = '';
   function falla(motivo){ sw.snzBusy = false; if(estado.sw === sw && sw.sheet === 'snz' && sw.snzCtx === c) snzError(sw, motivo); }
   sb.rpc('bm_snoozear', {p_token: token, p_clave: c.clave, p_hasta: hasta}).then(function(r){
@@ -3230,15 +3598,16 @@ function snzSacarDormidas(){
 }
 /* ----- aviso «Snoozeada hasta … · Deshacer» (5 s): vive aparte del mazo (hijo del mazo, no de la card) y se anuncia en la region viva ----- */
 function snzAnunciar(txt){ var l = document.getElementById('snz-live'); if(l) l.textContent = txt; }
-function snzToastMostrar(clave, cuando, sel){
+// `txt`: un aviso propio sin Deshacer (el «Ahora no: N cards» de ahListo: la respuesta ya salio, no hay vuelta)
+function snzToastMostrar(clave, cuando, sel, txt){
   snzToastQuitar();
   var el = document.createElement('div');
   el.className = 'snz-toast';
-  el.innerHTML = '<div class="snz-toast-in"><span class="snz-msg">' + esc('Snoozeada hasta ' + cuando) + '</span><button type="button" data-snz="deshacer">Deshacer</button></div>' +
+  el.innerHTML = '<div class="snz-toast-in"><span class="snz-msg">' + esc(txt || 'Snoozeada hasta ' + cuando) + '</span>' + (txt ? '' : '<button type="button" data-snz="deshacer">Deshacer</button>') + '</div>' +
     '<span class="snz-toast-t" aria-hidden="true"><i></i></span>';
   el.addEventListener('click', function(ev){ if(ev.target.closest && ev.target.closest('[data-snz="deshacer"]')) snzDeshacer(); });
   var t = estado.snzToast = {el: el, clave: clave, sw: estado.sw, sel: sel || null, t0: performance.now(), busy: false, timer: setTimeout(snzToastQuitar, SNZ_TOAST_MS)};
-  setTimeout(function(){ if(estado.snzToast === t) snzAnunciar('Snoozeada hasta ' + cuando + '. Podés deshacerlo.'); }, 60);   // la region ya existe vacia: el texto llega despues
+  setTimeout(function(){ if(estado.snzToast === t) snzAnunciar(txt ? txt + '.' : 'Snoozeada hasta ' + cuando + '. Podés deshacerlo.'); }, 60);   // la region ya existe vacia: el texto llega despues
   snzToastPoner();
 }
 function snzToastQuitar(){
@@ -3323,6 +3692,64 @@ function snzDespertarAhora(clave){
   }, function(err){ if(token === estado.token) falla((err && err.message) || 'sin conexión'); });
 }
 
+/* ----- «Ahora no» ----- */
+// En el sheet ¿Cuándo vuelve?: las cards sin marcar pasan a «después» y la respuesta sale con bm_decidir_pin,
+// con una nota «Ahora no · seguí sin estas respuestas» para que la sesión no se quede esperándolas
+function ahSinMarcar(clave, b){ return (b && b.items || []).filter(function(it){ return !marcaDe(clave, it.n).m; }); }
+function ahBotonHTML(clave, b){
+  var n = ahSinMarcar(clave, b).length; if(!n) return '';   // todas marcadas: no aparece
+  return '<button type="button" class="sw-snz-ahora" data-a="snz-ahora"><span class="op-l"><span class="rot">Ahora no</span>' +
+    '<span class="op-s">' + esc(pl(n, 'card sin marcar va', 'cards sin marcar van') + ' a Después · la sesión sigue sin ' + (n === 1 ? 'esa respuesta' : 'esas respuestas')) + '</span></span></button>';
+}
+function ahMandar(){
+  var sw = estado.sw, c = sw && sw.snzCtx; if(!sw || sw.sheet !== 'snz' || !c || sw.snzBusy) return;
+  if(sw.enviando || (sw.envio && sw.envio.st === 'enviando')) return;   // con un envio en curso no hace nada
+  var clave = c.clave, b = swBotInfo(sw, clave), token = estado.token; if(!b || !token || estado.bloqueadas[clave]) return;
+  var sin = ahSinMarcar(clave, b); if(!sin.length) return;
+  sw.snzBusy = true; estado.bloqueadas[clave] = true;
+  Array.prototype.forEach.call(sw.sheetEl.querySelectorAll('.sw-snz-op,.sw-snz-ahora'), function(x){ x.disabled = true; });
+  var er = sw.sheetEl.querySelector('.sw-snz-err'); if(er) er.textContent = '';
+  sin.forEach(function(it){ setMarca(clave, it.n, 'm', 'de'); });
+  function sacar(){ sin.forEach(function(it){ if(marcaDe(clave, it.n).m === 'de') setMarca(clave, it.n, 'm', ''); }); }
+  function falla(motivo){   // se sacan las marcas que puso el boton; el sheet queda abierto con el motivo
+    estado.bloqueadas[clave] = false; sw.snzBusy = false;
+    sacar();
+    if(estado.sw === sw && sw.sheet === 'snz' && sw.snzCtx === c) snzError(sw, motivo, 'mandar a Después');
+  }
+  sb.rpc('bm_decidir_pin', {p_token: token, p_clave: clave, p_respuesta: textoDe(clave, b.items, 'Ahora no · seguí sin las respuestas de ' + (sin.length === 1 ? 'esta card' : 'estas ' + sin.length + ' cards') + ': ' + (sin.length === 1 ? 'va' : 'van') + ' a Después, no las esperes.'), p_version: (b.d && b.d.updated_at) || null}).then(function(r){
+    if(token !== estado.token){ estado.bloqueadas[clave] = false; sacar(); return; }
+    if(r.error && tokenMalo(r.error)){ estado.bloqueadas[clave] = false; sacar(); sesionVencida(); return; }
+    if(r.error){ falla(r.error.message || 'error'); return; }
+    // la version del mazo no se refresca sola: reintentar daria «cambio» otra vez, asi que se dice como salir
+    if(r.data === 'cambio'){ falla('la botonera cambió mientras decidías. Salí del mazo y volvé a entrar'); cargarLista(); return; }
+    if(r.data !== 'decidida'){ falla('ya estaba ' + r.data); cargarLista(); return; }
+    estado.bloqueadas[clave] = false; sw.snzBusy = false;
+    delete estado.marcas[clave]; persistirMarcas();   // salio: sus marcas ya no sirven, este o no el mazo abierto
+    var f = snzFila(clave); if(f) f.estado = 'decidida';   // la proxima bm_lista lo confirma; asi el home ya no la ofrece
+    if(estado.sw !== sw){ homeCargar(); homePintar(); cargarLista(); return; }
+    var ocupado = sw.arr || sw.anim || (sw.sheet && sw.sheet !== 'snz');   // cancelaron el sheet y siguieron swipeando: se espera a que se libere
+    if(ocupado) sw.ahPend = {clave: clave, n: sin.length};
+    else ahListo(sw, clave, sin.length);
+  }, function(err){ if(token === estado.token) falla((err && err.message) || 'sin conexión'); else { estado.bloqueadas[clave] = false; sacar(); } });
+}
+// salio: la botonera deja el mazo (como el snooze, pero sin Deshacer) y aparece «Ahora no: N cards»
+function ahListo(sw, clave, n){
+  estado.tandasDe = null;
+  homeCargar();
+  var sel = sw.multi ? null : estado.sel;
+  if(sw.sheet) swipeCerrarHoja();
+  snzToastMostrar(clave, null, sel, 'Ahora no: ' + pl(n, 'card', 'cards') + ' a Después');
+  if(sw.multi){ snzQuitar(sw, clave); if(sw.snz) delete sw.snz[clave]; sw.ultN = null; swipeRender(); }
+  else volverALista();
+  homeCargar(); homePintar(); cargarLista();
+}
+// solo para pruebas locales: los grupos del Registro con los titulos de cada uno
+window.__registro = function(){
+  var G = segGrupos(), t = function(l){ return l.map(function(x){ return x.titulo || x.session_id; }); };
+  return {esperan: accOrden(accItems()).map(function(it){ return it.titulo; }), trabajando: t(G.encurso).concat(t(G.vuelo)), trabadas: t(G.trabadas), hechas: t(G.hechas), archivadas: t(G.archivadas),
+    rojo: regRojo(), badge: regN(), bloqueos: accOrden(accItems()).map(function(it){ return it.titulo; }).concat(t(G.trabadas)), tab: estado.tab};
+};
+
 /* ----- envio: bm_decidir_pin con el texto de respuestaVuelta(), igual que enviarVuelta ----- */
 // las notas generales (el comentario final de la pantalla de cierre, o las de la plantilla vieja) van en la linea «notas:»
 // `extra`: el comentario final del multi, que viaja igual a cada botonera del envío
@@ -3387,14 +3814,13 @@ window.__swipe = function(){
   if(sw.multi) o.resumen = swResumen(sw).map(function(r){ return {clave: r.bot.clave, titulo: r.bot.titulo, hechas: r.hechas, tot: r.tot, completa: r.completa, env: r.env ? r.env.st : null}; });
   return o;
 };
-/* ---------- home del swipe (maqueta B) ----------
+/* ---------- home del swipe ----------
    Al entrar se trae con bm_fila el JSON de cada botonera ABIERTA (la original o su vuelta abierta). Una card esta pendiente
    si su marca esta vacia. Arriba, «Por decidir» con Swipear todo; abajo, una fila por categoria con pendientes y su play.
    La categoria sale de datos.categoria ({id, nombre, color, emoji|icono, orden, privada}); sin ella la botonera cuenta en «Otras».
    El orden sale de datos.categoria.orden (numerico, ascendente): sin orden va despues de las numeradas y «Otras» siempre al final. */
 var CAT_OTRAS = {id: 'otras', nombre: 'Otras', color: '#E0DCD2',
   icono: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>'};
-var HOME_ICO_CARTAS = '<svg viewBox="0 0 24 24"><rect x="7" y="4" width="12" height="16" rx="2"/><path d="M5 7.5 3.6 8a1.5 1.5 0 0 0-.9 1.9l3.6 9.9a1.5 1.5 0 0 0 1.9.9l1.3-.5"/></svg>';
 var HOME_ICO_PLAY = '<svg viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5Z"/></svg>';
 
 // numeradas por orden ascendente; sin orden despues de ellas; «otras» al final
@@ -3565,7 +3991,7 @@ function avisosIcono(n){
   try{ (n ? navigator.setAppBadge(n) : navigator.clearAppBadge()).catch(function(){}); }catch(e){}
 }
 
-// la fila «Con error»: lo que murio sin avisar y el usuario todavia no vio. Sin errores no se pinta nada.
+// la fila «Con error» (en Bloqueos): lo que murio sin avisar y todavia no viste. Sin errores no se pinta nada.
 function erroresHTML(){
   var l = estado.errores || [];
   if(!l.length) return '';
@@ -3579,13 +4005,13 @@ function erroresHTML(){
     }).join('') +
     (l.length > MAX ? '<div class="herr-mas">' + esc('y ' + (l.length - MAX) + ' más') + '</div>' : '') + '</div>';
 }
-function cargarErrores(){
+function erroresCargar(){
   var token = estado.token; if(!token) return;
   sb.rpc('bm_errores_lista', {p_token: token}).then(function(r){
     if(token !== estado.token) return;
     if(r.error){ if(tokenMalo(r.error)) sesionVencida(); else console.warn('errores', r.error); return; }   // sin la migracion la RPC no existe: no hay fila y nada se rompe
     estado.errores = Array.isArray(r.data) ? r.data : [];
-    homePintar();
+    pestanasRepintar();
   }, function(err){ console.warn('errores', err); });
 }
 function errorVisto(id){
@@ -3593,32 +4019,37 @@ function errorVisto(id){
   estado.errores = (estado.errores || []).filter(function(e){ return Number(e.id) !== n; });   // sale al toque; si la base falla, vuelve con el proximo poll
   homePintar();
   sb.rpc('bm_error_visto', {p_token: token, p_id: n}).then(function(r){
-    if(r.error){ if(tokenMalo(r.error)) sesionVencida(); else { console.warn('visto', r.error); cargarErrores(); } }
-  }, function(err){ console.warn('visto', err); cargarErrores(); });
+    if(r.error){ if(tokenMalo(r.error)) sesionVencida(); else { console.warn('visto', r.error); erroresCargar(); } }
+  }, function(err){ console.warn('visto', err); erroresCargar(); });
 }
-function homeHTML(){ return erroresHTML() + homeHTMLBase(); }
+function homeHTML(){
+  if(estado.tab === 'sesiones' || estado.tab === 'bloqueos'){
+    if(estado.homeVisto) avisosIcono(homeCalc().pend);
+    return estado.tab === 'bloqueos' ? bloqueosHTML() : sesionesHTML();
+  }
+  return homeHTMLBase();
+}
 function homeHTMLBase(){
   if(!estado.listaCargada) return '';
   var H = homeCalc();
-  if(H.cargando && !estado.homeVisto) return '<div class="home-hero"><div class="home-k">Por decidir</div><div class="home-t">Cargando…</div></div>';
+  // sin bloque «Por decidir» en el home principal; la primera pasada es una linea chica
+  if(H.cargando && !estado.homeVisto) return '<div class="home-carga">Cargando…</div>';
   if(!H.cargando) estado.homeVisto = true;
-  var h, nl = H.listas.length, enviando = !!estado.homeEnviando;
-  var lineaL = nl ? '<div class="home-l">' + esc(pl(nl, 'lista', 'listas') + ' para enviar') + '</div>' : '';
-  var btnL = nl ? '<button type="button" class="home-env" data-home="enviar"' + (enviando ? ' disabled' : '') + '>' + (enviando ? 'Enviando…' : 'Enviar ' + nl) + '</button>' : '';
+  var h, nl = H.listas.length, enviando = !!estado.homeEnviando, enCat = false;
   if(!H.pend){
-    h = '<div class="home-hero"><div class="home-k">Por decidir</div><div class="home-t">Nada por decidir</div>' + (nl ? lineaL : fraseHTML(new Date())) +
-      (nl ? '<div class="home-acts">' + btnL + '</div>' : '') + '</div>';
+    // en cero queda un cartel con la frase del día; el confeti grande no depende de ningun bloque (festejoChequear)
+    h = '<div class="home-hero"><div class="home-k">Por decidir</div><div class="home-t">Nada por decidir</div>' + (nl ? '<div class="home-l">' + esc(pl(nl, 'lista', 'listas') + ' para enviar') + '</div>' : fraseHTML(new Date())) + '</div>';
   } else if(homeCatAbierta(H)){
+    enCat = true;
     // lo que quedó listo para enviar se manda también desde acá: si no, la botonera recién terminada espera escondida
-    h = (nl ? '<div class="home-hero hcat-env">' + lineaL + '<div class="home-acts">' + btnL + '</div></div>' : '') + homeTandasHTML(H.todasCats[estado.homeCat], 'data-home');
+    var lineaL = nl ? '<div class="home-l">' + esc(pl(nl, 'lista', 'listas') + ' para enviar') + '</div>' : '';
+    var btnL = nl ? '<button type="button" class="home-env" data-home="enviar"' + (enviando ? ' disabled' : '') + '>' + (enviando ? 'Enviando…' : 'Enviar ' + nl) + '</button>' : '';
+    h =(nl ? '<div class="home-hero hcat-env">' + lineaL + '<div class="home-acts">' + btnL + '</div></div>' : '') + homeTandasHTML(H.todasCats[estado.homeCat], 'data-home');
   } else {
-    h = '<div class="home-hero"><div class="home-k">Por decidir</div><div class="home-t">' + esc(pl(H.pend, 'card', 'cards')) + '</div>' +
-      '<div class="home-s">' + esc('de ' + pl(H.nbots, 'botonera', 'botoneras') + (H.hoy ? ' · ' + venceTxt(H.hoy) : '')) + '</div>' + lineaL +
-      '<div class="home-stack" aria-hidden="true"><div></div><div></div><div></div></div>' +
-      '<div class="home-acts"><button type="button" class="home-cta" data-home="todo">' + HOME_ICO_CARTAS + 'Swipear todo</button>' + btnL + '</div></div>' +
-      '<div class="hrows">' + H.cats.map(function(c){ return catFilaHTML(c, 'data-home="cat"'); }).join('') + '</div>';
+    h = '<div class="hrows">' + H.cats.map(function(c){ return catFilaHTML(c, 'data-home="cat"'); }).join('') + '</div>';
   }
-  h += snoozeadasHTML(H);
+  // adentro de una categoria se ve solo esa categoria: Snoozeadas y avisos quedan en el home
+  if(!enCat) h += snoozeadasHTML(H);   // Seguimiento vive en Sesiones y Bloqueos, no en Decidir
   var envs = estado.homeEnvs || {}, claves = Object.keys(envs);
   if(claves.length){
     h += '<div class="home-res" role="status">' + claves.map(function(c){
@@ -3626,7 +4057,7 @@ function homeHTMLBase(){
       return '<div class="' + (e.st === 'ok' ? 'ok' : e.st === 'enviando' ? '' : 'mal') + '">' + esc(e.titulo + ' · ' + t) + '</div>';
     }).join('') + '</div>';
   }
-  h += avisosHTML();
+  if(!enCat) h += avisosHTML();
   avisosIcono(H.pend);
   if(H.fallan) h += '<div class="home-err" role="status">' + esc('No pude cargar ' + pl(H.fallan, 'botonera', 'botoneras') + '. Se reintenta solo.') + '</div>';
   return h;
@@ -3650,10 +4081,15 @@ function homeTandasHTML(c, attr, sinTop){
   return h + '<div class="htandas">' + bots.map(function(r){
     var dat = datosDe(r), ses = (r.tanda && r.tanda.entrada && r.tanda.entrada.sesion_titulo) || '', hace = haceCuanto(r.creada);
     var k = ses ? 'De ' + ses + (hace ? ' · ' + hace : '') : (hace ? 'Armada ' + hace : 'De qué va');
-    return '<button type="button" class="htanda" ' + attr + '="tanda" data-clave="' + esc(r.clave) + '" aria-label="Decidir ' + esc(r.titulo) + '">' +
+    // la carpeta chica: tantas hojas como cards pendientes (tope 4), pestaña «Categoria · N» como la portada del mazo
+    var nh = Math.max(1, Math.min(4, r.pend)), hojas = '';
+    for(var i = 1; i <= nh; i++) hojas += '<span class="sw-hoja" style="--i:' + i + '" aria-hidden="true"></span>';
+    var st = '--Y:' + Math.max(nh * 7 + 8, 36) + 'px;--tinte:' + catTinte(c.cat.color, 0.7) + ';--cat:' + catTinte(c.cat.color, 0);
+    return '<button type="button" class="htanda" style="' + st + '" ' + attr + '="tanda" data-clave="' + esc(r.clave) + '" aria-label="Decidir ' + esc(r.titulo) + ', ' + esc(pl(r.pend, 'card', 'cards')) + '">' +
+      hojas + '<span class="htab" aria-hidden="true">' + catIcono(c.cat) + '<span class="sw-tn">' + esc(c.cat.nombre) + '</span><span class="sw-tc"> · <b>' + r.pend + '</b></span></span>' +
       '<span class="hk">' + esc(k) + '</span><span class="ht">' + esc(r.titulo) + '</span>' +
       (dat.contexto ? '<span class="hc">' + esc(dat.contexto) + '</span>' : '') +
-      '<span class="hn">' + esc(pl(r.pend, 'card', 'cards') + (r.hoy ? ' · ' + venceTxt(r.hoy) : '')) + ' →</span></button>';
+      '<span class="hf"><span class="hn">Abrir →</span>' + (r.hoy ? '<span class="hv">' + esc(venceTxt(r.hoy)) + '</span>' : '') + '</span></button>';
   }).join('') + '</div>';
 }
 // tocar una categoria: con 2+ botoneras pendientes se eligen en tarjetitas negras; con una sola, derecho al mazo
@@ -3665,11 +4101,28 @@ function homeElegirCat(catId){
 function homePintar(){
   var el = document.getElementById('home'); if(!el) return;
   var h = homeHTML();
-  if(estado.homeSig === h && el.innerHTML){ festejoChequear(); return; }
+  tabsPintar();
+  if(estado.homeSig === h && el.innerHTML){ festejoChequear(); homeAutoEnviar(); return; }
   estado.homeSig = h;
+  var f = document.activeElement, fk = f && f.getAttribute && el.contains(f) && f.getAttribute('data-pt-in') ? f.getAttribute('data-pt-in') + '\u0000' + f.getAttribute('data-k') : null, ss = fk ? f.selectionStart : 0;
   el.innerHTML = h;
+  restaurarCampos(el, fk, ss);
   homeAbrirPedida();
   festejoChequear();
+  homeAutoEnviar();
+}
+/* sin boton «Enviar» en el home principal, las botoneras con todas sus cards marcadas (listas) se mandan solas al cargar el home.
+   Una vez por carga de pagina y por clave: las claves ya intentadas viven en una variable del modulo (no en estado), asi un poll no repite
+   y un envio que fallo no se reintenta hasta la proxima carga. El resultado sale en home-res. Dentro de una categoria no pasa nada. */
+var homeAuto = {};
+function homeAutoEnviar(){
+  if(estado.sw || estado.homeEnviando || !estado.token || !estado.listaCargada) return;
+  var H = homeCalc(); if(H.cargando) return;
+  if(H.pend && homeCatAbierta(H)) return;
+  var nuevas = H.listas.filter(function(r){ return !homeAuto[r.clave]; });
+  if(!nuevas.length) return;
+  nuevas.forEach(function(r){ homeAuto[r.clave] = true; });
+  homeEnviar(nuevas.map(function(r){ return r.clave; }));
 }
 // la tanda del «?c=»: se abre sola en el mazo cuando su JSON ya llegó; sin cards pendientes (o ya cerrada) queda el home
 function homeAbrirPedida(){
@@ -3684,21 +4137,22 @@ function alClickHome(e){
   var tg = e.target; if(!tg || !tg.closest) return;
   var b = tg.closest('[data-home]'); if(!b) return;
   var a = b.getAttribute('data-home');
-  if(a === 'visto') errorVisto(b.getAttribute('data-id'));
-  else if(a === 'enviar') homeEnviar();
+  if(a.indexOf('seg-') === 0){ segClick(a, b); return; }   // la fila Seguimiento (segClick)
+  if(a === 'enviar') homeEnviar();   // el «Enviar» de una categoria: todas las listas, como siempre
   else if(a === 'avisos') avisosActivar();
   else if(a === 'despertar') snzDespertarAhora(b.getAttribute('data-clave'));
   else if(a === 'snz-abrir'){ estado.snzAbierta = estado.snzAbierta === false; homePintar(); }
+  else if(a === 'visto') errorVisto(b.getAttribute('data-id'));
   else if(a === 'cat') homeElegirCat(b.getAttribute('data-cat'));
   else if(a === 'volver'){ estado.homeCat = null; homePintar(); }
   else if(a === 'tanda') homeSwipear(null, b.getAttribute('data-clave'));
   else homeSwipear(null);
 }
 // manda las botoneras listas (todas sus cards marcadas): una por una, con su propio bm_decidir_pin; una que falle no frena a las otras
-function homeEnviar(){
+function homeEnviar(claves){   // claves (opcional): solo esas listas; sin ellas, todas
   if(estado.homeEnviando || estado.sw) return;
   var token = estado.token; if(!token) return;
-  var cola = homeCalc().listas.slice();
+  var cola = homeCalc().listas.filter(function(r){ return !Array.isArray(claves) || claves.indexOf(r.clave) >= 0; });
   if(!cola.length) return;
   estado.homeEnviando = true; estado.homeEnvs = {};
   var i = 0, oks = 0;
@@ -3730,12 +4184,328 @@ function homeEnviar(){
   sig();
 }
 
+/* ----- Seguimiento: lo ya mandado y todavía sin cerrar, al final del home -----
+   Grupos apilados: Trabadas · En curso · En vuelo · Archivadas, solo los que tienen algo; sin nada en ninguno, la fila no existe.
+   Los datos salen de bm_lista (las tandas) y de bm_seguimiento (En vuelo). Si bm_seguimiento falla o todavía no existe en la base, la fila anda igual sin En vuelo.
+   Una tanda = la base y sus vueltas -rN (armarTandas). Trabada = decidida o recibida con más de 24 h sin cambio (las bot-* no). */
+var SEG_TRABADA_MS = 24 * 3600e3;   // del botonera-v2
+var SEG_APLICADA_MS = 24 * 3600e3;  // pasado ese tiempo una aplicada sale de En curso y va a Archivadas
+var SEG_ARCHIVO_MS = 30 * 24 * 3600e3;
+var SEG_MAX = 5;                    // más de 5 en un grupo: «Ver N más»
+var SEG_ICO = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h12M9 12h12M9 18h12"/><path d="M3 6l1.5 1.5L7 5M3 12l1.5 1.5L7 11M3 18l1.5 1.5L7 17"/></svg>';
+var SEG_TICK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+function segEstado(){ return estado.seg || (estado.seg = {d: null, busy: false, ab: {}, arch: false, mas: {}, ocultas: {}, pend: null}); }
+function segCargar(){
+  var token = estado.token; if(!token) return;
+  var S = segEstado(); if(S.busy) return;
+  S.busy = true;
+  sb.rpc('bm_seguimiento', {p_token: token}).then(function(r){
+    S.busy = false;
+    if(token !== estado.token) return;
+    if(r.error){ if(tokenMalo(r.error)) sesionVencida(); return; }   // sin la RPC (migración sin aplicar) o caída: la fila sigue con lo de bm_lista
+    var d = r.data;
+    if(!d || typeof d !== 'object') return;
+    S.d = {vuelo: Array.isArray(d.vuelo) ? d.vuelo : []};   // bm_seguimiento trae además pedidos/escucha_at/activos: esta versión no los usa
+    homePintar();
+  }, function(){ S.busy = false; });
+}
+// «40 min», «30 h», «3 d»: cuánto hace desde t
+function segDur(t){
+  var m = Math.max(1, Math.floor((Date.now() - t) / 60000));
+  if(m < 60) return m + ' min';
+  var h = Math.floor(m / 60);
+  return h < 48 ? h + ' h' : Math.floor(h / 24) + ' d';
+}
+// la hora de una fila de En vuelo, como en la
+function segVueloCuando(t){
+  var m = (Date.now() - ms(t)) / 60000;
+  if(m < 1) return 'ahora';
+  if(m < 60) return 'hace ' + Math.floor(m) + ' min';
+  var h = m / 60;
+  if(h < 24) return 'hace ' + Math.floor(h) + ' h';
+  return h < 48 ? 'ayer' : 'hace ' + Math.floor(h / 24) + ' d';
+}
+function segFecha(t){ var p = snzPartes(t); return p.d + '-' + SW_MESES[p.m - 1]; }
+// las entradas de cada grupo, a partir de las tandas de bm_lista y de bm_seguimiento
+function segGrupos(){
+  var S = segEstado(), T = tandas(), ahora = Date.now(), G = {trabadas: [], encurso: [], vuelo: [], hechas: [], archivadas: []};
+  function pendiente(f){ return f.estado === 'decidida' || f.estado === 'recibida' || f.estado === 'esperando'; }
+  // archivada hace un rato: se esconde hasta que la lista traiga archivadas sus filas (o pasen 45 s sin que llegue)
+  function oculta(kk, t){
+    var oc = S.ocultas[kk]; if(!oc) return false;
+    if(oc.estado === 'hecho' && (ahora - oc.t > 45000 || oc.claves.every(function(c){ return t.vueltas.some(function(f){ return f.clave === c && f.estado === 'archivada'; }); }))){ delete S.ocultas[kk]; return false; }
+    return true;
+  }
+  Object.keys(T.mapa).forEach(function(b){
+    var t = T.mapa[b], e = t.entrada, est = e.estado;
+    var base = {titulo: e.titulo || b, ses: e.sesion_titulo || '', sid: e.session_id || '', todas: t.vueltas.map(function(f){ return f.clave; }), trabada: false};
+    function nuevo(kk, estX, extra){ var x = {clave: kk, est: estX, claves: []}; Object.keys(base).forEach(function(k){ x[k] = base[k]; }); Object.keys(extra || {}).forEach(function(k){ x[k] = extra[k]; }); return x; }
+    var dTrab = t.trabajando ? ms(e.trab_desde) : 0, viejaTrab = !!dTrab && !/^bot-/.test(b) && ahora - dTrab > SEG_TRABADA_MS;
+    // caso raro: una vuelta abierta o esperando y otra anterior trabada: la trabada igual va a Trabadas (con su propia clave, para archivarla sola)
+    if((est === 'abierta' || est === 'esperando') && viejaTrab && !oculta(b + '#trab', t)){
+      G.trabadas.push(nuevo(b + '#trab', t.trabajando.estado, {desde: dTrab, trabada: true,
+        claves: t.vueltas.filter(function(f){ return f.estado === 'decidida' || f.estado === 'recibida'; }).map(function(f){ return f.clave; })}));
+    }
+    if(oculta(b, t)) return;
+    if(est !== 'decidida' && est !== 'recibida' && est !== 'esperando' && est !== 'aplicada' && est !== 'archivada') return;   // abierta (mazo o Snoozeadas) y respondida_en_chat no entran
+    var x = nuevo(b, est, {claves: t.vueltas.filter(pendiente).map(function(f){ return f.clave; })});
+    if(est === 'decidida' || est === 'recibida'){
+      x.desde = ms(e.trab_desde);
+      x.trabada = viejaTrab;   // las bot-* están en pausa a propósito: no son trabadas
+      (x.trabada ? G.trabadas : G.encurso).push(x);
+    } else if(est === 'esperando'){
+      x.desde = ms(e.esperando_at) || ms(e.updated_at); x.motivo = e.espera_motivo || ''; x.sid = e.esperando_session || x.sid;
+      G.encurso.push(x);
+    } else {
+      x.cuando = ms(e.applied_at) || ms(e.updated_at) || ms(e.created_at);
+      if(est === 'aplicada'){
+        x.resumen = String((t.ultima && t.ultima.resumen_aplicado) || '').split(/\r?\n/).map(function(l){ return l.trim(); }).filter(Boolean)[0] || '';
+        if(ahora - x.cuando <= SEG_APLICADA_MS) G.hechas.push(x); else if(ahora - x.cuando <= SEG_ARCHIVO_MS) G.archivadas.push(x);   // una aplicada de las últimas 24 h es «Hecha hoy»
+      } else {
+        x.cuando = ms(e.updated_at) || ms(e.created_at);
+        if(ahora - x.cuando <= SEG_ARCHIVO_MS) G.archivadas.push(x);
+      }
+    }
+  });
+  G.trabadas.sort(function(a, b){ return a.desde - b.desde; });   // la que hace más que está trabada, primero
+  function prio(x){ return x.est === 'esperando' ? 0 : x.est === 'aplicada' ? 2 : 1; }
+  G.encurso.sort(function(a, b){ return (prio(a) - prio(b)) || ((b.desde || b.cuando) - (a.desde || a.cuando)); });
+  G.hechas.sort(function(a, b){ return b.cuando - a.cuando; });
+  G.archivadas.sort(function(a, b){ return b.cuando - a.cuando; });   // la más nueva arriba
+  G.vuelo = S.d ? S.d.vuelo.filter(function(v){ return v && v.estado !== 'cerrada'; }).sort(function(a, b){ return ms(b.updated_at) - ms(a.updated_at); }) : [];
+  return G;
+}
+function segBuscar(clave){
+  var G = segGrupos(), r = null;
+  ['trabadas', 'encurso', 'hechas', 'archivadas'].forEach(function(k){ G[k].forEach(function(x){ if(x.clave === clave) r = x; }); });
+  return r;
+}
+/* ----- Registro claro -----
+   Las trabadas son cards dentro de «Te esperan a vos» (hasta 3, después «Ver N más»). Debajo, dos listas planas de una línea:
+   «Trabajando ahora» (en curso + en vuelo) y «Hechas hoy». Tocar una fila la abre: ahí están el detalle, los botones y el link a la conversación (una sola vez).
+   Las archivadas salen de la lista: un link «Archivo · N ›» al pie las muestra o las oculta. */
+// una trabada como card de «Te esperan a vos»: título, cuánto hace que se frenó, de dónde viene y «Archivar»
+function segTrabHTML(x){
+  var cl = esc(x.clave);
+  return '<div class="hac" data-clave="' + cl + '"><b>' + esc(x.titulo) + '</b><span class="hac-frena">' + esc('Se frenó · sin novedad hace ' + segDur(x.desde)) + '</span>' +
+    (x.ses ? '<span class="hac-de">' + esc(x.ses) + '</span>' : '') +
+    '<div class="bts"><button type="button" data-home="seg-archivar" data-clave="' + cl + '" aria-label="' + esc('Archivar: ' + x.titulo) + '">Archivar</button></div></div>';
+}
+// la pastilla de una línea: una o dos palabras
+function segFilaEstado(x){
+  if(x.vuelo) return {cls: '', txt: 'Trabajando'};
+  if(x.est === 'decidida') return {cls: '', txt: 'Mandada'};
+  if(x.est === 'recibida') return {cls: '', txt: 'Trabajando'};
+  if(x.est === 'esperando') return {cls: 'w', txt: 'Te espera'};
+  if(x.est === 'aplicada') return {cls: 'ok', txt: 'Hecha'};
+  return {cls: 'mudo', txt: 'Archivada'};
+}
+// lo que se ve recién al abrir la fila: el detalle (en castellano), el resumen o la nota
+function segFilaDetalle(x){
+  var l = [];
+  if(x.vuelo){
+    var q = [x.vuelo.que_hace, x.vuelo.proximo ? 'próximo: ' + x.vuelo.proximo : ''].filter(Boolean).join(' · ');
+    if(q) l.push(q);
+    l.push('Última noticia: ' + segVueloCuando(x.vuelo.updated_at));
+  } else {
+    if(x.est === 'decidida') l.push('Mandada · esperando que la conversación la tome');
+    else if(x.est === 'recibida') l.push('El agente está trabajando · hace ' + segDur(x.desde));
+    else if(x.est === 'esperando'){ l.push('Te espera en la conversación'); if(x.motivo) l.push(x.motivo); }
+    else if(x.est === 'aplicada'){ if(x.enArchivo && x.cuando) l.push('Aplicada · ' + segFecha(x.cuando)); if(x.resumen) l.push(x.resumen); }
+    else l.push('Archivada · ' + segFecha(x.cuando));
+    if(x.ses && x.est !== 'aplicada' && x.est !== 'archivada') l.push(x.ses);
+  }
+  return l.map(function(t){ return '<p class="res">' + esc(t) + '</p>'; }).join('');
+}
+// una fila fina de una línea; abierta, suma el detalle, el link (una sola vez) y los botones de esa entrada
+function segFilaHTML(x){
+  var S = segEstado(), k = x.clave, ab = !!S.ab[k], est = segFilaEstado(x);
+  var fila = '<button type="button" class="hfin" data-home="seg-fila" data-clave="' + esc(k) + '" aria-expanded="' + ab + '"><b>' + esc(x.titulo) + '</b><span class="he ' + est.cls + '"><i></i>' + esc(est.txt) + '</span></button>';
+  if(!ab) return fila;
+  var url = urlSesion(x.sid), a = '';
+  if(url) a += '<a class="lnk-ses" href="' + esc(url) + '">Abrir la conversación ↗</a>';
+  if(!x.vuelo && x.est !== 'aplicada' && x.est !== 'archivada') a += '<button type="button" class="hseg-b" data-home="seg-archivar" data-clave="' + esc(k) + '" aria-label="' + esc('Archivar: ' + x.titulo) + '">Archivar</button>';
+  return '<div class="hfin-ab" data-clave="' + esc(k) + '">' + fila + segFilaDetalle(x) + (a ? '<div class="hseg-a">' + a + '</div>' : '') + '</div>';
+}
+// una lista plana: título de sección + filas (hasta SEG_MAX, después «Ver N más»); vacía, no se dibuja
+function segSeccion(k, nom, lista){
+  if(!lista.length) return '';
+  var S = segEstado(), ver = S.mas[k] ? lista : lista.slice(0, SEG_MAX);
+  return '<div class="grp gs">' + esc(nom + ' · ' + lista.length) + '</div><div class="hseg reg fino" data-sec="' + k + '">' + ver.map(segFilaHTML).join('') +
+    (lista.length > ver.length ? '<button type="button" class="hseg-mas" data-home="seg-mas" data-g="' + k + '">' + esc('Ver ' + (lista.length - ver.length) + ' más') + '</button>' : '') + '</div>';
+}
+function segHTML(G){
+  var S = segEstado(), h = '';
+  var trabajando = G.encurso.concat(G.vuelo.map(function(v, i){ return {vuelo: v, clave: 'vuelo-' + (v.session_id || i), titulo: v.titulo || v.session_id || 'Conversación', sid: v.session_id || ''}; }));
+  h += segSeccion('trabajando', 'Trabajando ahora', trabajando) + segSeccion('hechas', 'Hechas hoy', G.hechas);
+  if(G.archivadas.length){
+    G.archivadas.forEach(function(x){ x.enArchivo = true; });
+    h += '<button type="button" class="arch-l" data-home="seg-archivo" aria-expanded="' + !!S.arch + '">' + (S.arch ? 'Ocultar archivo' : esc('Archivo · ' + G.archivadas.length + ' ›')) + '</button>';
+    if(S.arch){
+      var ver = S.mas.archivadas ? G.archivadas : G.archivadas.slice(0, SEG_MAX);
+      h += '<div class="hseg reg fino" data-sec="archivadas">' + ver.map(segFilaHTML).join('') +
+        (G.archivadas.length > ver.length ? '<button type="button" class="hseg-mas" data-home="seg-mas" data-g="archivadas">' + esc('Ver ' + (G.archivadas.length - ver.length) + ' más') + '</button>' : '') + '</div>';
+    }
+  }
+  return h;
+}
+// Sesiones: las listas planas «Trabajando ahora» y «Hechas hoy». Sin bloque ámbar ni nada rojo: lo que te espera vive en Bloqueos
+function sesionesHTML(){
+  var h = '', A = estado.acc, G = segGrupos();
+  var g = segHTML(G);
+  h += g;
+  if(!g){
+    if(!A || (!A.d && !A.err)) return h + '<div class="home-carga">Cargando…</div>';
+    h += '<div class="hl-vacio">Nada en sesiones</div>';
+  }
+  return h;
+}
+// Bloqueos: todo lo que solo vos podés destrabar, sin tope: lo que falló («Con error»), obstáculos (Listo / No puedo / Comentar) y trabadas (Archivar)
+function bloqueosHTML(){
+  var A = estado.acc, G = segGrupos(), h = '';
+  var items = A && A.d ? accOrden(accItems()) : [], trab = G.trabadas, er = erroresHTML();
+  if(A && A.err) h += '<div class="hl-err" role="status">No se pudo leer la lista' + (A.d ? ' · se ve la última que llegó' : '. Se reintenta solo') + '</div>';
+  if(!items.length && !trab.length){
+    if(er) return h + er;
+    if(!A || (!A.d && !A.err)) return h + '<div class="home-carga">Cargando…</div>';
+    return h + '<div class="hl-vacio bl-vacio">Nada bloqueado ✓</div>';
+  }
+  return h + er + '<h2 class="h2 bl-h" id="bl-h">' + esc('Bloqueos · ' + regN()) + '</h2><p class="bl-sub">Solo vos podés destrabarlos.</p>' +
+    '<div class="hl-lista" aria-labelledby="bl-h">' + items.map(accHTML).join('') + trab.map(segTrabHTML).join('') + '</div>';
+}
+function segClick(a, b){
+  var S = segEstado(), k = b.getAttribute('data-clave');
+  if(a === 'seg-fila'){ S.ab[k] = !S.ab[k]; homePintar(); }
+  else if(a === 'seg-archivo'){ S.arch = !S.arch; homePintar(); }
+  else if(a === 'seg-mas'){ S.mas[b.getAttribute('data-g')] = true; homePintar(); }
+  else if(a === 'seg-archivar') segArchivar(k);
+}
+// Archivar saca la fila al toque y avisa 5 s con Deshacer. La RPC se llama recién pasados los 5 s: Deshacer no llama nada
+function segArchivar(clave){
+  var S = segEstado(), x = segBuscar(clave);
+  if(!x || !x.claves.length || S.ocultas[clave]) return;
+  segSoltar();   // otro archivado todavía esperando sus 5 s: se confirma ya (el aviso es uno solo)
+  S.ocultas[clave] = {estado: 'pend', titulo: x.titulo, claves: x.claves.slice(), t: Date.now()};
+  S.pend = {clave: clave, timer: setTimeout(function(){ segConfirmar(clave); }, SNZ_TOAST_MS)};
+  homePintar();
+  snzToastMostrar(null, null, null, 'Archivada · ' + (x.titulo.length > 34 ? x.titulo.slice(0, 33) + '…' : x.titulo));
+  var tt = estado.snzToast, cont = tt && tt.el.querySelector('.snz-toast-in');
+  if(cont){
+    var bt = document.createElement('button'); bt.type = 'button'; bt.setAttribute('data-seg', 'deshacer'); bt.textContent = 'Deshacer';
+    bt.addEventListener('click', function(ev){ ev.stopPropagation(); segDeshacer(clave); });
+    cont.appendChild(bt);
+  }
+}
+function segSoltar(urgente){
+  var S = segEstado(), p = S.pend; if(!p) return;
+  clearTimeout(p.timer); S.pend = null;
+  segConfirmar(p.clave, urgente);
+}
+function segDeshacer(clave){
+  var S = segEstado(), p = S.pend; if(!p || p.clave !== clave) return;
+  clearTimeout(p.timer); S.pend = null;
+  delete S.ocultas[clave];
+  snzToastQuitar();
+  homePintar();
+}
+// la misma llamada que sb.rpc pero con keepalive: sigue viva aunque la pestaña se cierre o se recargue (supabase-js no deja pasarlo por llamada)
+function segRpcKeepalive(nombre, args){
+  return fetch(SUPABASE_URL + '/rest/v1/rpc/' + nombre, {method: 'POST', keepalive: true,
+    headers: {'Content-Type': 'application/json', apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY}, body: JSON.stringify(args)})
+    .then(function(res){ return res.text().then(function(t){
+      var d = null; try{ d = t ? JSON.parse(t) : null; }catch(e){}
+      return res.ok ? {data: d, error: null} : {data: null, error: {message: (d && d.message) || t || ('HTTP ' + res.status)}};
+    }); });
+}
+// cerrar, recargar o mandar a segundo plano la pestaña dentro de los 5 s: el archivado pendiente se confirma igual, ya (sin Deshacer)
+function segAlSalir(){
+  var S = estado.seg; if(!S || !S.pend) return;
+  segSoltar(true);
+  snzToastQuitar();   // el aviso con Deshacer ya no tiene nada que deshacer
+}
+window.addEventListener('pagehide', segAlSalir);
+document.addEventListener('visibilitychange', function(){ if(document.hidden) segAlSalir(); });
+// sesión cerrada o vencida: lo de Seguimiento es de esa sesión
+function segReset(){
+  var S = estado.seg;
+  if(S && S.pend) clearTimeout(S.pend.timer);
+  estado.seg = null; estado.segAbierta = false;
+}
+function segConfirmar(clave, urgente){
+  var S = segEstado(), oc = S.ocultas[clave], token = estado.token;
+  if(S.pend && S.pend.clave === clave){ clearTimeout(S.pend.timer); S.pend = null; }
+  if(!oc || oc.estado !== 'pend' || !token) return;
+  function falla(){
+    delete S.ocultas[clave];
+    if(token !== estado.token) return;
+    snzToastMostrar(null, null, null, 'No se pudo archivar');
+    homePintar();
+  }
+  Promise.all(oc.claves.map(function(c){ var a = {p_token: token, p_clave: c}; return urgente && typeof fetch === 'function' ? segRpcKeepalive('bm_archivar_pin', a) : sb.rpc('bm_archivar_pin', a); })).then(function(rs){
+    if(token !== estado.token) return;
+    var malo = rs.filter(function(r){ return r.error; })[0];
+    if(malo && tokenMalo(malo.error)){ sesionVencida(); return; }
+    if(malo){ falla(); return; }
+    if(rs.some(function(r){ return !r.data || r.data.cambiado === false; })){ delete S.ocultas[clave]; homePintar(); cargarLista(); return; }   // otro dispositivo la movió: manda la base
+    oc.estado = 'hecho'; oc.t = Date.now();
+    var ahora = new Date().toISOString();
+    estado.filas = estado.filas.map(function(f){   // aparece ya en Archivadas; la próxima bm_lista lo confirma
+      if(oc.claves.indexOf(f.clave) < 0) return f;
+      var g = {}; Object.keys(f).forEach(function(kk){ g[kk] = f[kk]; });
+      g.estado = 'archivada'; g.updated_at = ahora; g.espera_motivo = null; g.resumen_aplicado = 'Archivada desde Sesiones';
+      return g;
+    });
+    homePintar();
+  }, falla);
+}
+window.__seguimiento = function(){ var S = estado.seg; return S ? {d: S.d, ocultas: Object.keys(S.ocultas), pend: !!S.pend} : null; };   // solo para pruebas locales
+
+/* ----- card de revisión: `tipo: "revision"` con hice / verifique / mirar y un link https o una imagen -----
+   Un solo botón, «Revisado» (marca `rv`: vuelve «N. revisado · título»). «Comentar» abre la hoja del comentario y marca `co`: pide un cambio y
+   nunca cuenta como revisado. Revisado con un comentario escrito antes (en el Detalle) vuelve «revisado · título · comentario: …». Sin marcar sigue en el mazo. */
+function esRev(it){ return !!it && it.tipo === 'revision'; }
+function revLink(u){ var s = String(u || ''); return /^https:\/\/[^\s"'<>]+$/.test(s) ? s : ''; }
+function revCuerpoHTML(e, grande){
+  var it = e.it, sw = estado.sw, b = sw ? swBotInfo(sw, e.clave) : null, cat = b && b.cat ? b.cat.nombre : '';
+  var imgH = imagenHTML(it, grande ? 'sw-img grande' : 'sw-img', !grande);   // en la card el toque abre el detalle: la imagen va sin link; el link va abajo
+  var url = revLink(it.link) || revLink(it.imagen && it.imagen.link);
+  var linkH = url && !(grande && imgH && revLink(it.imagen && it.imagen.link)) ?
+    '<a class="sw-rev-lnk" href="' + esc(url) + '" target="_blank" rel="noopener noreferrer">' + esc(url.replace(/^https:\/\//, '').replace(/\/$/, '')) + ' ↗</a>' : '';
+  function fila(r, v){ return v ? '<p class="sw-rev-l"><b>' + r + ':</b> ' + esc(v) + '</p>' : ''; }
+  return '<div class="sw-rev-k">REVISIÓN' + (cat ? ' · ' + esc(cat) : '') + '</div><h2>' + esc(it.titulo) + '</h2>' +
+    fila('Qué hice', it.hice) + fila('Qué verifiqué', it.verifique) + fila('Qué te queda mirar', it.mirar) + imgH + linkH;
+}
+function revBarraHTML(){
+  return '<div class="sw-acc rev"><button type="button" class="sw-act rv" data-a="rev-ok"><span>Revisado</span></button>' +
+    '<button type="button" class="sw-act cm" data-a="rev-com"><span>Comentar</span></button></div><p class="sw-rev-ley">Comentar sirve para pedir un cambio.</p>';
+}
+function revHojaCom(sw, cid){
+  var e = sw.por[cid]; if(!e || sw.sheet || sw.anim) return;
+  mqHoja(sw, 'Comentar', '<h2>' + esc(e.it.titulo) + '</h2>' + mqComHTML(cid, marcaDe(e.clave, e.n).c, 'Qué cambio pedís'),
+    '<div class="sw-dbar uno"><button type="button" class="sw-act go" data-a="rev-pedir" data-cid="' + esc(cid) + '"><span>Pedir el cambio</span></button></div>');
+}
+// solo para pruebas locales: la respuesta que mandaría el mazo del home (modo multi, donde __respuestaVuelta() no ve las cards)
+window.__respuestaHome = function(){ var c = Object.keys(estado.hd)[0], r = c && estado.hd[c]; return r ? textoDe(c, r.items) : null; };
+window.__pendRev = function(it, clave){ return pendRevHTML(it, it.n, clave || 'x', false); };   // solo para pruebas locales: la revisión del camino viejo (sin swipe)
+function revClick(sw, a, b){
+  if(a !== 'rev-ok' && a !== 'rev-com' && a !== 'rev-pedir') return false;
+  var e = mqFrente(sw), cid = primeraActiva(sw);
+  if(a === 'rev-ok'){ if(e && esRev(e.it)) mqMarcar(sw, cid, 'rv'); }
+  else if(a === 'rev-com'){ if(e && esRev(e.it)) revHojaCom(sw, cid); }
+  else {
+    var c = b.getAttribute('data-cid'), ta = sw.sheetEl.querySelector('textarea[data-com]');
+    if(!ta || !ta.value.trim()){ if(ta){ ta.placeholder = 'Escribí qué cambio pedís'; try{ ta.focus(); }catch(_){} } return true; }   // sin texto no hay cambio que pedir
+    swipeCerrarHoja();
+    if(primeraActiva(sw) === c) mqMarcar(sw, c, 'co'); else swipeRender();
+  }
+  return true;
+}
+
 /* ----- festejo: confeti al enviar, confeti grande al quedar en cero, frase estoica en cero ----- */
 // el envío no festeja en el momento del OK: espera a que la lista vuelva y el home cuente lo que quedó.
 // Si quedó en cero va solo el grande (nunca los dos encimados), y si el mazo sigue abierto espera a que se vea el home.
 // Abrir la app ya en cero no festeja: el festejo nace de un envío de esta visita.
-var CONFETI_SRC = 'https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js';
-var CONFETI_SRI = 'sha384-sPwMflxqfAN+Q5mvlkLmHiX3PORGbZSXHiSGPTXT9VHCD/AB+b+r+vJWsqprv+7k';
+var CONFETI_SRC = '/vendor/confetti.min.js';   // servido desde el mismo sitio (web/vendor/LEEME.md)
 var CONFETI_COLORES = ['#8ECAC8', '#F5F0E8', '#FFD166', '#EF476F', '#FFFFFF'];
 var confetiLib = null;
 function confetiCargar(){
@@ -3743,7 +4513,7 @@ function confetiCargar(){
   confetiLib = new Promise(function(ok, mal){
     if(window.confetti){ ok(window.confetti); return; }
     var s = document.createElement('script');
-    s.src = CONFETI_SRC; s.integrity = CONFETI_SRI; s.crossOrigin = 'anonymous'; s.async = true;
+    s.src = CONFETI_SRC; s.async = true;
     s.onload = function(){ if(window.confetti) ok(window.confetti); else { confetiLib = null; mal(); } };
     s.onerror = function(){ confetiLib = null; if(s.parentNode) s.parentNode.removeChild(s); mal(); };   // sin CDN, sin confeti: la app sigue igual
     document.head.appendChild(s);
@@ -3769,7 +4539,7 @@ function festejoChequear(){
     f.grande = true;
   }
   var el = document.getElementById('home');
-  if(estado.sw || !el || !el.offsetParent) return;   // el grande sale cuando el home en cero está a la vista
+  if(estado.sw || estado.tab !== 'decisiones' || !el || (el.innerHTML && !el.offsetParent)) return;   // el grande sale cuando el home en cero está a la vista (un home vacío no se ve y tampoco bloquea: sin bloque «Por decidir» puede quedar vacío)
   estado.festejo = null;
   if(enCero(homeCalc())) festejar('grande');   // si mientras tanto llegaron cards, ya no es cero: sin festejo
 }
@@ -3871,7 +4641,7 @@ function fraseHTML(d){
   return '<blockquote class="home-frase">' + esc('«' + f.t + '»') + '</blockquote>' +
     '<div class="home-autor">' + esc('— ' + f.autor + ', ' + f.fuente) + '</div>';
 }
-// solo para pruebas locales: la frase de una fecha ('2026-11-10T09:00:00') y su franja
+// solo para pruebas locales: la frase de una fecha ('2026-11-10T09:00:00-03:00') y su franja
 window.__frase = function(d){ var x = d ? new Date(d) : new Date(), f = fraseDe(x); return f ? {franja: franjaN(x), i: fraseIdx(franjaN(x)), t: f.t, autor: f.autor, fuente: f.fuente} : null; };
 window.__frases = function(){ return FRASES.length; };
 
@@ -4022,12 +4792,259 @@ function swipeSalirMulti(){
 }
 // solo para pruebas locales: el filtro de dormidas, tal cual
 window.__dormida = dormida;
+// solo para pruebas locales: el mazo de todas las botoneras (el botón «Swipear todo» ya no está en el home: 6)
+window.__homeSwipear = function(){ homeSwipear(null); };
 // solo para pruebas locales: lo que muestra el home
 window.__home = function(){
   var H = homeCalc();
   return {pend: H.pend, hoy: H.hoy, botoneras: H.nbots, listas: H.listas.map(function(b){ return b.clave; }), cargando: H.cargando, fallan: H.fallan, dormidas: H.dormidas.map(function(d){ return d.clave; }),
     filas: H.cats.map(function(c){ return {id: c.id, nombre: c.cat.nombre, pend: c.pend, hoy: c.hoy, marc: c.marc, tot: c.tot, bots: c.bots.map(function(b){ return b.clave; })}; })};
 };
+
+
+/* ---------- las tres pestañas: Sesiones · Decisiones (al medio) · Bloqueos ----------
+   La barra de abajo cambia lo que muestra #home; una vista por vez, a cualquier ancho. Decisiones es el home de siempre.
+   Bloqueos (bm_acciones_lista y los errores) se pide con la lista y al abrir su pestaña, como mucho una vez cada 5 min (60 s con una acción hecha hace poco). */
+var ACC_CADA = 5 * 60000;           // una lectura de Bloqueos cada 5 minutos
+var ACC_ACTIVO = 60000;             // con una accion hecha hace poco el agente puede volver a trabarse: se relee cada 60 s
+var ACC_VENTANA = 10 * 60000;       // cuanto dura ese «hace poco»
+var TABS = [
+  {id: 'sesiones', nom: 'Sesiones', cls: '', ico: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h12M9 12h12M9 18h12"/><path d="M3 6l1.5 1.5L7 5M3 12l1.5 1.5L7 11M3 18l1.5 1.5L7 17"/></svg>'},
+  {id: 'decisiones', nom: 'Decidir', cls: 'rj', dec: true, ico: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="3"/><path d="M8 12l3 3 5-6"/></svg>'},
+  {id: 'bloqueos', nom: 'Bloqueos', cls: 'rj', ico: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 3h7L21 8.5v7L15.5 21h-7L3 15.5v-7z"/><path d="M12 8v5"/><path d="M12 16h.01"/></svg>'}
+];
+function tabsHTML(){ return '<nav class="tabs" id="tabs" aria-label="Secciones">' + tabsInHTML() + '</nav>'; }
+function tabsInHTML(){
+  var vis = TABS;
+  return '<div class="tabs-in" style="grid-template-columns:repeat(' + vis.length + ',1fr)">' + vis.map(function(t){
+    var on = t.id === (estado.tab || 'decisiones');
+    // Decidir es el botón redondo del medio (sin número ni nombre visible); el punto rojo va adentro de él
+    if(t.dec) return '<button type="button" class="tab tab-dec' + (on ? ' on' : '') + '" data-tab="' + t.id + '" aria-label="Decidir"' + (on ? ' aria-current="page"' : '') + '>' +
+      '<span class="dec-btn">' + t.ico + '<span class="bdg rj dot" hidden></span></span></button>';
+    return '<button type="button" class="tab' + (on ? ' on' : '') + '" data-tab="' + t.id + '"' + (on ? ' aria-current="page"' : '') + '>' +
+      '<span class="bdg ' + t.cls + '" hidden></span>' + t.ico + '<span class="tab-n">' + t.nom + '</span></button>';
+  }).join('') + '</div>';
+}
+// los numeros que sabe la barra: cards pendientes y acciones abiertas (solo para pruebas: la barra no los muestra)
+function tabsNums(){
+  var A = accAbiertos().length;
+  return {decisiones: estado.homeVisto && estado.listaCargada ? homeCalc().pend : 0, acciones: A};
+}
+// el «!» de la pestaña Bloqueos va solo si la lectura de bm_acciones_lista fallo
+function accRojo(){
+  var X = estado.acc; if(!X) return false;
+  return !!X.err;
+}
+// el número sobre Bloqueos mientras haya al menos un obstaculo abierto o una trabada (aparte del «!» de accRojo)
+function regRojo(){ return regN() > 0; }
+// el número de la pestaña = obstáculos abiertos + trabadas + errores sin ver
+function regN(){
+  return accAbiertos().length + segGrupos().trabadas.length + (estado.errores || []).length;
+}
+function tabsPintar(){
+  var nav = document.getElementById('tabs'); if(!nav) return;
+  var n = tabsNums();
+  Array.prototype.forEach.call(nav.querySelectorAll('.tab'), function(b){
+    var id = b.getAttribute('data-tab'), on = id === estado.tab, g = b.querySelector('.bdg'), nom = id === 'decisiones' ? 'Decidir' : b.querySelector('.tab-n').textContent;
+    var rn = id === 'bloqueos' ? regN() : 0;
+    var punto = id === 'bloqueos' ? rn > 0 : id === 'decisiones' ? n.decisiones > 0 : false;
+    var excl = id === 'bloqueos' && accRojo();
+    b.classList.toggle('on', on);
+    if(on) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
+    if(!g){ b.setAttribute('aria-label', nom); return; }
+    // Bloqueos lleva el numero de lo que te espera (sin punto); Decidir sigue con su punto rojo; el «!» de la lectura fallada manda sobre el numero
+    var conNum = id === 'bloqueos' && !excl && rn > 0;
+    g.classList.toggle('dot', !excl && !conNum);
+    g.classList.toggle('rj', true);
+    var txt = excl ? '!' : conNum ? (rn > 99 ? '99+' : String(rn)) : '';
+    if(g.textContent !== txt) g.textContent = txt;
+    g.hidden = !(punto || excl);
+    b.setAttribute('aria-label', nom + (excl ? ', no se pudo leer' : punto ? (id === 'bloqueos' ? ', ' + pl(rn, 'te espera', 'te esperan') : ', hay cards abiertas') : ''));
+  });
+}
+function tabIr(id){
+  if(!estado.token || !/^(sesiones|bloqueos|decisiones)$/.test(id)) return;
+  if(id === 'decisiones') estado.homeCat = null;   // tocar Decidir deja el home de decisiones, tambien estando ya ahi
+  if(estado.tab === id){ if(id === 'decisiones'){ estado.homeSig = null; homePintar(); } try{ window.scrollTo(0, 0); }catch(e){} return; }
+  estado.tab = id; estado.homeSig = null;
+  if(id === 'sesiones' || id === 'bloqueos'){ accionesCargar(false); erroresCargar(); segCargar(); }
+  homePintar();
+  try{ window.scrollTo(0, 0); }catch(e){}
+}
+function pestanasReset(){
+  estado.tab = 'decisiones'; estado.acc = null;
+  document.body.classList.remove('con-barra');
+}
+// el estado para las pruebas: la pestaña y los numeros
+window.__pestanas = function(){
+  var n = tabsNums(), nav = document.getElementById('tabs');
+  return {tab: estado.tab, badges: n, barra: !!(nav && nav.getBoundingClientRect().height > 0 && getComputedStyle(nav).display !== 'none'), rojo: accRojo(), regRojo: regRojo(), regN: regN(), decPunto: n.decisiones > 0};
+};
+window.__pestanas.ir = function(id){ tabIr(id); };   // solo para pruebas: abre una pestaña por id
+function lecFecha(iso){   // «10-nov»
+  var t = ms(iso); if(!t) return '';
+  var p = snzPartes(t);
+  return p.d + '-' + SW_MESES[p.m - 1];
+}
+function cargarPestana(S, nombre, rpc, cada, activo, alLlegar){
+  var token = estado.token; if(!token) return;
+  var X = estado[S] || (estado[S] = {d: null, err: false, t: 0, busy: false, vuelo: 0, tomT: 0, ed: {}});
+  if(X.busy || (!activo && !X.forzar && X.t && Date.now() - X.t < cada) || (activo && X.t && Date.now() - X.t < activo)) return;
+  var t0 = Date.now();   // cuando salio este pedido: una accion que se confirmo despues lo deja viejo (guard tomT)
+  X.busy = true; X.t = t0; X.forzar = false;
+  function fin(){ X.busy = false; if(token === estado.token) alLlegar(); }
+  sb.rpc(rpc, {p_token: token}).then(function(r){
+    if(token !== estado.token){ X.busy = false; return; }
+    if(r.error && tokenMalo(r.error)){ X.busy = false; sesionVencida(); return; }
+    if(X.vuelo > 0 || (X.tomT && X.tomT > t0)){ X.t = 0; }   // salio antes de un toque que ya se confirmo (o hay uno en vuelo): traeria de vuelta lo que se acaba de sacar
+    else if(r.error || !r.data || !Array.isArray(r.data.items)){ X.err = true; X.t = 0; }
+    else { X.d = r.data; X.err = false; }
+    fin();
+  }, function(){ X.err = true; X.t = 0; fin(); });
+}
+function accionesCargar(forzar){
+  var A = estado.acc; if(forzar && A) A.forzar = true;
+  var act = !!(A && A.activoHasta && A.activoHasta > Date.now());
+  cargarPestana('acc', 'Acciones', 'bm_acciones_lista', ACC_CADA, act ? ACC_ACTIVO : 0, pestanasRepintar);
+}
+function pestanasRepintar(){ tabsPintar(); homePintar(); }
+
+// repone lo que se estaba escribiendo en un campo de Bloqueos cuando se repinta el home (el texto vive en estado, el html trae solo el valor inicial)
+function restaurarCampos(el, fk, ss){
+  Array.prototype.forEach.call(el.querySelectorAll('[data-pt-in]'), function(ta){
+    var tipo = ta.getAttribute('data-pt-in'), k = ta.getAttribute('data-k'), e = (estado.acc && estado.acc.ed || {})[k];
+    if(e && typeof e.txt === 'string') ta.value = e.txt;
+    if(fk && tipo + '\u0000' + k === fk){ try{ ta.focus({preventScroll: true}); ta.setSelectionRange(ss, ss); }catch(x){} }
+  });
+}
+function alInputPt(e){
+  var ta = e.target; if(!ta || !ta.getAttribute) return;
+  if(!ta.getAttribute('data-pt-in')) return;
+  var ed = (estado.acc && estado.acc.ed || {})[ta.getAttribute('data-k')];
+  if(ed){ ed.txt = ta.value; if(ed.err){ ed.err = ''; var er = ta.parentNode && ta.parentNode.querySelector('.hac-err'); if(er) er.textContent = ''; } }
+}
+
+/* ----- Acciones ----- */
+function accAbiertos(){ return accItems().filter(function(it){ return !it.estado || it.estado === 'abierta' || it.estado === 'abierto'; }); }   // v3.1 5/el bloque y la pestaña cuentan lo mismo: solo obstáculos abiertos
+function accItems(){ var A = estado.acc; return A && A.d ? A.d.items.filter(function(it){ return it.origen === 'item'; }) : []; }   // solo obstaculos (si llegara una fila vieja de error o pedido, no se muestra)
+function accKey(it){ return it.origen + '|' + it.ref; }
+function accPorKey(k){
+  var l = accItems();
+  for(var i = 0; i < l.length; i++) if(accKey(l[i]) === k) return l[i];
+  return null;
+}
+// los que frenan trabajo van arriba; dentro de cada grupo, el mas viejo primero (la base ya los manda asi: esto lo asegura tambien en el arnes)
+function accOrden(l){
+  return l.map(function(it, i){ return {it: it, i: i}; }).sort(function(a, b){
+    var fa = a.it.frena ? 0 : 1, fb = b.it.frena ? 0 : 1; if(fa !== fb) return fa - fb;
+    var ta = a.it.fecha ? ms(a.it.fecha) : Infinity, tb = b.it.fecha ? ms(b.it.fecha) : Infinity; if(isNaN(ta)) ta = Infinity; if(isNaN(tb)) tb = Infinity; if(ta !== tb) return ta < tb ? -1 : 1;
+    return a.i - b.i;
+  }).map(function(x){ return x.it; });
+}
+// el link vale solo si es https, sin usuario ni contrasena en la direccion; el texto muestra el sitio ENTERO (nunca recortado) y el camino recortado
+function accLinkHTML(it){
+  var u = String(it.link || ''), x;
+  if(!/^https:\/\/[^\s\\]+$/i.test(u)) return '';
+  try{ x = new URL(u); }catch(e){ return ''; }
+  if(x.protocol !== 'https:' || x.username || x.password) return '';
+  var cam = (x.pathname === '/' ? '' : x.pathname), txt = x.hostname.replace(/^www\./i, '') + (cam.length > 40 ? cam.slice(0, 39) + '…' : cam);
+  return '<a class="hac-link" href="' + esc(x.href) + '" target="_blank" rel="noopener noreferrer">' + esc(txt) + ' ↗</a>';
+}
+// el comando se muestra y se copia sin caracteres de control ni de direccion de texto (lo que se ve es lo que se pega)
+function accCmd(it){ return String(it.comando || '').replace(/[\u0000-\u001f\u007f\u200b-\u200f\u202a-\u202e\u2066-\u2069]/g, ''); }
+function accHTML(it){
+  var k = accKey(it), ed = (estado.acc.ed || {})[k], dis = it.busy ? ' disabled' : '', d = 'data-k="' + esc(k) + '"';
+  var h = '<div class="hac" ' + d + '><b>' + esc(it.titulo) + '</b>' + (it.frena ? '<span class="hac-frena">' + esc('Frena: ' + it.frena) + '</span>' : '') +
+    (it.por_que ? '<span class="hac-por">' + esc(it.por_que) + '</span>' : '') + accLinkHTML(it) +
+    (accCmd(it) ? '<span class="hac-cmd"><code>' + esc(accCmd(it)) + '</code><button type="button" class="hac-cp" data-pt="acc-copiar" ' + d + '>Copiar</button></span>' : '') +
+    '<span class="hac-de">' + esc([it.de, it.fecha ? 'desde ' + lecFecha(it.fecha) : ''].filter(Boolean).join(' · ')) + '</span>';
+  if(it.estado === 'no_puedo') h += '<span class="hac-m">' + esc('No puedo' + (it.comentario ? ': ' + it.comentario : '')) + '</span>';
+  else if(it.estado === 'comentada') h += '<span class="hac-m">' + esc('Comentario: ' + (it.comentario || '')) + '</span>';
+  if(ed){
+    var lbl = ed.modo === 'no_puedo' ? 'Por qué no podés (opcional)' : ed.modo === 'listo' ? 'Algo para el agente (opcional)' : 'Tu comentario para el agente';
+    h += '<label class="hac-l">' + esc(lbl) + '</label>' +
+      '<textarea class="lac-ta" rows="3" data-pt-in="acc" ' + d + '>' + esc(ed.ini || '') + '</textarea>' + (ed.err ? '<span class="hac-err" role="alert">' + esc(ed.err) + '</span>' : '') +
+      '<div class="bts"><button type="button" class="p" data-pt="acc-mandar" ' + d + dis + '>' + (ed.modo === 'listo' ? 'Listo' : ed.modo === 'no_puedo' ? 'No puedo' : 'Mandar') + '</button><button type="button" data-pt="acc-cancelar" ' + d + dis + '>Cancelar</button></div>';
+  } else {
+    h += '<div class="bts"><button type="button" class="p" data-pt="acc-hecho" ' + d + dis + '>Listo</button><button type="button" data-pt="acc-nopuedo" ' + d + dis + '>No puedo</button></div>' +
+      '<button type="button" class="hac-com" data-pt="acc-comentar" ' + d + dis + '>Comentar</button>';
+  }
+  return h + '</div>';
+}
+// Listo: con comentario opcional. La fila sale al toque; si la base falla, vuelve y el comentario no se pierde.
+function accHecha(k, com){
+  var token = estado.token, A = estado.acc, it = accPorKey(k); if(!token || !A || !it || it.busy) return;
+  var pos = A.d.items.indexOf(it), ed = A.ed[k];
+  it.busy = true; A.vuelo++;
+  A.d.items = A.d.items.filter(function(x){ return x !== it; });
+  pestanasRepintar();
+  function vuelve(){ it.busy = false; A.d.items.splice(Math.min(pos, A.d.items.length), 0, it); if(ed) A.ed[k] = ed; }
+  function fin(){ A.vuelo = Math.max(0, A.vuelo - 1); }
+  sb.rpc('bm_accion_hecha', {p_token: token, p_origen: it.origen, p_ref: it.ref, p_comentario: String(com || '')}).then(function(r){
+    fin();
+    if(token !== estado.token) return;
+    if(r.error && tokenMalo(r.error)){ sesionVencida(); return; }
+    if(r.error || !r.data){ vuelve(); pestanasRepintar(); snzToastMostrar(null, null, null, 'No se pudo'); return; }
+    A.tomT = Date.now(); delete A.ed[k];
+    var res = String(r.data.resultado || '');
+    A.activoHasta = Date.now() + ACC_VENTANA;
+    snzToastMostrar(null, null, null, res === 'ya no esta trabado' ? 'Ya no estaba trabado' : 'Listo: el agente sigue solo');
+    pestanasRepintar();
+  }, function(){ fin(); if(token === estado.token){ vuelve(); pestanasRepintar(); snzToastMostrar(null, null, null, 'No se pudo'); } });
+}
+function accAbrir(k, modo){
+  var A = estado.acc, it = accPorKey(k); if(!A || !it) return;
+  A.ed[k] = {modo: modo, ini: '', txt: '', err: ''};
+  pestanasRepintar();
+  var ta = null;
+  Array.prototype.forEach.call(document.querySelectorAll('.hac textarea'), function(x){ if(x.getAttribute('data-k') === k) ta = x; });
+  if(ta) try{ ta.focus({preventScroll: true}); }catch(e){}
+}
+// Mandar: Listo y No puedo con comentario opcional; Comentar (chico) lo exige y no saca la fila
+function accMandar(k){
+  var token = estado.token, A = estado.acc, it = accPorKey(k), ed = A && A.ed[k]; if(!token || !A || !it || !ed || it.busy) return;
+  var txt = String(ed.txt || '').trim();
+  if(ed.modo === 'listo'){ accHecha(k, txt); return; }
+  if(ed.modo === 'comentar' && !txt){ ed.err = 'Escribí el comentario'; pestanasRepintar(); return; }
+  it.busy = true; A.vuelo++; pestanasRepintar();
+  function fin(){ it.busy = false; A.vuelo = Math.max(0, A.vuelo - 1); }
+  sb.rpc('bm_accion_marcar', {p_token: token, p_origen: it.origen, p_ref: it.ref, p_estado: ed.modo === 'no_puedo' ? 'no_puedo' : 'comentada', p_comentario: txt}).then(function(r){
+    fin();
+    if(token !== estado.token) return;
+    if(r.error && tokenMalo(r.error)){ sesionVencida(); return; }
+    if(r.error || !r.data){ ed.err = 'No se pudo'; pestanasRepintar(); return; }
+    A.tomT = Date.now(); delete A.ed[k];
+    it.estado = r.data.estado || (ed.modo === 'no_puedo' ? 'no_puedo' : 'comentada'); it.comentario = r.data.comentario != null ? r.data.comentario : txt;
+    snzToastMostrar(null, null, null, ed.modo === 'no_puedo' ? 'Anotado: se lo aviso al agente' : 'Comentario guardado');
+    pestanasRepintar();
+  }, function(){ fin(); if(token === estado.token){ ed.err = 'No se pudo'; pestanasRepintar(); } });
+}
+// el comando se copia con un toque (con respaldo para cuando el portapapeles no deja)
+function accCopiar(k){
+  var it = accPorKey(k), txt = it ? accCmd(it) : ''; if(!txt) return;
+  function listo(){ snzToastMostrar(null, null, null, 'Copiado'); }
+  function respaldo(){
+    var t = document.createElement('textarea'); t.value = txt; t.setAttribute('readonly', ''); t.style.cssText = 'position:fixed;top:0;left:0;opacity:0';
+    document.body.appendChild(t); t.focus(); t.select(); try{ t.setSelectionRange(0, txt.length); }catch(e){}
+    var ok = false; try{ ok = document.execCommand('copy'); }catch(e){}
+    document.body.removeChild(t);
+    if(ok) listo(); else snzToastMostrar(null, null, null, 'No se pudo copiar');
+  }
+  if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(txt).then(listo, respaldo); } else respaldo();
+}
+
+/* ----- los toques de las tres pestañas: #home, el lector y la barra ----- */
+function alClickPt(e){
+  var tg = e.target; if(!tg || !tg.closest) return;
+  var b = tg.closest('[data-pt]'); if(!b || b.disabled) return;
+  var a = b.getAttribute('data-pt'), k = b.getAttribute('data-k');
+  if(a === 'acc-hecho') accAbrir(k, 'listo');   // Listo abre el comentario opcional; manda con «Listo» adentro (accMandar)
+  else if(a === 'acc-nopuedo') accAbrir(k, 'no_puedo');
+  else if(a === 'acc-comentar') accAbrir(k, 'comentar');
+  else if(a === 'acc-mandar') accMandar(k);
+  else if(a === 'acc-cancelar'){ if(estado.acc) delete estado.acc.ed[k]; pestanasRepintar(); }
+  else if(a === 'acc-copiar') accCopiar(k);
+}
 
 /* ---------- arranque ---------- */
 function init(){
@@ -4045,7 +5062,7 @@ function init(){
   });
   // al volver a la pestaña se pone al dia sin esperar el poll
   document.addEventListener('visibilitychange', function(){
-    if(!document.hidden && estado.token){ cargarLista(); avisosAlEntrar(); }
+    if(!document.hidden && estado.token){ cargarLista(); avisosAlEntrar(); homePintar(); }
   });
   window.addEventListener('focus', function(){ if(estado.token) cargarLista(); });
   var t = leerToken();

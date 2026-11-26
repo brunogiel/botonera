@@ -91,8 +91,13 @@ def main():
     print(f"values ('bot_secret_sha256', '{hash_hex}')")
     print("on conflict (k) do update set v = excluded.v;")
     print()
-    print("Para llevarlo al bot sin verlo: copiá el contenido de ~/.config/botonera/env-bot a su secret store.")
-    print("El bot publica con BM_SESSION_ID=bot-<nombre> y claves bot-<algo>.")
+    print("Dónde poner el archivo en el servidor del bot:")
+    print("  - copiá el contenido de ~/.config/botonera/env-bot a un archivo del servidor (por ejemplo")
+    print("    /etc/botonera/env, permisos 600, solo legible por el usuario que corre el bot) o a su secret store;")
+    print("  - apuntá el bot a ese archivo con la variable BM_ENV_FILE=/etc/botonera/env")
+    print("    (o dale SUPABASE_URL, SUPABASE_ANON_KEY y BM_SECRET como variables de entorno: tienen que estar las tres);")
+    print("  - el bot publica con BM_SESSION_ID=bot-<nombre> y claves bot-<algo>.")
+    print("  - el archivo no va a un repo, a un chat ni a un log.")
     print("Rotar: python3 secret-bot.py --rotar + el SQL de arriba. Dar de baja a los bots: "
           "delete from public.bm_config where k = 'bot_secret_sha256';")
 
