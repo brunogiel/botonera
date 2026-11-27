@@ -24,6 +24,8 @@ Botonera tiene dos versiones. Las dos juntan lo que tenés que decidir en tarjet
 | **Agentes** | Solo Claude | Claude Code, Cursor, Codex o cualquiera que corra Python |
 | **Sesiones y Bloqueos** | Sesiones: «Mandada», «Trabajando» y «Hecha». Bloqueos: solo respuestas sin novedad hace más de 24 horas | Completos: qué hace cada sesión, lo que solo vos podés hacer y lo que murió con error |
 
+Probá la botonera completa sin instalar nada: [demo en línea](https://brunogiel.github.io/botonera/demo/) (datos inventados de una agencia de ads; entrás con cualquier PIN).
+
 **La fácil** es para vos si usás Claude y querés ver tus pendientes en tarjetas sin armar nada. **La completa** es para vos si querés avisos en el celu, PIN, otros agentes o bots, y no te molesta usar la terminal y dos cuentas gratis.
 
 La fácil usa el mismo diseño y las mismas tarjetas que la completa (con una derivación de su web, ver [`facil/LEEME.md`](facil/LEEME.md)). Las dos se pueden tener instaladas a la vez en máquinas distintas; en una misma máquina el skill decide cuál usar (si existe `~/.config/botonera/env`, la completa).
@@ -202,6 +204,8 @@ python3 ~/.claude/skills/botonera/obstaculo.py --titulo "Iniciá sesión en el p
 ```
 
 Cuando tocás «Listo», `pendientes.py` lo muestra como resuelto y la sesión retoma lo frenado.
+
+Bloqueos muestra cada obstáculo en una fila cerrada (título y qué frena), agrupada por categoría como Decidir; un toque abre el detalle y los botones. La categoría sale de `--de` o de `--categoria <id>` (un id de `categorias.json`); sin ninguna va a «Otras».
 
 ### Fila «Con error»
 

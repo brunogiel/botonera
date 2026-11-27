@@ -105,7 +105,7 @@ function escenario(nombre, extra) {
     const base2 = escenario('sesiones');
     base.filas = base2.filas;
     base.acciones = { items: [
-      { origen: 'item', ref: '7', titulo: 'Pegar la llave de la API', por_que: 'Sin la llave no se puede publicar.', de: 'Sesión de prueba', fecha: iso(26 * 3600e3), frena: 'la publicación del informe', link: 'https://example.com/llaves', comando: '', estado: 'abierta', comentario: '' },
+      { origen: 'item', ref: '7', titulo: 'Pegar la llave de la API', por_que: 'Sin la llave no se puede publicar.', de: 'Sesión de prueba', fecha: iso(26 * 3600e3), frena: 'la publicación del informe', link: 'https://example.com/llaves', comando: '', estado: 'abierta', comentario: '', categoria: CAT('trabajo') },
       { origen: 'item', ref: '8', titulo: 'Correr la migración', por_que: 'La base no tiene la tabla.', de: 'Sesión de prueba', fecha: iso(3 * 3600e3), frena: '', link: '', comando: 'supabase db push', estado: 'abierta', comentario: '' }] };
     base.errores = [{ id: 1, tipo: 'tarea', origen_id: 'tarea-1', titulo: 'Reporte semanal', motivo: 'Límite de uso alcanzado', ocurrio_at: iso(13 * 3600e3) },
       { id: 2, tipo: 'sesion', origen_id: 'e2e-vieja', titulo: 'Tanda archivada con respuesta sin aplicar', motivo: 'La sesión ya no está', ocurrio_at: iso(3 * 3600e3) }];
@@ -196,11 +196,11 @@ function stub(FX, TOKEN) {
 }
 
 // ───────────── contexto del navegador ─────────────
-// opciones: ancho, alto, escritorio (sin isMobile), sinTouch (ratón puro: hover y pointer fine; usar click en vez de tap), sinToken (arranca en la pantalla del PIN), ahora (ISO: fija el reloj de la página)
+// opciones: ancho, alto, escritorio (sin isMobile), sinTouch (ratón puro: hover y pointer fine; usar click en vez de tap), sinToken (arranca en la pantalla del PIN), userAgent (un celu: para el cartel de instalar), ahora (ISO: fija el reloj de la página)
 async function ctxNuevo(FX, op) {
   op = op || {};
   if (!browser) browser = await chromium.launch();
-  const ctx = await browser.newContext({ viewport: { width: op.ancho || 390, height: op.alto || 844 }, hasTouch: !op.sinTouch, isMobile: !op.escritorio, deviceScaleFactor: 1 });
+  const ctx = await browser.newContext({ viewport: { width: op.ancho || 390, height: op.alto || 844 }, hasTouch: !op.sinTouch, isMobile: !op.escritorio, deviceScaleFactor: 1, userAgent: op.userAgent });
   // terceros: las fuentes de Google se contestan vacías (lo único que la web pide afuera); cualquier otro host se corta y queda anotado
   await ctx.route(u => !['127.0.0.1', 'localhost'].includes(u.hostname), r => {
     const h = new URL(r.request().url()).hostname; ctx.terceros = ctx.terceros || new Set(); ctx.terceros.add(h);

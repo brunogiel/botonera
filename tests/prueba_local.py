@@ -708,11 +708,24 @@ def main():
         st, lst = rpc("bm_acciones_lista", {"p_token": token})
         its_o = lst.get("items") if isinstance(lst, dict) else []
         it_o = next((x for x in its_o if x.get("ref") == str(id_ob)), {})
-        claves_o = {"origen", "ref", "titulo", "por_que", "de", "fecha", "frena", "link", "comando", "estado", "comentario"}
+        claves_o = {"origen", "ref", "titulo", "por_que", "de", "fecha", "frena", "link", "comando", "estado", "comentario", "categoria"}
         registrar(st == 200 and set(lst) == {"items"} and len(its_o) == 1 and set(it_o) == claves_o and it_o.get("origen") == "item"
                   and it_o.get("estado") == "abierta" and it_o.get("frena") == "el reporte semanal" and it_o.get("de") == "reportes"
                   and it_o.get("link") == "https://ejemplo.com/panel",
-                  "bm_acciones_lista devuelve {items:[…]} con los once campos de siempre", f"{st} {str(lst)[:300]}")
+                  "bm_acciones_lista devuelve {items:[…]} con los doce campos (once de siempre + categoria)", f"{st} {str(lst)[:300]}")
+        registrar(isinstance(it_o.get("categoria"), dict) and it_o["categoria"].get("id") == "reportes",
+                  "sin --categoria, la categoría del obstáculo sale de --de", str(it_o.get("categoria"))[:200])
+        r = py("obstaculo.py", "--titulo", "Aprobá el presupuesto de ejemplo", "--link", "https://ejemplo.com/presupuesto", "--categoria", "clientes")
+        m_cat = re.search(r"#(\d+)", r.stdout)
+        st, lst2 = rpc("bm_acciones_lista", {"p_token": token})
+        it_c = next((x for x in (lst2.get("items") if isinstance(lst2, dict) else []) if m_cat and x.get("ref") == m_cat.group(1)), {})
+        registrar(r.returncode == 0 and isinstance(it_c.get("categoria"), dict) and it_c["categoria"].get("id") == "clientes",
+                  "obstaculo.py --categoria guarda la categoría y bm_acciones_lista la devuelve", f"{r.stderr or r.stdout} {str(it_c)[:200]}")
+        st, res = rpc("bm_obstaculo_publicar", {"p_secret": secreto, "p_titulo": "Categoría rara", "p_por_que": "", "p_de": "", "p_frena": "",
+                                                "p_link": "https://ejemplo.com/rara", "p_comando": "", "p_categoria": {"id": "no vale con espacios"}})
+        cat_rara = sql("select coalesce(categoria::text, 'NULL') from public.bm_obstaculos where titulo = 'Categoría rara';")
+        registrar(st == 200 and "NULL" in str(getattr(cat_rara, "stdout", cat_rara)), "una categoría con id inválido se guarda nula (cae en «Otras»)", f"{st} {res} {getattr(cat_rara, 'stdout', cat_rara)}")
+        sql("delete from public.bm_obstaculos where titulo in ('Aprobá el presupuesto de ejemplo', 'Categoría rara');")
         st, res = rpc("bm_acciones_lista", {"p_token": "token-falso"})
         registrar(st >= 400 and "token invalido" in mensaje(res), "bm_acciones_lista con token falso se rechaza", f"{st} {res}")
         st, res = rpc("bm_accion_marcar", {"p_token": token, "p_origen": "item", "p_ref": str(id_ob), "p_estado": "comentada", "p_comentario": ""})

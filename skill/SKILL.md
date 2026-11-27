@@ -327,7 +327,7 @@ python3 ~/.claude/skills/botonera/obstaculo.py --titulo "Iniciá sesión en el p
     --retoma "cuando lo hagas, corro el reporte" --de "<proyecto o tema>"
 ```
 
-`--titulo` es obligatorio, y hace falta un `--link` https o un `--comando`. `--seco` muestra lo que mandaría sin publicar nada.
+`--titulo` es obligatorio, y hace falta un `--link` https o un `--comando`. Bloqueos agrupa por categoría, como Decidir: sale de `--de` (un alias del catálogo o un nombre libre) o de `--categoria <id>`; sin ninguno cae en «Otras». `--seco` muestra lo que mandaría sin publicar nada.
 Repetir el mismo título abierto no duplica. Cuando el usuario toca «Listo», `pendientes.py` lista el obstáculo resuelto: la
 sesión que lo abrió (o cualquier otra) retoma lo que estaba frenado y lo cierra con `obstaculo.py --llevado <id>`, para que no vuelva a listarse.
 Un bot con secreto limitado no puede publicar obstáculos ni anotar vuelos.
