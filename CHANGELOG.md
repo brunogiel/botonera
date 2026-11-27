@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.3.1 · 2026-11-27
+
+**Bloqueos más corto de leer, un cartel para instalar la app y un ícono nuevo.**
+
+- **Bloqueos compacto.** Arriba, un resumen («N para hacer», «N sesiones trabadas»). Cada obstáculo y cada sesión trabada es una fila cerrada con su título en dos líneas y una sola línea de «Frena …»; un toque abre el detalle (el porqué, el link o el comando con «Copiar», el estado y los botones Listo / No puedo / Comentar, o Archivar). Se abre una fila a la vez, y la que tiene el comentario abierto no se cierra sola.
+- **Bloqueos agrupa por categoría, como Decidir.** Cada grupo lleva el ícono y el color de su categoría, en el mismo orden que Decidir; las sesiones trabadas van al final y lo que no trae categoría, en «Otras». `obstaculo.py` suma `--categoria <id>` (un id de `categorias.json`); sin él, la categoría sale de `--de`.
+- **Cartel para instalar la app en el inicio del celu.** La primera vez que abrís la botonera desde el navegador del celu, un cartel explica cómo instalarla: en iPhone, «Compartir» y «Agregar a inicio»; en Android, el botón «Instalar» cuando el navegador lo ofrece. No sale en compu ni si ya corre instalada, y cerrarlo lo apaga para siempre.
+- **Ícono nuevo:** el cuadrado entero es un mazo de cartas.
+- **La demo en línea** muestra todo esto, con datos inventados.
+- Una migración nueva (`20261127000000_bm_obstaculos_categoria.sql`): la columna `categoria` de los obstáculos, un parámetro opcional más en `bm_obstaculo_publicar` y la categoría en `bm_acciones_lista`. `install.sh` la suma a `instalar.sql` y se puede repetir, así que actualizar desde la 1.3.0 es volver a correr el instalador y pegar el SQL.
+- **Pruebas:** casos nuevos de Bloqueos compactos en `e2e-bloqueos.js` y `facil/tests/e2e.js`, y `e2e-instalar.js` para el cartel (`npm run e2e:todo`).
+
 ## 1.3.0 · 2026-11-26
 
 **Dos versiones en un mismo repo: la completa con cualquier agente, y una versión fácil sin servidor.**
