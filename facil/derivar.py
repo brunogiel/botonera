@@ -68,8 +68,8 @@ def derivar(web):
 
     # 1. <head>: título corto, sin íconos ni manifest por ruta (una página privada no sirve archivos aparte)
     d.sub("<title>Botonera</title>", "<title>Tus pendientes</title>", nombre="título")
-    for linea in ('<link rel="icon" type="image/svg+xml" href="/icon.svg">\n', '<link rel="icon" type="image/png" sizes="32x32" href="/icon-32.png">\n',
-                  '<link rel="apple-touch-icon" href="/apple-touch-icon.png">\n', '<link rel="manifest" href="/manifest.webmanifest">\n',
+    for linea in ('<link rel="icon" type="image/svg+xml" href="/icon.svg?v=2">\n', '<link rel="icon" type="image/png" sizes="32x32" href="/icon-32.png?v=2">\n',
+                  '<link rel="apple-touch-icon" href="/apple-touch-icon.png?v=2">\n', '<link rel="manifest" href="/manifest.webmanifest">\n',
                   '<meta name="apple-mobile-web-app-title" content="Botonera">\n'):
         d.sub(linea, "", nombre="sin " + linea[:40].strip())
     d.sub("</style>\n</head>", CSS + "</style>\n</head>", nombre="css del aviso a Claude")
@@ -117,6 +117,10 @@ function avisosIcono(n){
           nombre="avisar tras el envío del home")
     d.entre("function segRpcKeepalive(nombre, args){", "// cerrar, recargar o mandar a segundo plano",
             "function segRpcKeepalive(nombre, args){ return sb.rpc(nombre, args); }   /* ARTIFACT: sin fetch directo */\n", "archivar sin fetch directo")
+
+    # 5b. sin cartel de instalar en el inicio: una página privada no se instala ni sirve íconos aparte
+    d.entre("/* ---------- cartel «instalala en el inicio» ----------", "/* ---------- arranque ---------- */",
+            "/* ARTIFACT: sin cartel de instalar (una página privada no se instala en el inicio) */\nfunction instPintar(){}\n\n", "sin cartel de instalar")
 
     # 6. confeti sin script de afuera
     d.entre("var CONFETI_SRC = '/vendor/confetti.min.js';", "function festejoTras(p){",

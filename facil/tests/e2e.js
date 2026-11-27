@@ -320,6 +320,21 @@ async function arrastrar(page, dx) {
     check('una tanda que llega mientras la página está abierta aparece sola (sin recargar)', /Casa/.test(await home(p)));
     await cerrar(p);
 
+    /* ===== E2. Bloqueos compactos: una respuesta sin novedad hace más de 24 h ===== */
+    console.log('\nE2. Bloqueos compactos');
+    p = await abrir('', { docs: [CASA] });
+    await p.waitForSelector('.hrow');
+    await p.evaluate(c => window.__fake.seed('respuestas/' + c, { clave: c, texto: '/botonera respuesta · ' + c + '\n1. va', por: 'x', cuando: new Date(Date.now() - 30 * 3600e3).toISOString() }), CLAVE_CASA);
+    await tap(p, '[data-tab="bloqueos"]');
+    await p.waitForSelector('.bl-fila', { timeout: 8000 });
+    const bl = await p.evaluate(() => ({ ex: document.querySelector('.bl-cab').getAttribute('aria-expanded'), det: getComputedStyle(document.querySelector('.bl-det')).display,
+      grupo: document.querySelector('.bl-gn').textContent.trim(), res: document.querySelector('.bl-res').innerText.replace(/\s+/g, ' ') }));
+    check('Bloqueos compactos: la trabada sale cerrada, en «Sesiones trabadas» y con su resumen arriba', bl.ex === 'false' && bl.det === 'none' && bl.grupo === 'Sesiones trabadas' && /1 sesión trabada/.test(bl.res), bl);
+    await p.locator('.bl-cab').first().tap(); await sleep(250);
+    check('Bloqueos compactos: un toque abre el detalle y muestra «Archivar»', (await p.locator('[data-home="seg-archivar"]').isVisible()) && (await p.locator('.bl-cab').first().getAttribute('aria-expanded')) === 'true');
+    check('Bloqueos compactos: 390 px sin scroll horizontal', await sinScrollX(p));
+    await cerrar(p);
+
     /* ===== F. anchos y errores ===== */
     console.log('\nF. 1280 px y errores');
     p = await abrir('', { ancho: 1280, alto: 900, sinTouch: true });

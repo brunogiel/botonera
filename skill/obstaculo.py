@@ -7,7 +7,7 @@ Aparece en la pestaña Bloqueos, bajo «Te esperan a vos», con qué hacer, dón
 Uso:
   python3 obstaculo.py --titulo "Iniciá sesión en el panel de analítica" --link https://ejemplo.com/panel \\
       --frena "el reporte semanal" [--por-que "pide un login tuyo"] [--retoma "cuando lo hagas, corro el reporte"] \\
-      [--de "reportes"] [--seco]
+      [--de "reportes"] [--categoria trabajo] [--seco]
   python3 obstaculo.py --llevado <id>      # ya recogí ese obstáculo resuelto (lo marca para que no vuelva a avisar)
 
   --titulo    qué hay que hacer, en una línea. Obligatorio.
@@ -17,6 +17,7 @@ Uso:
   --por-que   una línea: por qué traba.
   --retoma    qué sigue cuando lo haga: lo lee la sesión que lo recoge. Es una pista, no una orden.
   --de        de qué proyecto o tema viene.
+  --categoria id (o alias) de categorias.json: en qué grupo de Bloqueos sale. Sin esto sale de --de, y sin ninguno de los dos va a «Otras».
   --seco      imprime lo que mandaría y no llama a la red.
 
 Si ya hay un obstáculo abierto con el mismo título no publica otro (sale 0). Sale 1 y no publica nada si falta el título,
@@ -28,6 +29,7 @@ import json
 import re
 import sys
 
+import armar
 import maestro
 
 
@@ -46,8 +48,11 @@ def validar(a):
 
 def cuerpo(a):
     una = lambda t: " ".join(str(t or "").split())
+    # la categoría sale del catálogo (--categoria, o --de como alias o nombre libre); nunca frena la publicación
+    cat, _aviso = armar.resolver_categoria({"categoria": una(a.categoria) or None, "proyecto": una(a.de) or None})
     return {"p_titulo": una(a.titulo), "p_por_que": una(a.por_que), "p_de": una(a.de), "p_frena": una(a.frena),
-            "p_link": (a.link or "").strip(), "p_comando": (a.comando or "").strip(), "p_retoma": una(a.retoma)}
+            "p_link": (a.link or "").strip(), "p_comando": (a.comando or "").strip(), "p_retoma": una(a.retoma),
+            "p_categoria": cat}
 
 
 def main(argv=None):
@@ -60,6 +65,7 @@ def main(argv=None):
     ap.add_argument("--por-que", dest="por_que", default="")
     ap.add_argument("--retoma", default="")
     ap.add_argument("--de", default="")
+    ap.add_argument("--categoria", default="")
     ap.add_argument("--seco", action="store_true")
     ap.add_argument("--llevado", type=int, metavar="ID")
     a = ap.parse_args(argv)

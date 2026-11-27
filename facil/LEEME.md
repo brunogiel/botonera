@@ -15,7 +15,7 @@ Cada cambio exige que el texto original aparezca las veces esperadas. Si la web 
 2. **Datos**: se saca `supabase.min.js` y `config.js`. Va inline `facil/adaptador.js`: un objeto con la misma interfaz que usa la web (`createClient().rpc(nombre, params)` → `Promise<{data, error}>`) que contesta cada RPC con la base de la página (`claude.use("db")`). Se saca la validación de la config de Supabase.
 3. **Sin PIN**: la pantalla del PIN pasa a ser el aviso «Esta página necesita que entres a Claude con tu cuenta» (`db` ausente) o «Todavía no pude leer tus tarjetas» (la base tarda más de 10 s). Se saca el botón Salir y su oyente.
 4. **Marcas a medio decidir**: `persistirMarcas` además las manda a `marcas/<clave>` (una escritura por pausa), y `cargarLista` adopta una vez por clave lo que otro dispositivo dejó marcado.
-5. **Sin avisos al celu**: el bloque de Web Push (service worker, suscripción, cartel «Activar avisos») se reemplaza por stubs. `segRpcKeepalive` deja de usar `fetch` directo.
+5. **Sin avisos al celu**: el bloque de Web Push (service worker, suscripción, cartel «Activar avisos») se reemplaza por stubs, y el cartel de instalar la app en el inicio del celu (`instPintar`) queda vacío: una página privada no se instala. `segRpcKeepalive` deja de usar `fetch` directo.
 6. **Confeti**: `confeti.js` (unas 40 líneas, inline) reemplaza a `canvas-confetti`; no se carga ningún script de afuera.
 7. **Rótulos**: «Claude recomienda», «Claude está trabajando», «Esto propuso Claude» en vez de «el agente»; «tarjeta/tarjetas» en vez de «card/cards» en los textos visibles (la lista exacta está en `derivar.py`).
 8. **Sin «Ver la botonera original»**: necesita el html de la tanda, que esta página no guarda.

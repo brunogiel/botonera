@@ -696,6 +696,17 @@
   .sw .sw-act.cm{background:#fff;color:#1C1B1B}
   .sw-acc.rev{grid-template-columns:1fr 1fr}
   .sw-rev-ley{margin:0;text-align:center;font-size:12.5px;color:#3a3837}
+  /* ---------- cartel «instalala en el inicio»: solo celu, solo en el navegador, hasta que se cierra ---------- */
+  .inst{position:fixed;left:10px;right:10px;bottom:max(10px,env(safe-area-inset-bottom));z-index:45;max-width:440px;margin:0 auto;display:flex;align-items:flex-start;gap:12px;padding:12px 8px 12px 12px;
+    border:2px solid #1C1B1B;border-radius:12px;background:#fff;color:#1C1B1B;box-shadow:4px 4px 0 #1C1B1B;font-family:Manrope,-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;animation:snz-sube .25s ease-out}
+  body.con-barra .inst{bottom:calc(76px + env(safe-area-inset-bottom,0px))}
+  html.sw-lock .inst{display:none}
+  .inst img{flex:none;width:52px;height:52px;border-radius:12px}
+  .inst-tx{flex:1;min-width:0}
+  .inst-tx b{display:block;font-size:15px;font-weight:800;line-height:1.25}
+  .inst-tx p{margin:3px 0 0;font-size:13px;line-height:1.35;color:#3a3837}
+  .inst-ok{margin-top:8px;min-height:36px;padding:0 16px;border:2px solid #1C1B1B;border-radius:99px;background:#1C1B1B;color:#fff;font:inherit;font-size:14px;font-weight:800;cursor:pointer}
+  .inst-x{flex:none;width:36px;height:36px;border:0;background:none;font:inherit;font-size:22px;line-height:1;color:#6B6862;cursor:pointer}
   
   body.con-barra{padding-bottom:calc(66px + env(safe-area-inset-bottom,0px))}
   html.sw-lock body.con-barra{padding-bottom:0}
@@ -793,6 +804,44 @@
   .hac-cp{flex:none;min-height:32px;padding:4px 10px;font:inherit;font-size:12.5px;font-weight:800;border:2px solid #1C1B1B;border-radius:10px;background:#fff;color:#1C1B1B;cursor:pointer}
   .hac-com{display:block;margin:8px 0 0 auto;padding:4px 2px;border:0;background:none;font:inherit;font-size:12.5px;font-weight:800;color:#6B6862;text-decoration:underline;cursor:pointer}
   .hac-com[disabled]{opacity:.55;cursor:default}
+  /* Bloqueos compactos: resumen, grupos por categoria y filas que se abren con un toque */
+  .bl-res{display:flex;gap:8px;margin:10px 0 2px}
+  .bl-res span{flex:1;min-width:0;background:#fff;border:2px solid #1C1B1B;border-radius:12px;padding:7px 10px;font-size:12.5px;font-weight:700;color:#3A3837}
+  .bl-res b{display:block;font-size:21px;line-height:1.1;color:#1C1B1B;font-variant-numeric:tabular-nums}
+  .hl-lista.bl-grupos{gap:2px}
+  .bl-gh{display:flex;justify-content:space-between;align-items:center;margin:12px 4px 6px;font-size:14px;font-weight:800;color:#1C1B1B}
+  .bl-gn{display:flex;align-items:center;gap:8px;min-width:0}
+  .bl-gc{font-size:13px;color:#6B6862;font-variant-numeric:tabular-nums}
+  .bl-gic{flex:none;width:28px;height:28px;display:grid;place-items:center;border:1.5px solid #1C1B1B;border-radius:8px}
+  .bl-gic img{display:block;width:17px;height:17px}
+  .bl-gic .cemo{font-size:15px}
+  .bl-gic-t{background:#F6DDD6}
+  .bl-gic-t svg{width:15px;height:15px;fill:none;stroke:#8a3b2a;stroke-width:2.4;stroke-linecap:round}
+  .bl-caja{background:#fff;border:2px solid #1C1B1B;border-radius:16px;overflow:hidden}
+  .hac.bl-fila{background:none;border:0;border-radius:0;padding:0}
+  .bl-fila + .bl-fila{border-top:1.5px solid #E5E0D6}
+  .bl-fila.ab{background:#FFFBF3;box-shadow:inset 4px 0 0 #8A5A10}
+  .bl-trab.ab{box-shadow:inset 4px 0 0 #8a3b2a}
+  .bl-cab{display:flex;align-items:center;gap:10px;width:100%;min-height:52px;padding:10px 12px;border:0;background:none;font:inherit;color:#1C1B1B;text-align:left;cursor:pointer}
+  .bl-cab:focus-visible{outline:3px solid #1F6F6B;outline-offset:-3px}
+  .bl-ico{flex:none;width:28px;height:28px;border-radius:9px;background:#F4E3C3;display:grid;place-items:center}
+  .bl-ico svg{width:16px;height:16px;fill:none;stroke:#8A5A10;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+  .bl-trab .bl-ico{background:#F6DDD6}
+  .bl-trab .bl-ico svg{stroke:#8a3b2a}
+  .bl-txt{flex:1;min-width:0}
+  .hac.bl-fila .bl-txt b{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:14px;line-height:1.3}
+  .hac.bl-fila.ab .bl-txt b{display:block;-webkit-line-clamp:unset}
+  .bl-fr{display:block;margin-top:1px;font-size:12px;font-weight:600;color:#6B6862;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .bl-fila.ab .bl-fr{display:none}
+  .bl-chev{flex:none;width:20px;height:20px;fill:none;stroke:#6B6862;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;transition:transform .15s}
+  .bl-fila.ab .bl-chev{transform:rotate(90deg)}
+  @media (prefers-reduced-motion:reduce){.bl-chev{transition:none}}
+  .bl-det{padding:0 12px 12px}
+  .bl-fila:not(.ab) .bl-det{display:none}
+  .bl-det .hac-frena{margin-top:2px;border-radius:10px}
+  .bl-det .bts button{min-height:44px}
+  .bl-det .hac-cp{min-height:40px}
+  .bl-det .hac-com{min-height:36px;padding:4px 6px}
 
 
   /* ARTIFACT: la barra de arriba conserva el alto que tiene con el botón Salir (acá no hay Salir), así todo queda en el mismo lugar */
@@ -1121,6 +1170,7 @@ var estado = {
   hd: {},             // home: clave abierta -> {clave, k, d, items, secs, cat, tanda, listo, error, enVuelo}
   listaCargada: false, // llego al menos una bm_lista
   tab: 'decisiones',  // la pestaña de la barra de abajo: sesiones | decisiones | bloqueos (al recargar vuelve a decisiones)
+  blAb: '',           // Bloqueos: id de la fila abierta (una a la vez)
   acc: null,          // Bloqueos: {d: bm_acciones_lista, err, t, busy, vuelo, tomT, ed, activoHasta}
   errores: [],        // «Con error» (Bloqueos): lo que trajo bm_errores_lista (solo los no vistos)
   homeVisto: false    // el home ya completo una primera pasada (despues no vuelve a «Cargando…»)
@@ -4438,9 +4488,10 @@ function segBuscar(clave){
 // una trabada como card de «Te esperan a vos»: título, cuánto hace que se frenó, de dónde viene y «Archivar»
 function segTrabHTML(x){
   var cl = esc(x.clave);
-  return '<div class="hac" data-clave="' + cl + '"><b>' + esc(x.titulo) + '</b><span class="hac-frena">' + esc('Se frenó · sin novedad hace ' + segDur(x.desde)) + '</span>' +
+  var h = '<span class="hac-frena">' + esc('Se frenó · sin novedad hace ' + segDur(x.desde)) + '</span>' +
     (x.ses ? '<span class="hac-de">' + esc(x.ses) + '</span>' : '') +
-    '<div class="bts"><button type="button" data-home="seg-archivar" data-clave="' + cl + '" aria-label="' + esc('Archivar: ' + x.titulo) + '">Archivar</button></div></div>';
+    '<div class="bts"><button type="button" data-home="seg-archivar" data-clave="' + cl + '" aria-label="' + esc('Archivar: ' + x.titulo) + '">Archivar</button></div>';
+  return blFila('t|' + x.clave, 'data-clave="' + cl + '"', true, x.titulo, 'Sin novedad hace ' + segDur(x.desde), false, h);
 }
 // la pastilla de una línea: una o dos palabras
 function segFilaEstado(x){
@@ -4522,8 +4573,47 @@ function bloqueosHTML(){
     if(!A || (!A.d && !A.err)) return h + '<div class="home-carga">Cargando…</div>';
     return h + '<div class="hl-vacio bl-vacio">Nada bloqueado ✓</div>';
   }
-  return h + er + '<h2 class="h2 bl-h" id="bl-h">' + esc('Bloqueos · ' + regN()) + '</h2><p class="bl-sub">Solo vos podés destrabarlos.</p>' +
-    '<div class="hl-lista" aria-labelledby="bl-h">' + items.map(accHTML).join('') + trab.map(segTrabHTML).join('') + '</div>';
+  // resumen arriba (una cajita en 0 no sale). Grupos con las categorias de Decidir (it.categoria; sin ella, «Otras»), en el orden
+  // de catPos; dentro de cada una, el orden de accOrden. Las trabadas van al final
+  blSeq = 0;
+  var grupos = [], porCat = Object.create(null), nA = accAbiertos().length, nT = trab.length;
+  items.forEach(function(it){
+    var c = catDe(it);
+    if(!porCat[c.id]){ porCat[c.id] = {cat: c, filas: [], i: grupos.length}; grupos.push(porCat[c.id]); }
+    porCat[c.id].filas.push(accHTML(it));
+  });
+  grupos.sort(function(a, b){ return (catPos(a.cat) - catPos(b.cat)) || (a.i - b.i); });
+  if(nT) grupos.push({cat: null, filas: trab.map(segTrabHTML)});
+  var res = nA || nT ? '<div class="bl-res">' + (nA ? '<span><b>' + nA + '</b>para hacer</span>' : '') +
+    (nT ? '<span><b>' + nT + '</b>' + (nT === 1 ? 'sesión trabada' : 'sesiones trabadas') + '</span>' : '') + '</div>' : '';
+  return h + er + '<h2 class="h2 bl-h" id="bl-h">' + esc('Bloqueos · ' + regN()) + '</h2><p class="bl-sub">Solo vos podés destrabarlos.</p>' + res +
+    '<div class="hl-lista bl-grupos" aria-labelledby="bl-h">' + grupos.map(function(g){
+      var ic = g.cat ? '<span class="bl-gic" style="background:' + esc(g.cat.color) + '">' + catIcono(g.cat, '') + '</span>' : '<span class="bl-gic bl-gic-t">' + BL_ICO.pausa + '</span>';
+      return '<section class="bl-grp"><h3 class="bl-gh"><span class="bl-gn">' + ic + esc(g.cat ? g.cat.nombre : 'Sesiones trabadas') + '</span><span class="bl-gc">' + g.filas.length + '</span></h3><div class="bl-caja">' + g.filas.join('') + '</div></section>';
+    }).join('') + '</div>';
+}
+// una fila de Bloqueos = cabecera (boton con icono, titulo en 2 lineas, una linea de «Frena» y flecha) + detalle.
+// Abierta si es la que se toco (estado.blAb, una a la vez) o si tiene el editor abierto (forzada)
+var blSeq = 0;
+var BL_ICO = {
+  lock: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>',
+  pausa: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6v12M15 6v12"/></svg>',
+  chev: '<svg class="bl-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>'
+};
+function blFila(id, attrs, trab, titulo, linea, forzada, detalle){
+  var ab = forzada || estado.blAb === id, did = 'bl-d-' + (++blSeq);
+  return '<div class="hac bl-fila' + (trab ? ' bl-trab' : '') + (ab ? ' ab' : '') + '" ' + attrs + '>' +
+    '<button type="button" class="bl-cab" data-pt="bl-abrir" data-bl="' + esc(id) + '" aria-expanded="' + (ab ? 'true' : 'false') + '" aria-controls="' + did + '">' +
+    '<span class="bl-ico">' + (trab ? BL_ICO.pausa : BL_ICO.lock) + '</span>' +
+    '<span class="bl-txt"><b>' + esc(titulo) + '</b>' + (linea ? '<span class="bl-fr">' + esc(linea) + '</span>' : '') + '</span>' + BL_ICO.chev + '</button>' +
+    '<div class="bl-det" id="' + did + '">' + detalle + '</div></div>';
+}
+function blAlternar(id){
+  estado.blAb = estado.blAb === id ? '' : id;
+  homePintar();
+  var b = null;
+  Array.prototype.forEach.call(document.querySelectorAll('.bl-cab'), function(x){ if(x.getAttribute('data-bl') === id) b = x; });
+  if(b){ try{ b.focus({preventScroll: true}); }catch(e){} try{ b.scrollIntoView({block: 'nearest'}); }catch(e){} }
 }
 function segClick(a, b){
   var S = segEstado(), k = b.getAttribute('data-clave');
@@ -5087,7 +5177,7 @@ function accLinkHTML(it){
 function accCmd(it){ return String(it.comando || '').replace(/[\u0000-\u001f\u007f\u200b-\u200f\u202a-\u202e\u2066-\u2069]/g, ''); }
 function accHTML(it){
   var k = accKey(it), ed = (estado.acc.ed || {})[k], dis = it.busy ? ' disabled' : '', d = 'data-k="' + esc(k) + '"';
-  var h = '<div class="hac" ' + d + '><b>' + esc(it.titulo) + '</b>' + (it.frena ? '<span class="hac-frena">' + esc('Frena: ' + it.frena) + '</span>' : '') +
+  var h = (it.frena ? '<span class="hac-frena">' + esc('Frena: ' + it.frena) + '</span>' : '') +
     (it.por_que ? '<span class="hac-por">' + esc(it.por_que) + '</span>' : '') + accLinkHTML(it) +
     (accCmd(it) ? '<span class="hac-cmd"><code>' + esc(accCmd(it)) + '</code><button type="button" class="hac-cp" data-pt="acc-copiar" ' + d + '>Copiar</button></span>' : '') +
     '<span class="hac-de">' + esc([it.de, it.fecha ? 'desde ' + lecFecha(it.fecha) : ''].filter(Boolean).join(' · ')) + '</span>';
@@ -5102,7 +5192,10 @@ function accHTML(it){
     h += '<div class="bts"><button type="button" class="p" data-pt="acc-hecho" ' + d + dis + '>Listo</button><button type="button" data-pt="acc-nopuedo" ' + d + dis + '>No puedo</button></div>' +
       '<button type="button" class="hac-com" data-pt="acc-comentar" ' + d + dis + '>Comentar</button>';
   }
-  return h + '</div>';
+  // la linea de afuera: que frena; sin frena, el porque; sin nada, desde cuando. Un obstaculo ya marcado lo dice adelante
+  var linea = it.frena ? 'Frena ' + it.frena : it.por_que ? String(it.por_que) : it.fecha ? 'desde ' + lecFecha(it.fecha) : '';
+  if(it.estado === 'no_puedo') linea = 'No puedo · ' + linea; else if(it.estado === 'comentada') linea = 'Comentado · ' + linea;
+  return blFila('a|' + k, d, false, it.titulo, linea, !!ed, h);
 }
 // Listo: con comentario opcional. La fila sale al toque; si la base falla, vuelve y el comentario no se pierde.
 function accHecha(k, com){
@@ -5177,7 +5270,11 @@ function alClickPt(e){
   else if(a === 'acc-mandar') accMandar(k);
   else if(a === 'acc-cancelar'){ if(estado.acc) delete estado.acc.ed[k]; pestanasRepintar(); }
   else if(a === 'acc-copiar') accCopiar(k);
+  else if(a === 'bl-abrir') blAlternar(b.getAttribute('data-bl'));
 }
+
+/* ARTIFACT: sin cartel de instalar (una página privada no se instala en el inicio) */
+function instPintar(){}
 
 /* ARTIFACT: el paso de «avisar a Claude», después de Enviar.
    La respuesta ya quedó guardada en `respuestas/<clave>` (la escribió el adaptador). Claude la lee de ahí; este paso solo

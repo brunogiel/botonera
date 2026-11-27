@@ -1,10 +1,18 @@
 /* E2E de Bloqueos: «Con error» (Visto), «Te esperan a vos» (Listo / No puedo / Comentar con el contrato de bm_acciones_lista,
  * bm_accion_hecha y bm_accion_marcar) y las trabadas (solo «Archivar»; sin «Que la retome otra», sin «Nueva tarea»).
+ * Las filas son compactas: nacen cerradas, se agrupan por categoría y el detalle y los botones se ven al tocar la cabecera.
  * Uso: NODE_PATH=<carpeta con playwright> node tests/e2e-bloqueos.js
  */
 const A = require('./arnes/arnes');
 const R = A.nuevoReporte('e2e-bloqueos');
 const home = page => page.evaluate(() => document.getElementById('home').innerText);
+// Cada fila nace cerrada y sus botones viven en .bl-det (display:none hasta abrirla). Abre la fila (toca su .bl-cab) si todavía no está abierta y la devuelve.
+async function abrirFila(page, fila) {
+  const cab = fila.locator('.bl-cab').first();
+  if ((await cab.getAttribute('aria-expanded')) !== 'true') { await cab.tap(); await A.sleep(200); }
+  return fila;
+}
+const filaDe = (page, txt) => page.locator('.hac.bl-fila', { hasText: txt });
 async function abrir(page) { await page.goto(A.url()); await page.waitForSelector('#tabs', { timeout: 10000 }); await A.sleep(500); await page.tap('[data-tab="bloqueos"]'); await page.waitForSelector('.hac', { timeout: 6000 }); await A.sleep(400); }
 const cierre = (page, n) => R.reg(n, 'Sin errores de página ni de consola', page.errores.length === 0 && page.consola.length === 0, page.errores.concat(page.consola).join(' | '));
 
@@ -32,16 +40,24 @@ const cierre = (page, n) => R.reg(n, 'Sin errores de página ni de consola', pag
       R.reg('herr-css', 'Con 2 errores, `.herr-tx b` y `.herr-m` son display:block y el título queda arriba del detalle',
         herr.length === 2 && herr.every(x => x.b === 'block' && x.m === 'block' && x.arriba && x.w === 'flex'), JSON.stringify(herr));
       R.reg('orden', 'Los obstáculos que frenan trabajo van arriba', t.indexOf('Pegar la llave') < t.indexOf('Correr la migración'));
-      R.reg('frena', 'Muestra «Frena: …», el link https con su sitio y el comando con «Copiar»', /Frena: la publicación del informe/.test(t) && /example\.com\/llaves ↗/.test(t) && /supabase db push/.test(t) && /Copiar/.test(t));
+      R.reg('cerradas', 'Las filas nacen cerradas: sin link, sin comando y sin botones a la vista, con «Frena …» en una línea', /Frena la publicación del informe/.test(t) && !/example\.com\/llaves|supabase db push|Copiar|Listo/.test(t));
+      await abrirFila(page, filaDe(page, 'Pegar la llave'));
+      const t7 = await home(page);
+      R.reg('frena', 'Abierta, muestra «Frena: …» y el link https con su sitio', /Frena: la publicación del informe/.test(t7) && /example\.com\/llaves ↗/.test(t7) && /Listo/.test(t7));
+      await abrirFila(page, filaDe(page, 'Correr la migración'));
+      const t8 = await home(page);
+      R.reg('comando', 'Abierta la otra, muestra el comando con «Copiar» (y la primera se cerró)', /supabase db push/.test(t8) && /Copiar/.test(t8) && !/example\.com\/llaves/.test(t8));
+      await abrirFila(page, filaDe(page, 'Pegar la llave'));
       const rel = await page.locator('.hac-link').first().getAttribute('rel'), tgt = await page.locator('.hac-link').first().getAttribute('target');
       R.reg('link', 'El link se abre en pestaña nueva con noopener', tgt === '_blank' && /noopener/.test(rel));
-      const trab = await page.locator('.hac', { hasText: 'Tanda trabada' }).innerText();
+      const trab = await (await abrirFila(page, filaDe(page, 'Tanda trabada'))).innerText();
       R.reg('trabada', 'La trabada trae solo «Archivar» (sin «Que la retome otra»)', /Archivar/.test(trab) && !/retome/i.test(trab) && /Se frenó · sin novedad hace 30 h/.test(trab), trab.replace(/\n/g, ' / '));
       R.reg('sin-nt', 'Sin «Nueva tarea», sin escucha ni reuniones', !/Nueva tarea|escucha|reuniones/i.test(t) && !(await page.locator('#b-nt').count()));
       // Visto
       await page.locator('.herr-v').first().tap(); await A.sleep(500);
       R.reg('visto', '«Visto» saca el error y llama a bm_error_visto', (await page.evaluate(() => window.__visto)).join() === '1' && /Con error · 1/i.test(await home(page)));
       // Listo con comentario
+      await abrirFila(page, filaDe(page, 'Pegar la llave'));
       await page.tap('[data-pt="acc-hecho"][data-k="item|7"]'); await A.sleep(300);
       await page.locator('.lac-ta').fill('Ya la pegué'); await A.sleep(100);
       await page.tap('[data-pt="acc-mandar"][data-k="item|7"]'); await A.sleep(900);
@@ -51,12 +67,15 @@ const cierre = (page, n) => R.reg(n, 'Sin errores de página ni de consola', pag
       const toast = await page.locator('.snz-toast').first().innerText().catch(() => '');
       R.reg('toast', 'El aviso dice «Listo: el agente sigue solo» (sin hablar de escucha)', /Listo: el agente sigue solo/.test(toast), toast);
       // No puedo
+      await abrirFila(page, filaDe(page, 'Correr la migración'));
       await page.tap('[data-pt="acc-nopuedo"][data-k="item|8"]'); await A.sleep(300);
       await page.locator('.lac-ta').fill('No tengo permisos'); await A.sleep(100);
       await page.tap('[data-pt="acc-mandar"][data-k="item|8"]'); await A.sleep(900);
       const m = await page.evaluate(() => window.__rpcs.filter(r => r.nombre === 'bm_accion_marcar').map(r => r.params));
       R.reg('no-puedo', '«No puedo» llama a bm_accion_marcar con estado no_puedo y muestra el motivo', m.length === 1 && m[0].p_estado === 'no_puedo' && m[0].p_comentario === 'No tengo permisos' && /No puedo: No tengo permisos/.test(await home(page)), JSON.stringify(m));
+      R.reg('linea-marca', 'La línea de la fila marca «No puedo ·» aunque esté cerrada', /No puedo · /.test(await page.evaluate(() => [...document.querySelectorAll('.bl-fr')].map(x => x.textContent).join('|'))));
       // Archivar trabada con Deshacer / a los 5 s
+      await abrirFila(page, filaDe(page, 'Tanda trabada'));
       await page.locator('.hac', { hasText: 'Tanda trabada' }).locator('[data-home="seg-archivar"]').tap(); await A.sleep(500);
       R.reg('archivar-trabada', 'Archivar saca la trabada al toque con aviso y Deshacer', !/Tanda trabada/.test(await home(page)) && /Archivada · Tanda trabada/.test(await page.locator('.snz-toast').first().innerText().catch(() => '')));
       await A.sleep(5800);
@@ -65,10 +84,43 @@ const cierre = (page, n) => R.reg(n, 'Sin errores de página ni de consola', pag
       cierre(page, 'errores-1');
     } finally { await ctx.close(); }
 
+    // Bloqueos compactos: resumen, grupos por categoría, filas cerradas, una abierta a la vez, el editor la mantiene abierta
+    ({ ctx, page } = await A.ctxNuevo(A.escenario('bloqueos')));
+    try {
+      await abrir(page);
+      const res = await page.locator('.bl-res').innerText();
+      R.reg('resumen', 'Arriba va el resumen: «2 para hacer» y «1 sesión trabada»', /2\s*para hacer/.test(res) && /1\s*sesión trabada/.test(res), res.replace(/\n/g, ' '));
+      const grupos = await page.evaluate(() => [...document.querySelectorAll('.bl-grp')].map(g => ({ nom: g.querySelector('.bl-gn').textContent.trim(), n: g.querySelector('.bl-gc').textContent.trim(), filas: g.querySelectorAll('.bl-fila').length })));
+      R.reg('grupos', 'Los grupos van con las categorías de Decidir (Trabajo, luego Otras) y las trabadas al final', JSON.stringify(grupos.map(g => [g.nom, g.n])) === JSON.stringify([['Trabajo', '1'], ['Otras', '1'], ['Sesiones trabadas', '1']]), JSON.stringify(grupos));
+      const ico = await page.evaluate(() => [...document.querySelectorAll('.bl-gic')].map(x => !!x.querySelector('img') || !!x.querySelector('svg')));
+      R.reg('grupo-icono', 'Cada grupo lleva su ícono', ico.length === 3 && ico.every(Boolean), JSON.stringify(ico));
+      const cerradas = await page.evaluate(() => [...document.querySelectorAll('.bl-fila')].map(f => ({ ex: f.querySelector('.bl-cab').getAttribute('aria-expanded'), det: getComputedStyle(f.querySelector('.bl-det')).display })));
+      R.reg('cerradas-aria', 'Las 3 filas nacen cerradas (aria-expanded=false, detalle oculto)', cerradas.length === 3 && cerradas.every(c => c.ex === 'false' && c.det === 'none'), JSON.stringify(cerradas));
+      const f7 = filaDe(page, 'Pegar la llave'), f8 = filaDe(page, 'Correr la migración'), ft = filaDe(page, 'Tanda trabada');
+      await f7.locator('.bl-cab').tap(); await A.sleep(200);
+      const e7 = await f7.locator('.bl-cab').getAttribute('aria-expanded'), v7 = await f7.locator('[data-pt="acc-hecho"]').isVisible();
+      R.reg('abre', 'Tocar la cabecera abre el detalle y muestra los botones', e7 === 'true' && v7);
+      await f8.locator('.bl-cab').tap(); await A.sleep(200);
+      R.reg('una-a-la-vez', 'Abrir otra fila cierra la anterior', (await f7.locator('.bl-cab').getAttribute('aria-expanded')) === 'false' && (await f8.locator('.bl-cab').getAttribute('aria-expanded')) === 'true');
+      await f8.locator('.bl-cab').tap(); await A.sleep(200);
+      R.reg('cierra', 'Tocar de nuevo la cierra', (await f8.locator('.bl-cab').getAttribute('aria-expanded')) === 'false');
+      // con el editor abierto, la fila no se cierra aunque se abra otra
+      await f7.locator('.bl-cab').tap(); await A.sleep(200);
+      await page.tap('[data-pt="acc-hecho"][data-k="item|7"]'); await A.sleep(300);
+      await f8.locator('.bl-cab').tap(); await A.sleep(200);
+      R.reg('editor-abierto', 'La fila con el editor abierto sigue abierta aunque se abra otra', (await f7.locator('.bl-cab').getAttribute('aria-expanded')) === 'true' && (await f8.locator('.bl-cab').getAttribute('aria-expanded')) === 'true' && await page.locator('.lac-ta').isVisible());
+      await page.tap('[data-pt="acc-cancelar"][data-k="item|7"]'); await A.sleep(300);
+      await ft.locator('.bl-cab').tap(); await A.sleep(200);
+      R.reg('trabada-abre', 'La trabada también se abre con un toque y muestra «Archivar»', await ft.locator('[data-home="seg-archivar"]').isVisible());
+      R.reg('sin-scroll', 'Sin scroll horizontal a 390 px', await A.sinScrollHorizontal(page));
+      cierre(page, 'errores-compacto');
+    } finally { await ctx.close(); }
+
     // Comentar exige texto
     ({ ctx, page } = await A.ctxNuevo(A.escenario('bloqueos')));
     try {
       await abrir(page);
+      await abrirFila(page, filaDe(page, 'Correr la migración'));
       await page.tap('[data-pt="acc-comentar"][data-k="item|8"]'); await A.sleep(300);
       await page.tap('[data-pt="acc-mandar"][data-k="item|8"]'); await A.sleep(300);
       const err = await page.locator('.hac-err').first().innerText().catch(() => '');
