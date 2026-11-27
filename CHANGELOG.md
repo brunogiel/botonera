@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.3.2 · 2026-11-27
+
+**La demo en línea entra directo, sin pantalla de PIN.**
+
+- La demo pública (`docs/demo/`) ya no pide PIN: abre en la botonera, con un cartel chico arriba a la derecha que dice «Demo con datos inventados». El botón «Salir» no está en la demo.
+- La web que se instala (completa y fácil) no cambia: sigue con su PIN y su bloqueo temporal.
+
 ## 1.3.1 · 2026-11-27
 
 **Bloqueos más corto de leer, un cartel para instalar la app y un ícono nuevo.**

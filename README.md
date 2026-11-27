@@ -24,7 +24,7 @@ Botonera tiene dos versiones. Las dos juntan lo que tenés que decidir en tarjet
 | **Agentes** | Solo Claude | Claude Code, Cursor, Codex o cualquiera que corra Python |
 | **Sesiones y Bloqueos** | Sesiones: «Mandada», «Trabajando» y «Hecha». Bloqueos: solo respuestas sin novedad hace más de 24 horas | Completos: qué hace cada sesión, lo que solo vos podés hacer y lo que murió con error |
 
-Probá la botonera completa sin instalar nada: [demo en línea](https://brunogiel.github.io/botonera/demo/) (datos inventados de una agencia de ads; entrás con cualquier PIN).
+Probá la botonera completa sin instalar nada: [demo en línea](https://brunogiel.github.io/botonera/demo/) (datos inventados de una agencia de ads; entra directo, sin PIN).
 
 **La fácil** es para vos si usás Claude y querés ver tus pendientes en tarjetas sin armar nada. **La completa** es para vos si querés avisos en el celu, PIN, otros agentes o bots, y no te molesta usar la terminal y dos cuentas gratis.
 

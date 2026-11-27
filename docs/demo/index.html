@@ -74,7 +74,7 @@
   .btn[disabled]{opacity:.55;cursor:default}
 
   /* pantalla de entrada */
-  .demo-franja{position:fixed;top:0;left:0;right:0;z-index:50;background:#1F2D3D;color:#fff;font-size:12px;line-height:1.35;text-align:center;padding:8px 16px}
+  .demo-nota{margin-left:auto;font-size:12px;line-height:1.3;color:var(--muted);text-align:right}
   .entrada{max-width:380px;margin:12vh auto 0;text-align:center}
   .entrada h1{font-size:20px;margin:0 0 6px;font-weight:600}
   .entrada p{color:var(--muted);margin:0 0 20px}
@@ -1699,7 +1699,6 @@ function vistaEntrada(msg, esErr){
   swipeDesmontar(); estado.swd = null; estado.hd = {}; estado.listaCargada = false; estado.homeVisto = false; estado.homeEnvs = {}; estado.homeEnviando = false; estado.festejo = null;
   document.body.classList.remove('con-barra');
   raiz.innerHTML =
-    '<div class="demo-franja">Demo con datos inventados · entrá con cualquier PIN, por ejemplo 1234</div>' +
     '<div class="entrada">' +
       '<h1>Botonera</h1>' +
       '<p>Poné tu PIN.</p>' +
@@ -1770,7 +1769,7 @@ function vistaApp(){
   estado.filas = []; estado.sel = null; estado.vivo = null; estado.orig = null; estado.panelKey = null; estado.decidido = null; estado.pend = null;
   raiz.innerHTML =
     '<div class="top"><h1>Botonera</h1>' +
-      '<button class="btn" id="b-salir">Salir</button></div>' +
+      '<span class="demo-nota">Demo con datos inventados</span></div>' +
     '<div class="app">' +
       '<div class="lista" id="lista"><div class="home" id="home"></div></div>' +
       '<div class="panel" id="panel"></div>' +
@@ -1780,7 +1779,6 @@ function vistaApp(){
   document.getElementById('tabs').addEventListener('click', function(e){ var b = e.target.closest ? e.target.closest('[data-tab]') : null; if(b) tabIr(b.getAttribute('data-tab')); });
   document.getElementById('home').addEventListener('click', alClickPt);
   document.getElementById('home').addEventListener('input', alInputPt);
-  document.getElementById('b-salir').onclick = salir;
   avisosAlEntrar();
   // solo cards: «?c=<clave>» ya no abre el panel de la tanda; abre su mazo si le quedan cards, si no queda el home
   var q = new URLSearchParams(location.search).get('c');
@@ -5642,9 +5640,8 @@ function init(){
   });
   window.addEventListener('focus', function(){ if(estado.token) cargarLista(); });
   instPintar();
-  var t = leerToken();
-  if(!t){ vistaEntrada(); return; }
-  estado.token = t;
+  // demo publica: sin PIN, se entra directo con el token de la demo
+  estado.token = 'demo-token';   // el mismo que acepta el mock de arriba
   vistaApp();
 }
 init();
